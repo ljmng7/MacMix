@@ -1,0 +1,386 @@
+//
+//  AudioModel.swift
+//  MacMix
+//
+//  Created by Jazmin on 2026/6/29.
+//
+
+import AppKit
+import Combine
+import CoreAudio
+import Foundation
+
+@MainActor
+final class OutputAudioState: ObservableObject {
+    @Published var devices: [AudioDevice] = []
+    @Published var systemVolume: Double = 0
+
+    var currentDevice: AudioDevice? {
+        devices.first(where: \.isCurrent)
+    }
+
+    var menuBarSymbolName: String {
+        if systemVolume <= 0.001 {
+            return "speaker.slash.fill"
+        }
+
+        if systemVolume < 0.34 {
+            return "speaker.wave.1.fill"
+        }
+
+        if systemVolume < 0.67 {
+            return "speaker.wave.2.fill"
+        }
+
+        return "speaker.wave.3.fill"
+    }
+}
+
+@MainActor
+final class InputAudioState: ObservableObject {
+    @Published var devices: [AudioDevice] = []
+    @Published var inputVolume: Double = 0
+
+    var currentDevice: AudioDevice? {
+        devices.first(where: \.isCurrent)
+    }
+}
+
+@MainActor
+final class OutputAppsState: ObservableObject {
+    @Published var apps: [AudioApp] = []
+    @Published var needsSystemAudioPermission = false
+}
+
+@MainActor
+final class AudioModel: NSObject, ObservableObject {
+    let outputState = OutputAudioState()
+    let inputState = InputAudioState()
+    let outputAppsState = OutputAppsState()
+
+    private let hardware = CoreAudioHardware()
+    private let appAudioMixer = AppAudioMixer.shared
+    private let defaults = UserDefaults.standard
+    private var outputVolumeObserver: CoreAudioVolumeObserver?
+    private var refreshTimer: Timer?
+    private var pendingOutputApps: [AudioApp]?
+    private var outputAppRefreshSuppressedUntil: Date?
+
+    override init() {
+        super.init()
+        outputVolumeObserver = CoreAudioVolumeObserver { [weak self] in
+            self?.refreshOutputState()
+        }
+        outputVolumeObserver?.start()
+        refresh()
+        refreshTimer = Timer.scheduledTimer(
+            timeInterval: 2,
+            target: self,
+            selector: #selector(refreshFromTimer),
+            userInfo: nil,
+            repeats: true
+        )
+    }
+
+    deinit {
+        outputVolumeObserver?.stop()
+        refreshTimer?.invalidate()
+        appAudioMixer.stopAll()
+    }
+
+    var currentOutputDevice: AudioDevice? {
+        outputState.currentDevice
+    }
+
+    var currentInputDevice: AudioDevice? {
+        inputState.currentDevice
+    }
+
+    func refresh() {
+        refreshOutputState()
+        refreshInputState()
+        refreshOutputApps(stabilize: false)
+    }
+
+    func refreshOutputState() {
+        let previousOutputUID = currentOutputDevice?.uid
+        let devices = hardware.devices(for: .output)
+        setOutputDevicesIfChanged(devices)
+
+        if let outputVolume = devices.first(where: \.isCurrent)?.volume {
+            setSystemOutputVolumeIfChanged(outputVolume)
+        }
+
+        let currentOutputUID = devices.first(where: \.isCurrent)?.uid
+
+        if let previousOutputUID, previousOutputUID != currentOutputUID {
+            suppressOutputAppRefresh()
+            reconcileOutputApps()
+            refreshOutputAppsAfterRouteSettles()
+        }
+    }
+
+    func refreshInputState() {
+        let devices = hardware.devices(for: .input)
+        setInputDevicesIfChanged(devices)
+
+        if let inputVolume = devices.first(where: \.isCurrent)?.volume {
+            setInputVolumeIfChanged(inputVolume)
+        }
+    }
+
+    func refreshOutputApps(stabilize: Bool = true) {
+        if let outputAppRefreshSuppressedUntil,
+           Date() < outputAppRefreshSuppressedUntil {
+            return
+        }
+
+        let apps = hardware.runningOutputApps { [weak self] bundleID in
+            self?.storedAppVolume(for: bundleID) ?? 1
+        }
+
+        guard !audioAppsMatch(outputAppsState.apps, apps) else {
+            pendingOutputApps = nil
+            return
+        }
+
+        if stabilize {
+            guard let pendingOutputApps,
+                  audioAppsMatch(pendingOutputApps, apps) else {
+                pendingOutputApps = apps
+                return
+            }
+        }
+
+        pendingOutputApps = nil
+        outputAppsState.apps = apps
+        reconcileOutputApps()
+    }
+
+    func requestSystemAudioPermissionIfNeeded() {
+        let permissionAvailable = appAudioMixer.requestSystemAudioPermissionIfNeeded()
+        setNeedsSystemAudioPermission(!permissionAvailable)
+    }
+
+    func requestSystemAudioPermission() {
+        let permissionAvailable = appAudioMixer.requestSystemAudioPermission()
+        setNeedsSystemAudioPermission(!permissionAvailable)
+
+        if !permissionAvailable {
+            openSystemAudioRecordingSettings()
+        } else {
+            reconcileOutputApps()
+        }
+    }
+
+    @objc private func refreshFromTimer() {
+        refreshOutputApps()
+    }
+
+    func setSystemOutputVolume(_ volume: Double) {
+        setSystemOutputVolumeIfChanged(volume)
+        guard let deviceID = currentOutputDevice?.id else {
+            return
+        }
+
+        hardware.setVolume(volume, for: deviceID, direction: .output)
+        setCurrentOutputDeviceVolume(volume)
+    }
+
+    func setInputVolume(_ volume: Double) {
+        setInputVolumeIfChanged(volume)
+        guard let deviceID = currentInputDevice?.id else {
+            return
+        }
+
+        hardware.setVolume(volume, for: deviceID, direction: .input)
+        setCurrentInputDeviceVolume(volume)
+    }
+
+    func selectOutputDevice(_ device: AudioDevice) {
+        guard !device.isCurrent else {
+            return
+        }
+
+        suppressOutputAppRefresh()
+        hardware.setDefaultDevice(device.id, direction: .output)
+        refreshOutputState()
+        refreshOutputAppsAfterRouteSettles()
+    }
+
+    func selectInputDevice(_ device: AudioDevice) {
+        guard !device.isCurrent else {
+            return
+        }
+
+        hardware.setDefaultDevice(device.id, direction: .input)
+        refreshInputState()
+    }
+
+    func setAppVolume(_ volume: Double, for app: AudioApp) {
+        let clampedVolume = max(0, min(1, volume))
+        defaults.set(clampedVolume, forKey: defaultsKey(for: app.bundleID))
+
+        if let index = outputAppsState.apps.firstIndex(where: { $0.id == app.id }) {
+            var apps = outputAppsState.apps
+            guard !nearlyEqual(apps[index].volume, clampedVolume) else {
+                return
+            }
+
+            apps[index].volume = clampedVolume
+            outputAppsState.apps = apps
+            setNeedsSystemAudioPermission(!appAudioMixer.apply(
+                clampedVolume,
+                to: apps[index],
+                outputDeviceUID: currentOutputDevice?.uid
+            ))
+        } else {
+            var updatedApp = app
+            updatedApp.volume = clampedVolume
+            setNeedsSystemAudioPermission(!appAudioMixer.apply(
+                clampedVolume,
+                to: updatedApp,
+                outputDeviceUID: currentOutputDevice?.uid
+            ))
+        }
+    }
+
+    private func reconcileOutputApps() {
+        setNeedsSystemAudioPermission(!appAudioMixer.reconcile(
+            apps: outputAppsState.apps,
+            outputDeviceUID: currentOutputDevice?.uid
+        ))
+    }
+
+    private func suppressOutputAppRefresh() {
+        pendingOutputApps = nil
+        outputAppRefreshSuppressedUntil = Date().addingTimeInterval(1.25)
+    }
+
+    private func refreshOutputAppsAfterRouteSettles() {
+        Task { @MainActor [weak self] in
+            try? await Task.sleep(nanoseconds: 1_300_000_000)
+            self?.refreshOutputApps(stabilize: false)
+        }
+    }
+
+    private func setOutputDevicesIfChanged(_ devices: [AudioDevice]) {
+        guard outputState.devices != devices else {
+            return
+        }
+
+        outputState.devices = devices
+    }
+
+    private func setInputDevicesIfChanged(_ devices: [AudioDevice]) {
+        guard inputState.devices != devices else {
+            return
+        }
+
+        inputState.devices = devices
+    }
+
+    private func setCurrentOutputDeviceVolume(_ volume: Double) {
+        let devices = devicesWithCurrentVolume(volume, in: outputState.devices)
+        setOutputDevicesIfChanged(devices)
+    }
+
+    private func setCurrentInputDeviceVolume(_ volume: Double) {
+        let devices = devicesWithCurrentVolume(volume, in: inputState.devices)
+        setInputDevicesIfChanged(devices)
+    }
+
+    private func devicesWithCurrentVolume(_ volume: Double, in devices: [AudioDevice]) -> [AudioDevice] {
+        var updatedDevices = devices
+        guard let index = devices.firstIndex(where: \.isCurrent),
+              let existingVolume = devices[index].volume,
+              !nearlyEqual(existingVolume, volume) else {
+            return devices
+        }
+
+        let device = devices[index]
+        updatedDevices[index] = AudioDevice(
+            id: device.id,
+            uid: device.uid,
+            name: device.name,
+            iconName: device.iconName,
+            isCurrent: device.isCurrent,
+            volume: volume
+        )
+
+        return updatedDevices
+    }
+
+    private func setSystemOutputVolumeIfChanged(_ volume: Double) {
+        guard !nearlyEqual(outputState.systemVolume, volume) else {
+            return
+        }
+
+        outputState.systemVolume = volume
+    }
+
+    private func setInputVolumeIfChanged(_ volume: Double) {
+        guard !nearlyEqual(inputState.inputVolume, volume) else {
+            return
+        }
+
+        inputState.inputVolume = volume
+    }
+
+    private func setNeedsSystemAudioPermission(_ isNeeded: Bool) {
+        guard outputAppsState.needsSystemAudioPermission != isNeeded else {
+            return
+        }
+
+        outputAppsState.needsSystemAudioPermission = isNeeded
+    }
+
+    private func audioAppsMatch(_ lhs: [AudioApp], _ rhs: [AudioApp]) -> Bool {
+        guard lhs.count == rhs.count else {
+            return false
+        }
+
+        return zip(lhs, rhs).allSatisfy { lhsApp, rhsApp in
+            lhsApp.id == rhsApp.id
+                && lhsApp.pid == rhsApp.pid
+                && lhsApp.bundleID == rhsApp.bundleID
+                && lhsApp.name == rhsApp.name
+                && lhsApp.audioObjectIDs == rhsApp.audioObjectIDs
+                && nearlyEqual(lhsApp.volume, rhsApp.volume)
+        }
+    }
+
+    private func nearlyEqual(_ lhs: Double, _ rhs: Double) -> Bool {
+        abs(lhs - rhs) < 0.001
+    }
+
+    private func storedAppVolume(for bundleID: String) -> Double {
+        let key = defaultsKey(for: bundleID)
+
+        if defaults.object(forKey: key) == nil {
+            return 1
+        }
+
+        return defaults.double(forKey: key)
+    }
+
+    private func defaultsKey(for bundleID: String) -> String {
+        "AppVolume.\(bundleID)"
+    }
+
+    private func openSystemAudioRecordingSettings() {
+        let privacyURLs = [
+            "x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture",
+            "x-apple.systempreferences:com.apple.preference.security?Privacy",
+        ]
+
+        for privacyURL in privacyURLs {
+            guard let url = URL(string: privacyURL),
+                  NSWorkspace.shared.open(url) else {
+                continue
+            }
+
+            return
+        }
+    }
+}

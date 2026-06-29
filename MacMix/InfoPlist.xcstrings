@@ -1,0 +1,366 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "CFBundleName" : {
+      "comment" : "Bundle name",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MacMix"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MacMix"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "MacMix"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MacMix"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MacMix"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MacMix"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MacMix"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MacMix"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MacMix"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MacMix"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MacMix"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MacMix"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MacMix"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MacMix"
+          }
+        },
+        "th" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MacMix"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MacMix"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MacMix"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MacMix"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MacMix"
+          }
+        }
+      }
+    },
+    "NSAudioCaptureUsageDescription" : {
+      "comment" : "Privacy usage description for system audio capture permission.",
+      "extractionState" : "stale",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يلتقط MacMix صوت التطبيق فقط عند ضبط مستوى صوت تطبيق فردي للمزج المحلي في الوقت الفعلي. ولا يسجل الصوت أو يحفظه أو يرفعه."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MacMix erfasst App-Audio nur, wenn du die Lautstarke einzelner Apps fur lokales Echtzeit-Mixing anpasst. Audio wird nicht aufgenommen, gespeichert oder hochgeladen."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "MacMix only captures app audio when you adjust individual app volume for local real-time mixing. It does not record, save, or upload audio."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MacMix solo captura audio de apps cuando ajustas el volumen de una app individual para mezclar localmente en tiempo real. No graba, guarda ni sube audio."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MacMix capture l'audio d'une app uniquement lorsque vous reglez le volume d'une app individuelle pour le mixage local en temps reel. Il n'enregistre, ne sauvegarde et ne televerse aucun audio."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MacMix स्थानीय रियल-टाइम मिक्सिंग के लिए केवल तब ऐप ऑडियो कैप्चर करता है जब आप किसी अलग ऐप का वॉल्यूम समायोजित करते हैं। यह ऑडियो रिकॉर्ड, सेव या अपलोड नहीं करता।"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MacMix hanya menangkap audio app saat Anda menyesuaikan volume app individual untuk mixing lokal real-time. MacMix tidak merekam, menyimpan, atau mengunggah audio."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MacMix acquisisce l'audio delle app solo quando regoli il volume di singole app per il mixaggio locale in tempo reale. Non registra, salva o carica audio."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MacMixは、ローカルでリアルタイムにミックスするために個別のアプリ音量を調整するときだけアプリ音声をキャプチャします。音声を録音、保存、アップロードすることはありません。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MacMix는 로컬 실시간 믹싱을 위해 개별 앱 음량을 조절할 때만 앱 오디오를 캡처합니다. 오디오를 녹음, 저장 또는 업로드하지 않습니다."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MacMix legt app-audio alleen vast wanneer je het volume van afzonderlijke apps aanpast voor lokale realtime mixing. Audio wordt niet opgenomen, opgeslagen of geupload."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MacMix przechwytuje dzwiek aplikacji tylko podczas regulacji glosnosci pojedynczej aplikacji na potrzeby lokalnego miksowania w czasie rzeczywistym. Nie nagrywa, nie zapisuje ani nie przesyla dzwieku."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O MacMix so captura audio de apps quando voce ajusta o volume de apps individuais para mixagem local em tempo real. Ele nao grava, salva nem envia audio."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MacMix захватывает звук приложения только при настройке громкости отдельного приложения для локального микширования в реальном времени. Он не записывает, не сохраняет и не отправляет звук."
+          }
+        },
+        "th" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MacMix จะจับเสียงของแอปเฉพาะเมื่อคุณปรับระดับเสียงของแต่ละแอปเพื่อมิกซ์แบบเรียลไทม์บนเครื่องเท่านั้น และจะไม่บันทึก จัดเก็บ หรืออัปโหลดเสียง"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MacMix, yerel gercek zamanli miks icin yalnizca tek tek uygulama ses duzeylerini ayarladiginizda uygulama sesini yakalar. Sesi kaydetmez, saklamaz veya yuklemez."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MacMix chi thu am thanh cua ung dung khi ban dieu chinh am luong tung ung dung de tron am thoi gian thuc cuc bo. Ung dung khong ghi, luu hoac tai am thanh len."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MacMix 只在你调节单个 App 音量时捕获该 App 的音频，用于本机实时混音，不会录制、保存或上传音频。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MacMix 只會在你調整單個 App 音量時擷取該 App 的音訊，用於本機即時混音，不會錄製、儲存或上傳音訊。"
+          }
+        }
+      }
+    },
+    "NSHumanReadableCopyright" : {
+      "comment" : "Copyright (human-readable)",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ⓒ2026 Jazmín"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ⓒ2026 Jazmín"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Ⓒ2026 Jazmín"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ⓒ2026 Jazmín"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ⓒ2026 Jazmín"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ⓒ2026 Jazmín"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ⓒ2026 Jazmín"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ⓒ2026 Jazmín"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ⓒ2026 Jazmín"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ⓒ2026 Jazmín"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ⓒ2026 Jazmín"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ⓒ2026 Jazmín"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ⓒ2026 Jazmín"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ⓒ2026 Jazmín"
+          }
+        },
+        "th" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ⓒ2026 Jazmín"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ⓒ2026 Jazmín"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ⓒ2026 Jazmín"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ⓒ2026 Jazmín"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ⓒ2026 Jazmín"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

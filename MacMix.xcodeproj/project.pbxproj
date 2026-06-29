@@ -6,8 +6,13 @@
 	objectVersion = 110;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		DCA2568E2FF235B500CE0317 /* MacMix.icon in Resources */ = {isa = PBXBuildFile; fileRef = DCA2568D2FF235B500CE0317 /* MacMix.icon */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
 		DC17C3362FF21B870075D0CC /* MacMix.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MacMix.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		DCA2568D2FF235B500CE0317 /* MacMix.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = MacMix.icon; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -30,6 +35,7 @@
 		DC17C32D2FF21B870075D0CC = {
 			isa = PBXGroup;
 			children = (
+				DCA2568D2FF235B500CE0317 /* MacMix.icon */,
 				DC17C3382FF21B870075D0CC /* MacMix */,
 				DC17C3372FF21B870075D0CC /* Products */,
 			);
@@ -85,6 +91,24 @@
 			knownRegions = (
 				en,
 				Base,
+				"zh-Hans",
+				"zh-Hant",
+				ja,
+				ko,
+				fr,
+				de,
+				es,
+				it,
+				"pt-BR",
+				ru,
+				ar,
+				hi,
+				id,
+				th,
+				vi,
+				tr,
+				nl,
+				pl,
 			);
 			mainGroup = DC17C32D2FF21B870075D0CC;
 			minimizedProjectReferenceProxies = 1;
@@ -102,6 +126,7 @@
 		DC17C3342FF21B870075D0CC /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			files = (
+				DCA2568E2FF235B500CE0317 /* MacMix.icon in Resources */,
 			);
 		};
 /* End PBXResourcesBuildPhase section */
@@ -238,22 +263,23 @@
 		DC17C3422FF21B870075D0CC /* Debug configuration for PBXNativeTarget "MacMix" */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_APPICON_NAME = MacMix;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = GZQ8FJW98B;
-				ENABLE_APP_SANDBOX = YES;
+				ENABLE_APP_SANDBOX = NO;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
-				ENABLE_USER_SELECTED_FILES = readonly;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				ENABLE_USER_SELECTED_FILES = NO;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = "Config/MacMix-Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
+				MACOSX_DEPLOYMENT_TARGET = 15.0;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = jazmin.MacMix;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -270,22 +296,23 @@
 		DC17C3432FF21B870075D0CC /* Release configuration for PBXNativeTarget "MacMix" */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_APPICON_NAME = MacMix;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = GZQ8FJW98B;
-				ENABLE_APP_SANDBOX = YES;
+				ENABLE_APP_SANDBOX = NO;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
-				ENABLE_USER_SELECTED_FILES = readonly;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				ENABLE_USER_SELECTED_FILES = NO;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = "Config/MacMix-Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
+				MACOSX_DEPLOYMENT_TARGET = 15.0;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = jazmin.MacMix;
 				PRODUCT_NAME = "$(TARGET_NAME)";
