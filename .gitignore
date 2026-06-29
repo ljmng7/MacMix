@@ -1,0 +1,35 @@
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Xcode user state
+xcuserdata/
+*.xcuserstate
+*.xcscmblueprint
+
+# Xcode build products
+build/
+DerivedData/
+*.xcarchive
+*.xcresult
+
+# Swift Package Manager
+.build/
+.swiftpm/
+
+# App distribution artifacts
+*.app
+*.dmg
+*.pkg
+*.ipa
+*.dSYM
+
+# Playgrounds
+timeline.xctimeline
+playground.xcworkspace
+
+# Temporary files
+*.swp
+*.tmp
+*.bak
