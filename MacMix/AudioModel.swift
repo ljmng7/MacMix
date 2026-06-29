@@ -50,6 +50,7 @@ final class InputAudioState: ObservableObject {
 final class OutputAppsState: ObservableObject {
     @Published var apps: [AudioApp] = []
     @Published var needsSystemAudioPermission = false
+    @Published var isSystemAudioPermissionAuthorized = false
 }
 
 @MainActor
@@ -159,17 +160,28 @@ final class AudioModel: NSObject, ObservableObject {
 
     func requestSystemAudioPermissionIfNeeded() {
         let permissionAvailable = appAudioMixer.requestSystemAudioPermissionIfNeeded()
+        setSystemAudioPermissionAuthorized(permissionAvailable)
         setNeedsSystemAudioPermission(!permissionAvailable)
     }
 
     func requestSystemAudioPermission() {
         let permissionAvailable = appAudioMixer.requestSystemAudioPermission()
+        setSystemAudioPermissionAuthorized(permissionAvailable)
         setNeedsSystemAudioPermission(!permissionAvailable)
 
         if !permissionAvailable {
             openSystemAudioRecordingSettings()
         } else {
             reconcileOutputApps()
+        }
+    }
+
+    func refreshSystemAudioPermissionStatus() {
+        let permissionAvailable = appAudioMixer.hasSystemAudioPermission()
+        setSystemAudioPermissionAuthorized(permissionAvailable)
+
+        if permissionAvailable {
+            setNeedsSystemAudioPermission(false)
         }
     }
 
@@ -335,6 +347,14 @@ final class AudioModel: NSObject, ObservableObject {
         outputAppsState.needsSystemAudioPermission = isNeeded
     }
 
+    private func setSystemAudioPermissionAuthorized(_ isAuthorized: Bool) {
+        guard outputAppsState.isSystemAudioPermissionAuthorized != isAuthorized else {
+            return
+        }
+
+        outputAppsState.isSystemAudioPermissionAuthorized = isAuthorized
+    }
+
     private func audioAppsMatch(_ lhs: [AudioApp], _ rhs: [AudioApp]) -> Bool {
         guard lhs.count == rhs.count else {
             return false
@@ -370,7 +390,6 @@ final class AudioModel: NSObject, ObservableObject {
 
     private func openSystemAudioRecordingSettings() {
         let privacyURLs = [
-            "x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture",
             "x-apple.systempreferences:com.apple.preference.security?Privacy",
         ]
 

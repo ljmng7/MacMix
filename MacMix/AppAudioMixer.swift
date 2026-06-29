@@ -22,22 +22,23 @@ nonisolated final class AppAudioMixer {
     }
 
     private var engines: [String: any AppGainEngine] = [:]
-    private var requestedPermissionThisLaunch = false
     private var lastPermissionRequestSucceeded: Bool?
 
     private init() {}
 
+    func hasSystemAudioPermission() -> Bool {
+        lastPermissionRequestSucceeded == true || requestSystemAudioPermission()
+    }
+
     func requestSystemAudioPermissionIfNeeded() -> Bool {
-        if requestedPermissionThisLaunch {
-            return lastPermissionRequestSucceeded ?? false
+        if lastPermissionRequestSucceeded == true {
+            return true
         }
 
         return requestSystemAudioPermission()
     }
 
     func requestSystemAudioPermission() -> Bool {
-        requestedPermissionThisLaunch = true
-
         guard #available(macOS 14.4, *) else {
             lastPermissionRequestSucceeded = false
             return false
@@ -162,12 +163,25 @@ nonisolated private final class ProcessTapGainEngine: AppGainEngine {
         self.gainPointer = UnsafeMutablePointer<Float>.allocate(capacity: 1)
         self.gainPointer.initialize(to: max(0, min(1, gain)))
 
-        let tapDescription = CATapDescription(stereoMixdownOfProcesses: audioObjectIDs)
-        tapDescription.muteBehavior = .mutedWhenTapped
-        tapDescription.isPrivate = true
+        var tapDescription = CATapDescription(processes: audioObjectIDs, deviceUID: outputDeviceUID, stream: 0)
+        Self.configure(tapDescription)
 
-        guard AudioHardwareCreateProcessTap(tapDescription, &tapID) == noErr,
-              tapID != kAudioObjectUnknown else {
+        if AudioHardwareCreateProcessTap(tapDescription, &tapID) != noErr || tapID == kAudioObjectUnknown {
+            let fallbackTapDescription = CATapDescription(stereoMixdownOfProcesses: audioObjectIDs)
+            Self.configure(fallbackTapDescription)
+            tapID = AudioObjectID(kAudioObjectUnknown)
+
+            guard AudioHardwareCreateProcessTap(fallbackTapDescription, &tapID) == noErr,
+                  tapID != kAudioObjectUnknown else {
+                destroyGainPointer()
+                return nil
+            }
+
+            tapDescription = fallbackTapDescription
+        }
+
+        guard let tapFormat = Self.tapFormat(for: tapID) else {
+            AudioHardwareDestroyProcessTap(tapID)
             destroyGainPointer()
             return nil
         }
@@ -200,24 +214,10 @@ nonisolated private final class ProcessTapGainEngine: AppGainEngine {
         let status = AudioDeviceCreateIOProcIDWithBlock(&ioProc, aggregateID, nil) { _, inputData, _, outputData, _ in
             let inputBuffers = UnsafeMutableAudioBufferListPointer(UnsafeMutablePointer(mutating: inputData))
             let outputBuffers = UnsafeMutableAudioBufferListPointer(outputData)
-            var gain = gainPointer.pointee
-            let isBoosting = gain > 1
-            var low: Float = -1
-            var high: Float = 1
+            let gain = gainPointer.pointee
 
             for (index, inputBuffer) in inputBuffers.enumerated() where index < outputBuffers.count {
-                guard let source = inputBuffer.mData?.assumingMemoryBound(to: Float.self),
-                      let destination = outputBuffers[index].mData?.assumingMemoryBound(to: Float.self) else {
-                    continue
-                }
-
-                let sampleCount = min(Int(inputBuffer.mDataByteSize), Int(outputBuffers[index].mDataByteSize))
-                    / MemoryLayout<Float>.size
-                vDSP_vsmul(source, 1, &gain, destination, 1, vDSP_Length(sampleCount))
-
-                if isBoosting {
-                    vDSP_vclip(destination, 1, &low, &high, destination, 1, vDSP_Length(sampleCount))
-                }
+                Self.writeScaledAudio(from: inputBuffer, to: outputBuffers[index], gain: gain, format: tapFormat)
             }
         }
 
@@ -265,4 +265,174 @@ nonisolated private final class ProcessTapGainEngine: AppGainEngine {
         destroyedGainPointer = true
     }
 
+    private static func configure(_ tapDescription: CATapDescription) {
+        tapDescription.muteBehavior = .mutedWhenTapped
+        tapDescription.isPrivate = true
+    }
+
+    private static func tapFormat(for tapID: AudioObjectID) -> AudioStreamBasicDescription? {
+        var address = AudioObjectPropertyAddress(
+            mSelector: kAudioTapPropertyFormat,
+            mScope: kAudioObjectPropertyScopeGlobal,
+            mElement: kAudioObjectPropertyElementMain
+        )
+        var format = AudioStreamBasicDescription()
+        var dataSize = UInt32(MemoryLayout<AudioStreamBasicDescription>.size)
+        let status = AudioObjectGetPropertyData(tapID, &address, 0, nil, &dataSize, &format)
+
+        return status == noErr ? format : nil
+    }
+
+    private static func writeScaledAudio(
+        from inputBuffer: AudioBuffer,
+        to outputBuffer: AudioBuffer,
+        gain: Float,
+        format: AudioStreamBasicDescription
+    ) {
+        guard let source = inputBuffer.mData,
+              let destination = outputBuffer.mData else {
+            return
+        }
+
+        let inputByteCount = Int(inputBuffer.mDataByteSize)
+        let outputByteCount = Int(outputBuffer.mDataByteSize)
+        let byteCount = min(inputByteCount, outputByteCount)
+
+        guard byteCount > 0 else {
+            return
+        }
+
+        guard format.mFormatID == kAudioFormatLinearPCM else {
+            copyAudio(from: source, to: destination, byteCount: byteCount, outputByteCount: outputByteCount)
+            return
+        }
+
+        let flags = format.mFormatFlags
+        let isFloat = flags & kAudioFormatFlagIsFloat != 0
+        let isSignedInteger = flags & kAudioFormatFlagIsSignedInteger != 0
+
+        if isFloat {
+            switch format.mBitsPerChannel {
+            case 32:
+                writeScaledFloat32(from: source, to: destination, gain: gain, byteCount: byteCount)
+            case 64:
+                writeScaledFloat64(from: source, to: destination, gain: gain, byteCount: byteCount)
+            default:
+                copyAudio(from: source, to: destination, byteCount: byteCount, outputByteCount: outputByteCount)
+            }
+        } else if isSignedInteger {
+            switch format.mBitsPerChannel {
+            case 16:
+                writeScaledInt16(from: source, to: destination, gain: gain, byteCount: byteCount)
+            case 32:
+                writeScaledInt32(from: source, to: destination, gain: gain, byteCount: byteCount)
+            default:
+                copyAudio(from: source, to: destination, byteCount: byteCount, outputByteCount: outputByteCount)
+            }
+        } else {
+            copyAudio(from: source, to: destination, byteCount: byteCount, outputByteCount: outputByteCount)
+        }
+
+        zeroRemainingAudio(in: destination, byteCount: byteCount, outputByteCount: outputByteCount)
+    }
+
+    private static func writeScaledFloat32(
+        from source: UnsafeMutableRawPointer,
+        to destination: UnsafeMutableRawPointer,
+        gain: Float,
+        byteCount: Int
+    ) {
+        let sampleCount = byteCount / MemoryLayout<Float>.size
+        guard sampleCount > 0 else {
+            return
+        }
+
+        var gain = gain
+        vDSP_vsmul(
+            source.assumingMemoryBound(to: Float.self),
+            1,
+            &gain,
+            destination.assumingMemoryBound(to: Float.self),
+            1,
+            vDSP_Length(sampleCount)
+        )
+    }
+
+    private static func writeScaledFloat64(
+        from source: UnsafeMutableRawPointer,
+        to destination: UnsafeMutableRawPointer,
+        gain: Float,
+        byteCount: Int
+    ) {
+        let sampleCount = byteCount / MemoryLayout<Double>.size
+        guard sampleCount > 0 else {
+            return
+        }
+
+        var gain = Double(gain)
+        vDSP_vsmulD(
+            source.assumingMemoryBound(to: Double.self),
+            1,
+            &gain,
+            destination.assumingMemoryBound(to: Double.self),
+            1,
+            vDSP_Length(sampleCount)
+        )
+    }
+
+    private static func writeScaledInt16(
+        from source: UnsafeMutableRawPointer,
+        to destination: UnsafeMutableRawPointer,
+        gain: Float,
+        byteCount: Int
+    ) {
+        let sampleCount = byteCount / MemoryLayout<Int16>.size
+        let source = source.assumingMemoryBound(to: Int16.self)
+        let destination = destination.assumingMemoryBound(to: Int16.self)
+        let gain = Double(gain)
+
+        for index in 0..<sampleCount {
+            let scaledSample = (Double(source[index]) * gain).rounded()
+            destination[index] = Int16(clamping: Int(scaledSample))
+        }
+    }
+
+    private static func writeScaledInt32(
+        from source: UnsafeMutableRawPointer,
+        to destination: UnsafeMutableRawPointer,
+        gain: Float,
+        byteCount: Int
+    ) {
+        let sampleCount = byteCount / MemoryLayout<Int32>.size
+        let source = source.assumingMemoryBound(to: Int32.self)
+        let destination = destination.assumingMemoryBound(to: Int32.self)
+        let gain = Double(gain)
+
+        for index in 0..<sampleCount {
+            let scaledSample = (Double(source[index]) * gain).rounded()
+            destination[index] = Int32(clamping: Int64(scaledSample))
+        }
+    }
+
+    private static func copyAudio(
+        from source: UnsafeMutableRawPointer,
+        to destination: UnsafeMutableRawPointer,
+        byteCount: Int,
+        outputByteCount: Int
+    ) {
+        memcpy(destination, source, byteCount)
+        zeroRemainingAudio(in: destination, byteCount: byteCount, outputByteCount: outputByteCount)
+    }
+
+    private static func zeroRemainingAudio(
+        in destination: UnsafeMutableRawPointer,
+        byteCount: Int,
+        outputByteCount: Int
+    ) {
+        guard outputByteCount > byteCount else {
+            return
+        }
+
+        memset(destination.advanced(by: byteCount), 0, outputByteCount - byteCount)
+    }
 }

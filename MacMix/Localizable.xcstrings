@@ -228,7 +228,7 @@
       }
     },
     "Authorized" : {
-      "comment" : "Permission status when Screen & System Audio access is available.",
+      "comment" : "Permission status when System Audio Recording access is available.",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -567,7 +567,7 @@
       }
     },
     "Go to Authorize" : {
-      "comment" : "Button on the about page that requests Screen & System Audio permission or opens the related system privacy settings.",
+      "comment" : "Button on the about page that requests System Audio Recording permission or opens the related system privacy settings.",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -905,115 +905,115 @@
         }
       }
     },
-    "Mixing needs Screen & System Audio permission because macOS requires this permission before an app can process another app's audio. MacMix uses it only for local real-time mixing when you adjust per-app volume, and does not record, save, or upload screen content or audio." : {
-      "comment" : "About page explanation for why MacMix requests Screen & System Audio permission.",
+    "Mixing needs System Audio Recording permission because macOS requires this permission before an app can process another app's audio. MacMix uses it only for local real-time mixing when you adjust per-app volume, and does not record, save, or upload audio." : {
+      "comment" : "About page explanation for why MacMix requests System Audio Recording permission.",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "تحتاج ميزة المزج إلى إذن الشاشة وصوت النظام لأن macOS يتطلب هذا الإذن قبل أن يتمكن أي تطبيق من معالجة صوت تطبيق آخر. يستخدمه MacMix فقط للمزج المحلي في الوقت الفعلي عند ضبط مستوى صوت كل تطبيق، ولا يسجل أو يحفظ أو يرفع محتوى الشاشة أو الصوت."
+            "value" : "تحتاج ميزة المزج إلى إذن تسجيل صوت النظام لأن macOS يتطلب هذا الإذن قبل أن يتمكن أي تطبيق من معالجة صوت تطبيق آخر. يستخدمه MacMix فقط للمزج المحلي في الوقت الفعلي عند ضبط مستوى صوت كل تطبيق، ولا يسجل الصوت أو يحفظه أو يرفعه."
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Die Mischfunktion benötigt die Berechtigung für Bildschirm und Systemaudio, weil macOS diese Berechtigung verlangt, bevor eine App Audio einer anderen App verarbeiten kann. MacMix nutzt sie nur für lokales Echtzeit-Mixing, wenn du die Lautstärke einzelner Apps anpasst, und zeichnet Bildschirminhalte oder Audio nicht auf, speichert sie nicht und lädt sie nicht hoch."
+            "value" : "Die Mischfunktion benötigt die Berechtigung für Systemaudioaufnahme, weil macOS diese Berechtigung verlangt, bevor eine App Audio einer anderen App verarbeiten kann. MacMix nutzt sie nur für lokales Echtzeit-Mixing, wenn du die Lautstärke einzelner Apps anpasst, und zeichnet Audio nicht auf, speichert es nicht und lädt es nicht hoch."
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "La mezcla necesita el permiso Pantalla y audio del sistema porque macOS exige este permiso antes de que una app pueda procesar el audio de otra app. MacMix lo usa solo para mezclar localmente en tiempo real cuando ajustas el volumen por app, y no graba, guarda ni sube contenido de pantalla ni audio."
+            "value" : "La mezcla necesita el permiso de grabación de audio del sistema porque macOS exige este permiso antes de que una app pueda procesar el audio de otra app. MacMix lo usa solo para mezclar localmente en tiempo real cuando ajustas el volumen por app, y no graba, guarda ni sube audio."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Le mixage nécessite l’autorisation Écran et audio système, car macOS exige cette autorisation avant qu’une app puisse traiter l’audio d’une autre app. MacMix l’utilise uniquement pour le mixage local en temps réel lorsque vous ajustez le volume par app, et n’enregistre, ne sauvegarde ni ne téléverse le contenu de l’écran ou l’audio."
+            "value" : "Le mixage nécessite l’autorisation d’enregistrement audio du système, car macOS exige cette autorisation avant qu’une app puisse traiter l’audio d’une autre app. MacMix l’utilise uniquement pour le mixage local en temps réel lorsque vous ajustez le volume par app, et n’enregistre, ne sauvegarde ni ne téléverse l’audio."
           }
         },
         "hi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "मिक्सिंग के लिए स्क्रीन और सिस्टम ऑडियो अनुमति चाहिए, क्योंकि macOS किसी ऐप को दूसरे ऐप का ऑडियो प्रोसेस करने से पहले यह अनुमति मांगता है। MacMix इसका उपयोग केवल तब स्थानीय रियल-टाइम मिक्सिंग के लिए करता है जब आप प्रति-ऐप वॉल्यूम समायोजित करते हैं, और स्क्रीन सामग्री या ऑडियो को रिकॉर्ड, सेव या अपलोड नहीं करता।"
+            "value" : "मिक्सिंग के लिए सिस्टम ऑडियो रिकॉर्डिंग अनुमति चाहिए, क्योंकि macOS किसी ऐप को दूसरे ऐप का ऑडियो प्रोसेस करने से पहले यह अनुमति मांगता है। MacMix इसका उपयोग केवल तब स्थानीय रियल-टाइम मिक्सिंग के लिए करता है जब आप प्रति-ऐप वॉल्यूम समायोजित करते हैं, और ऑडियो को रिकॉर्ड, सेव या अपलोड नहीं करता।"
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Fitur mixing memerlukan izin Layar & Audio Sistem karena macOS mewajibkan izin ini sebelum app dapat memproses audio dari app lain. MacMix menggunakannya hanya untuk mixing lokal real-time saat Anda menyesuaikan volume per app, dan tidak merekam, menyimpan, atau mengunggah konten layar maupun audio."
+            "value" : "Fitur mixing memerlukan izin Perekaman Audio Sistem karena macOS mewajibkan izin ini sebelum app dapat memproses audio dari app lain. MacMix menggunakannya hanya untuk mixing lokal real-time saat Anda menyesuaikan volume per app, dan tidak merekam, menyimpan, atau mengunggah audio."
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Il mixaggio richiede l’autorizzazione Schermo e audio di sistema perché macOS la richiede prima che un’app possa elaborare l’audio di un’altra app. MacMix la usa solo per il mixaggio locale in tempo reale quando regoli il volume per app, e non registra, salva o carica contenuti dello schermo o audio."
+            "value" : "Il mixaggio richiede l’autorizzazione di registrazione audio di sistema perché macOS la richiede prima che un’app possa elaborare l’audio di un’altra app. MacMix la usa solo per il mixaggio locale in tempo reale quando regoli il volume per app, e non registra, salva o carica audio."
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "ミックス機能には画面とシステムオーディオの権限が必要です。macOSでは、アプリが別のアプリのオーディオを処理する前にこの権限が求められるためです。MacMixは、アプリごとの音量を調整するときのローカルなリアルタイムミックスにのみ使用し、画面内容やオーディオを録画、保存、アップロードしません。"
+            "value" : "ミックス機能にはシステムオーディオ録音の権限が必要です。macOSでは、アプリが別のアプリのオーディオを処理する前にこの権限が求められるためです。MacMixは、アプリごとの音量を調整するときのローカルなリアルタイムミックスにのみ使用し、オーディオを録音、保存、アップロードしません。"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "믹싱 기능에는 화면 및 시스템 오디오 권한이 필요합니다. macOS가 앱이 다른 앱의 오디오를 처리하기 전에 이 권한을 요구하기 때문입니다. MacMix는 앱별 음량을 조절할 때 로컬 실시간 믹싱에만 이 권한을 사용하며, 화면 콘텐츠나 오디오를 녹화, 저장 또는 업로드하지 않습니다."
+            "value" : "믹싱 기능에는 시스템 오디오 녹음 권한이 필요합니다. macOS가 앱이 다른 앱의 오디오를 처리하기 전에 이 권한을 요구하기 때문입니다. MacMix는 앱별 음량을 조절할 때 로컬 실시간 믹싱에만 이 권한을 사용하며, 오디오를 녹음, 저장 또는 업로드하지 않습니다."
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Mixing heeft toestemming voor Scherm en systeemaudio nodig omdat macOS deze toestemming vereist voordat een app audio van een andere app kan verwerken. MacMix gebruikt dit alleen voor lokale realtime mixing wanneer je het volume per app aanpast, en neemt geen scherminhoud of audio op, bewaart deze niet en uploadt deze niet."
+            "value" : "Mixing heeft toestemming voor systeemaudio-opname nodig omdat macOS deze toestemming vereist voordat een app audio van een andere app kan verwerken. MacMix gebruikt dit alleen voor lokale realtime mixing wanneer je het volume per app aanpast, en neemt geen audio op, bewaart deze niet en uploadt deze niet."
           }
         },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Miksowanie wymaga uprawnienia Ekran i dźwięk systemowy, ponieważ macOS wymaga go, zanim aplikacja będzie mogła przetwarzać dźwięk innej aplikacji. MacMix używa go tylko do lokalnego miksowania w czasie rzeczywistym podczas regulacji głośności poszczególnych aplikacji i nie nagrywa, nie zapisuje ani nie przesyła treści ekranu ani dźwięku."
+            "value" : "Miksowanie wymaga uprawnienia do nagrywania dźwięku systemowego, ponieważ macOS wymaga go, zanim aplikacja będzie mogła przetwarzać dźwięk innej aplikacji. MacMix używa go tylko do lokalnego miksowania w czasie rzeczywistym podczas regulacji głośności poszczególnych aplikacji i nie nagrywa, nie zapisuje ani nie przesyła dźwięku."
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "A mixagem precisa da permissão Tela e Áudio do Sistema porque o macOS exige essa permissão antes que um app possa processar o áudio de outro app. O MacMix a usa apenas para mixagem local em tempo real quando você ajusta o volume por app, e não grava, salva nem envia conteúdo da tela ou áudio."
+            "value" : "A mixagem precisa da permissão Gravação de Áudio do Sistema porque o macOS exige essa permissão antes que um app possa processar o áudio de outro app. O MacMix a usa apenas para mixagem local em tempo real quando você ajusta o volume por app, e não grava, salva nem envia áudio."
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Для микширования требуется разрешение «Экран и системный звук», потому что macOS требует его, прежде чем приложение сможет обрабатывать звук другого приложения. MacMix использует его только для локального микширования в реальном времени при регулировке громкости отдельных приложений и не записывает, не сохраняет и не отправляет содержимое экрана или звук."
+            "value" : "Для микширования требуется разрешение на запись системного звука, потому что macOS требует его, прежде чем приложение сможет обрабатывать звук другого приложения. MacMix использует его только для локального микширования в реальном времени при регулировке громкости отдельных приложений и не записывает, не сохраняет и не отправляет звук."
           }
         },
         "th" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "ฟีเจอร์มิกซ์ต้องใช้สิทธิ์หน้าจอและเสียงระบบ เพราะ macOS กำหนดให้แอปต้องได้รับสิทธิ์นี้ก่อนจึงจะประมวลผลเสียงจากแอปอื่นได้ MacMix ใช้สิทธิ์นี้เฉพาะสำหรับการมิกซ์แบบเรียลไทม์บนเครื่องเมื่อคุณปรับระดับเสียงแยกตามแอป และจะไม่บันทึก จัดเก็บ หรืออัปโหลดเนื้อหาหน้าจอหรือเสียง"
+            "value" : "ฟีเจอร์มิกซ์ต้องใช้สิทธิ์การบันทึกเสียงระบบ เพราะ macOS กำหนดให้แอปต้องได้รับสิทธิ์นี้ก่อนจึงจะประมวลผลเสียงจากแอปอื่นได้ MacMix ใช้สิทธิ์นี้เฉพาะสำหรับการมิกซ์แบบเรียลไทม์บนเครื่องเมื่อคุณปรับระดับเสียงแยกตามแอป และจะไม่บันทึก จัดเก็บ หรืออัปโหลดเสียง"
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Miksleme için Ekran ve Sistem Sesi izni gerekir, çünkü macOS bir uygulamanın başka bir uygulamanın sesini işlemeden önce bu izni almasını zorunlu kılar. MacMix bu izni yalnızca uygulama bazında ses düzeyini ayarladığınızda yerel gerçek zamanlı miksleme için kullanır; ekran içeriğini veya sesi kaydetmez, saklamaz ya da yüklemez."
+            "value" : "Miksleme için Sistem Sesi Kaydı izni gerekir, çünkü macOS bir uygulamanın başka bir uygulamanın sesini işlemeden önce bu izni almasını zorunlu kılar. MacMix bu izni yalnızca uygulama bazında ses düzeyini ayarladığınızda yerel gerçek zamanlı miksleme için kullanır; sesi kaydetmez, saklamaz ya da yüklemez."
           }
         },
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tính năng trộn âm cần quyền Màn hình & âm thanh hệ thống vì macOS yêu cầu quyền này trước khi một ứng dụng có thể xử lý âm thanh của ứng dụng khác. MacMix chỉ dùng quyền này để trộn âm cục bộ theo thời gian thực khi bạn điều chỉnh âm lượng từng ứng dụng, và không ghi, lưu hoặc tải nội dung màn hình hay âm thanh lên."
+            "value" : "Tính năng trộn âm cần quyền ghi âm âm thanh hệ thống vì macOS yêu cầu quyền này trước khi một ứng dụng có thể xử lý âm thanh của ứng dụng khác. MacMix chỉ dùng quyền này để trộn âm cục bộ theo thời gian thực khi bạn điều chỉnh âm lượng từng ứng dụng, và không ghi, lưu hoặc tải âm thanh lên."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "混音功能需要“录屏与系统录音”权限，因为 macOS 要求应用在处理其他 App 的音频前必须获得此权限。MacMix 只会在你调节单个 App 音量时用于本机实时混音，不会录制、保存或上传屏幕内容或音频。"
+            "value" : "混音功能需要“系统录音”权限，因为 macOS 要求应用在处理其他 App 的音频前必须获得此权限。MacMix 只会在你调节单个 App 音量时用于本机实时混音，不会录制、保存或上传音频。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "混音功能需要「錄屏與系統錄音」權限，因為 macOS 要求 App 在處理其他 App 的音訊前必須取得此權限。MacMix 只會在你調整單個 App 音量時用於本機即時混音，不會錄製、儲存或上傳螢幕內容或音訊。"
+            "value" : "混音功能需要「系統錄音」權限，因為 macOS 要求 App 在處理其他 App 的音訊前必須取得此權限。MacMix 只會在你調整單個 App 音量時用於本機即時混音，不會錄製、儲存或上傳音訊。"
           }
         }
       }
@@ -1809,115 +1809,115 @@
         }
       }
     },
-    "Screen & System Audio" : {
+    "System Audio Recording" : {
       "comment" : "Permission name shown on the about page.",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "الشاشة وصوت النظام"
+            "value" : "تسجيل صوت النظام"
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Bildschirm und Systemaudio"
+            "value" : "Systemaudioaufnahme"
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Pantalla y audio del sistema"
+            "value" : "Grabación de audio del sistema"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Écran et audio système"
+            "value" : "Enregistrement audio du système"
           }
         },
         "hi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "स्क्रीन और सिस्टम ऑडियो"
+            "value" : "सिस्टम ऑडियो रिकॉर्डिंग"
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Layar & Audio Sistem"
+            "value" : "Perekaman Audio Sistem"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Schermo e audio di sistema"
+            "value" : "Registrazione audio di sistema"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "画面とシステムオーディオ"
+            "value" : "システムオーディオ録音"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "화면 및 시스템 오디오"
+            "value" : "시스템 오디오 녹음"
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Scherm en systeemaudio"
+            "value" : "Systeemaudio-opname"
           }
         },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ekran i dźwięk systemowy"
+            "value" : "Nagrywanie dźwięku systemowego"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tela e Áudio do Sistema"
+            "value" : "Gravação de Áudio do Sistema"
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Экран и системный звук"
+            "value" : "Запись системного звука"
           }
         },
         "th" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "หน้าจอและเสียงระบบ"
+            "value" : "การบันทึกเสียงระบบ"
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ekran ve Sistem Sesi"
+            "value" : "Sistem Sesi Kaydı"
           }
         },
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Màn hình & âm thanh hệ thống"
+            "value" : "Ghi âm âm thanh hệ thống"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "录屏与系统录音"
+            "value" : "系统录音"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "錄屏與系統錄音"
+            "value" : "系統錄音"
           }
         }
       }

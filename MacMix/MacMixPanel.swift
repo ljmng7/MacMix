@@ -264,7 +264,7 @@ private struct ControlPanelAboutPage: View {
                         action: audioModel.requestSystemAudioPermission
                     )
 
-                    Text("Mixing needs Screen & System Audio permission because macOS requires this permission before an app can process another app's audio. MacMix uses it only for local real-time mixing when you adjust per-app volume, and does not record, save, or upload screen content or audio.")
+                    Text("Mixing needs System Audio Recording permission because macOS requires this permission before an app can process another app's audio. MacMix uses it only for local real-time mixing when you adjust per-app volume, and does not record, save, or upload audio.")
                         .font(.system(size: 13))
                         .foregroundStyle(.secondary)
                         .lineSpacing(3)
@@ -279,6 +279,9 @@ private struct ControlPanelAboutPage: View {
         }
         .frame(minWidth: ControlPanelLayout.detailMinWidth, maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .navigationTitle("About")
+        .onAppear {
+            audioModel.refreshSystemAudioPermissionStatus()
+        }
     }
 
     private static var versionText: String {
@@ -358,12 +361,12 @@ private struct PermissionAccessRow: View {
     let action: () -> Void
 
     private var isAuthorized: Bool {
-        !state.needsSystemAudioPermission
+        state.isSystemAudioPermissionAuthorized
     }
 
     var body: some View {
         HStack(alignment: .firstTextBaseline, spacing: 12) {
-            Text("Screen & System Audio")
+            Text("System Audio Recording")
                 .font(.system(size: 13, weight: .medium))
 
             Spacer(minLength: 16)
