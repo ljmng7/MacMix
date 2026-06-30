@@ -5,7 +5,7 @@
 MacMix 是一款轻量级 macOS 菜单栏音频混音工具，可以快速控制系统音量、音频设备、麦克风输入以及每个应用的输出音量。
 
 <p align="center">
-  <img src="Docs/images/screenshot.png" alt="MacMix 菜单栏音频混音器截图" width="440">
+  <img src="Docs/images/screenshot_cn.png" alt="MacMix 菜单栏音频混音器截图" width="440">
 </p>
 
 ## 功能
