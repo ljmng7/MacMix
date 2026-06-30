@@ -1,9 +1,20 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "CFBundleGetInfoString" : {
+      "comment" : "Get Info string",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "1.1"
+          }
+        }
+      }
+    },
     "CFBundleName" : {
       "comment" : "Bundle name",
-      "extractionState" : "extracted_with_value",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -19,7 +30,7 @@
         },
         "en" : {
           "stringUnit" : {
-            "state" : "new",
+            "state" : "translated",
             "value" : "MacMix"
           }
         },
@@ -134,12 +145,12 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "MacMix erfasst App-Audio nur, wenn du die Lautstarke einzelner Apps fur lokales Echtzeit-Mixing anpasst. Audio wird nicht aufgenommen, gespeichert oder hochgeladen."
+            "value" : "MacMix erfasst App-Audio nur, wenn du die Lautstärke einzelner Apps für lokales Echtzeit-Mixing anpasst. Audio wird nicht aufgenommen, gespeichert oder hochgeladen."
           }
         },
         "en" : {
           "stringUnit" : {
-            "state" : "new",
+            "state" : "translated",
             "value" : "MacMix only captures app audio when you adjust individual app volume for local real-time mixing. It does not record, save, or upload audio."
           }
         },
@@ -152,7 +163,7 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "MacMix capture l'audio d'une app uniquement lorsque vous reglez le volume d'une app individuelle pour le mixage local en temps reel. Il n'enregistre, ne sauvegarde et ne televerse aucun audio."
+            "value" : "MacMix capture l’audio d’une app uniquement lorsque vous réglez le volume d’une app individuelle pour le mixage local en temps réel. Il n’enregistre, ne sauvegarde et ne téléverse aucun audio."
           }
         },
         "hi" : {
@@ -188,19 +199,19 @@
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "MacMix legt app-audio alleen vast wanneer je het volume van afzonderlijke apps aanpast voor lokale realtime mixing. Audio wordt niet opgenomen, opgeslagen of geupload."
+            "value" : "MacMix legt app-audio alleen vast wanneer je het volume van afzonderlijke apps aanpast voor lokale realtime mixing. Audio wordt niet opgenomen, opgeslagen of geüpload."
           }
         },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "MacMix przechwytuje dzwiek aplikacji tylko podczas regulacji glosnosci pojedynczej aplikacji na potrzeby lokalnego miksowania w czasie rzeczywistym. Nie nagrywa, nie zapisuje ani nie przesyla dzwieku."
+            "value" : "MacMix przechwytuje dźwięk aplikacji tylko podczas regulacji głośności pojedynczej aplikacji na potrzeby lokalnego miksowania w czasie rzeczywistym. Nie nagrywa, nie zapisuje ani nie przesyła dźwięku."
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "O MacMix so captura audio de apps quando voce ajusta o volume de apps individuais para mixagem local em tempo real. Ele nao grava, salva nem envia audio."
+            "value" : "O MacMix só captura áudio de apps quando você ajusta o volume de apps individuais para mixagem local em tempo real. Ele não grava, salva nem envia áudio."
           }
         },
         "ru" : {
@@ -218,13 +229,13 @@
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "MacMix, yerel gercek zamanli miks icin yalnizca tek tek uygulama ses duzeylerini ayarladiginizda uygulama sesini yakalar. Sesi kaydetmez, saklamaz veya yuklemez."
+            "value" : "MacMix, yerel gerçek zamanlı miks için yalnızca tek tek uygulama ses düzeylerini ayarladığınızda uygulama sesini yakalar. Sesi kaydetmez, saklamaz veya yüklemez."
           }
         },
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "MacMix chi thu am thanh cua ung dung khi ban dieu chinh am luong tung ung dung de tron am thoi gian thuc cuc bo. Ung dung khong ghi, luu hoac tai am thanh len."
+            "value" : "MacMix chỉ thu âm thanh của ứng dụng khi bạn điều chỉnh âm lượng từng ứng dụng để trộn âm cục bộ theo thời gian thực. Ứng dụng không ghi, lưu hoặc tải âm thanh lên."
           }
         },
         "zh-Hans" : {
@@ -243,7 +254,6 @@
     },
     "NSHumanReadableCopyright" : {
       "comment" : "Copyright (human-readable)",
-      "extractionState" : "extracted_with_value",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -259,7 +269,7 @@
         },
         "en" : {
           "stringUnit" : {
-            "state" : "new",
+            "state" : "translated",
             "value" : "Ⓒ2026 Jazmín"
           }
         },

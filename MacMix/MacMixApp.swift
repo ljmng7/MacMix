@@ -6,6 +6,7 @@
 //
 
 import AppKit
+import Sparkle
 import SwiftUI
 
 @main
@@ -15,6 +16,16 @@ struct MacMixApp: App {
     @State private var isRunningFirstLaunchFlow = false
     @AppStorage("MacMix.HasRunFirstLaunchPermissionFlow") private var hasOpenedFirstLaunchAboutPage = false
     @Environment(\.openWindow) private var openWindow
+
+    private let updaterController: SPUStandardUpdaterController
+
+    init() {
+        updaterController = SPUStandardUpdaterController(
+            startingUpdater: true,
+            updaterDelegate: nil,
+            userDriverDelegate: nil
+        )
+    }
 
     var body: some Scene {
         MenuBarExtra {
@@ -28,7 +39,11 @@ struct MacMixApp: App {
         .menuBarExtraStyle(.window)
 
         Window("Control Panel", id: "control-panel") {
-            MacMixControlPanel(audioModel: audioModel, selection: $controlPanelSelection)
+            MacMixControlPanel(
+                audioModel: audioModel,
+                selection: $controlPanelSelection,
+                updater: updaterController.updater
+            )
                 .onAppear {
                     NSApp.setActivationPolicy(.regular)
                     NSApp.activate(ignoringOtherApps: true)
@@ -47,6 +62,10 @@ struct MacMixApp: App {
                     openWindow(id: "control-panel")
                     NSApp.activate(ignoringOtherApps: true)
                 }
+            }
+
+            CommandGroup(after: .appInfo) {
+                CheckForUpdatesView(updater: updaterController.updater)
             }
         }
     }

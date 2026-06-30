@@ -25,7 +25,7 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "A propos"
+            "value" : "À propos"
           }
         },
         "hi" : {
@@ -97,7 +97,7 @@
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Gioi thieu"
+            "value" : "Giới thiệu"
           }
         },
         "zh-Hans" : {
@@ -229,7 +229,6 @@
     },
     "Authorized" : {
       "comment" : "Permission status when System Audio Recording access is available.",
-      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -443,13 +442,13 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "构建%@"
+            "value" : "构建 %@"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "建置%@"
+            "value" : "建置 %@"
           }
         }
       }
@@ -478,7 +477,7 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Panneau de controle"
+            "value" : "Panneau de contrôle"
           }
         },
         "hi" : {
@@ -526,7 +525,7 @@
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Painel de Controle"
+            "value" : "Painel de controle"
           }
         },
         "ru" : {
@@ -550,7 +549,7 @@
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Bang dieu khien"
+            "value" : "Bảng điều khiển"
           }
         },
         "zh-Hans" : {
@@ -569,7 +568,6 @@
     },
     "Go to Authorize" : {
       "comment" : "Button on the about page that requests System Audio Recording permission or opens the related system privacy settings.",
-      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -705,7 +703,7 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Entree"
+            "value" : "Entrée"
           }
         },
         "hi" : {
@@ -747,7 +745,7 @@
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Wejscie"
+            "value" : "Wejście"
           }
         },
         "pt-BR" : {
@@ -771,13 +769,13 @@
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Giris"
+            "value" : "Giriş"
           }
         },
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Dau vao"
+            "value" : "Đầu vào"
           }
         },
         "zh-Hans" : {
@@ -890,7 +888,7 @@
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tron am"
+            "value" : "Trộn âm"
           }
         },
         "zh-Hans" : {
@@ -1038,7 +1036,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ninguna app esta reproduciendo audio"
+            "value" : "Ninguna app está reproduciendo audio"
           }
         },
         "fr" : {
@@ -1086,13 +1084,13 @@
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Zadna aplikacja nie odtwarza audio"
+            "value" : "Żadna aplikacja nie odtwarza dźwięku"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Nenhum app esta reproduzindo audio"
+            "value" : "Nenhum app está reproduzindo áudio"
           }
         },
         "ru" : {
@@ -1110,13 +1108,13 @@
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ses calan uygulama yok"
+            "value" : "Ses çalan uygulama yok"
           }
         },
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Khong co ung dung nao dang phat am thanh"
+            "value" : "Không có ứng dụng nào đang phát âm thanh"
           }
         },
         "zh-Hans" : {
@@ -1145,7 +1143,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Keine verfugbaren Gerate"
+            "value" : "Keine verfügbaren Geräte"
           }
         },
         "es" : {
@@ -1199,13 +1197,13 @@
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Brak dostepnych urzadzen"
+            "value" : "Brak dostępnych urządzeń"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Nenhum dispositivo disponivel"
+            "value" : "Nenhum dispositivo disponível"
           }
         },
         "ru" : {
@@ -1223,13 +1221,13 @@
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Kullanilabilir aygit yok"
+            "value" : "Kullanılabilir aygıt yok"
           }
         },
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Khong co thiet bi kha dung"
+            "value" : "Không có thiết bị khả dụng"
           }
         },
         "zh-Hans" : {
@@ -1258,19 +1256,19 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Beim Anmelden offnen"
+            "value" : "Beim Anmelden öffnen"
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Abrir al iniciar sesion"
+            "value" : "Abrir al iniciar sesión"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ouvrir a l'ouverture de session"
+            "value" : "Ouvrir à l’ouverture de session"
           }
         },
         "hi" : {
@@ -1318,7 +1316,7 @@
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Abrir ao iniciar sessao"
+            "value" : "Abrir ao iniciar sessão"
           }
         },
         "ru" : {
@@ -1336,13 +1334,13 @@
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Giris Yapinca Ac"
+            "value" : "Giriş yapınca aç"
           }
         },
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Mo khi dang nhap"
+            "value" : "Mở khi đăng nhập"
           }
         },
         "zh-Hans" : {
@@ -1371,7 +1369,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Hauptfenster offnen"
+            "value" : "Hauptfenster öffnen"
           }
         },
         "es" : {
@@ -1383,7 +1381,7 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ouvrir la fenetre principale"
+            "value" : "Ouvrir la fenêtre principale"
           }
         },
         "hi" : {
@@ -1425,7 +1423,7 @@
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Otworz glowne okno"
+            "value" : "Otwórz główne okno"
           }
         },
         "pt-BR" : {
@@ -1449,13 +1447,13 @@
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ana Pencereyi Ac"
+            "value" : "Ana pencereyi aç"
           }
         },
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Mo cua so chinh"
+            "value" : "Mở cửa sổ chính"
           }
         },
         "zh-Hans" : {
@@ -1538,13 +1536,13 @@
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Wyjscie"
+            "value" : "Wyjście"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Saida"
+            "value" : "Saída"
           }
         },
         "ru" : {
@@ -1562,13 +1560,13 @@
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Cikis"
+            "value" : "Çıkış"
           }
         },
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Dau ra"
+            "value" : "Đầu ra"
           }
         },
         "zh-Hans" : {
@@ -1788,13 +1786,13 @@
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "MacMix'ten Cik"
+            "value" : "MacMix'ten çık"
           }
         },
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Thoat MacMix"
+            "value" : "Thoát MacMix"
           }
         },
         "zh-Hans" : {
@@ -1829,13 +1827,13 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Configuracion"
+            "value" : "Configuración"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Reglages"
+            "value" : "Réglages"
           }
         },
         "hi" : {
@@ -1907,7 +1905,7 @@
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Cai dat"
+            "value" : "Cài đặt"
           }
         },
         "zh-Hans" : {
@@ -1948,7 +1946,7 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Afficher l'entree dans le panneau"
+            "value" : "Afficher l’entrée dans le panneau"
           }
         },
         "hi" : {
@@ -1990,7 +1988,7 @@
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Pokaz wejscie w panelu"
+            "value" : "Pokaż wejście w panelu"
           }
         },
         "pt-BR" : {
@@ -2014,13 +2012,13 @@
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Panelde girisi goster"
+            "value" : "Panelde girişi göster"
           }
         },
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Hien thi dau vao trong bang"
+            "value" : "Hiển thị đầu vào trong bảng"
           }
         },
         "zh-Hans" : {
@@ -2103,13 +2101,13 @@
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Pokaz wyjscie w panelu"
+            "value" : "Pokaż wyjście w panelu"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Mostrar saida no painel"
+            "value" : "Mostrar saída no painel"
           }
         },
         "ru" : {
@@ -2127,13 +2125,13 @@
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Panelde cikisi goster"
+            "value" : "Panelde çıkışı göster"
           }
         },
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Hien thi dau ra trong bang"
+            "value" : "Hiển thị đầu ra trong bảng"
           }
         },
         "zh-Hans" : {
@@ -2388,7 +2386,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Berechtigung fur Systemaudioaufnahme erforderlich"
+            "value" : "Berechtigung für Systemaudioaufnahme erforderlich"
           }
         },
         "es" : {
@@ -2400,7 +2398,7 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Autorisation d'enregistrement audio systeme requise"
+            "value" : "Autorisation d’enregistrement audio système requise"
           }
         },
         "hi" : {
@@ -2442,13 +2440,13 @@
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Wymagane uprawnienie do nagrywania dzwieku systemowego"
+            "value" : "Wymagane uprawnienie do nagrywania dźwięku systemowego"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Permissao para gravar audio do sistema necessaria"
+            "value" : "Permissão para gravar áudio do sistema necessária"
           }
         },
         "ru" : {
@@ -2466,13 +2464,13 @@
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Sistem sesi kayit izni gerekli"
+            "value" : "Sistem sesi kayıt izni gerekli"
           }
         },
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Can quyen ghi am am thanh he thong"
+            "value" : "Cần quyền ghi âm âm thanh hệ thống"
           }
         },
         "zh-Hans" : {
@@ -2614,7 +2612,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Unbekanntes Gerat"
+            "value" : "Unbekanntes Gerät"
           }
         },
         "es" : {
@@ -2668,7 +2666,7 @@
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Nieznane urzadzenie"
+            "value" : "Nieznane urządzenie"
           }
         },
         "pt-BR" : {
@@ -2692,13 +2690,13 @@
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Bilinmeyen Aygit"
+            "value" : "Bilinmeyen aygıt"
           }
         },
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Thiet bi khong xac dinh"
+            "value" : "Thiết bị không xác định"
           }
         },
         "zh-Hans" : {
@@ -2817,13 +2815,13 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "版本%@"
+            "value" : "版本 %@"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "版本%@"
+            "value" : "版本 %@"
           }
         }
       }
@@ -2930,13 +2928,13 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "版本%1$@(%2$@)"
+            "value" : "版本 %1$@（%2$@）"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "版本%1$@(%2$@)"
+            "value" : "版本 %1$@（%2$@）"
           }
         }
       }
@@ -3054,11 +3052,231 @@
         }
       }
     },
-    "前往授权" : {
-
+    "Check for Updates..." : {
+      "comment" : "App menu item that opens Sparkle update checking.",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "التحقق من وجود تحديثات..."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nach Updates suchen..."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Buscar actualizaciones..."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rechercher les mises à jour..."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "अपडेट देखें..."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Periksa Pembaruan..."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cerca aggiornamenti..."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "アップデートを確認..."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "업데이트 확인..."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zoek naar updates..."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sprawdź uaktualnienia..."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Buscar Atualizações..."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Проверить обновления..."
+          }
+        },
+        "th" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ตรวจหาการอัปเดต..."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Güncellemeleri denetle..."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kiểm tra bản cập nhật..."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "检查更新..."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "檢查更新..."
+          }
+        }
+      }
     },
-    "已授权" : {
-
+    "Automatic Updates" : {
+      "comment" : "Settings toggle for enabling automatic update checks and downloads.",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "التحديثات التلقائية"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Automatische Updates"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Actualizaciones automáticas"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mises à jour automatiques"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "स्वचालित अपडेट"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pembaruan Otomatis"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aggiornamenti automatici"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "自動アップデート"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "자동 업데이트"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Automatische updates"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Automatyczne uaktualnienia"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Atualizações automáticas"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Автоматические обновления"
+          }
+        },
+        "th" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "อัปเดตอัตโนมัติ"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Otomatik Güncellemeler"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tự động cập nhật"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "自动更新"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "自動更新"
+          }
+        }
+      }
     }
   },
   "version" : "1.0"

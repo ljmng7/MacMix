@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		DC9A2F572FF3ABCD00CE0317 /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = DC9A2F562FF3ABCD00CE0317 /* Sparkle */; };
 		DCA2568E2FF235B500CE0317 /* MacMix.icon in Resources */ = {isa = PBXBuildFile; fileRef = DCA2568D2FF235B500CE0317 /* MacMix.icon */; };
 /* End PBXBuildFile section */
 
@@ -27,6 +28,7 @@
 		DC17C3332FF21B870075D0CC /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			files = (
+				DC9A2F572FF3ABCD00CE0317 /* Sparkle in Frameworks */,
 			);
 		};
 /* End PBXFrameworksBuildPhase section */
@@ -66,6 +68,9 @@
 				DC17C3382FF21B870075D0CC /* MacMix */,
 			);
 			name = MacMix;
+			packageProductDependencies = (
+				DC9A2F562FF3ABCD00CE0317 /* Sparkle */,
+			);
 			productName = MacMix;
 			productReference = DC17C3362FF21B870075D0CC /* MacMix.app */;
 			productType = "com.apple.product-type.application";
@@ -112,6 +117,9 @@
 			);
 			mainGroup = DC17C32D2FF21B870075D0CC;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				DC9A2F552FF3ABCD00CE0317 /* XCRemoteSwiftPackageReference "Sparkle" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = DC17C3372FF21B870075D0CC /* Products */;
 			projectDirPath = "";
@@ -268,7 +276,7 @@
 				CODE_SIGN_ENTITLEMENTS = Config/MacMix.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = GZQ8FJW98B;
 				ENABLE_APP_SANDBOX = NO;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -282,7 +290,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 15.0;
-				MARKETING_VERSION = 1.0.1;
+				MARKETING_VERSION = 1.1;
 				PRODUCT_BUNDLE_IDENTIFIER = jazmin.MacMix;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = NO;
@@ -304,7 +312,7 @@
 				CODE_SIGN_INJECT_BASE_ENTITLEMENTS = NO;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = GZQ8FJW98B;
 				ENABLE_APP_SANDBOX = NO;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -318,7 +326,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 15.0;
-				MARKETING_VERSION = 1.0.1;
+				MARKETING_VERSION = 1.1;
 				PRODUCT_BUNDLE_IDENTIFIER = jazmin.MacMix;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = NO;
@@ -351,6 +359,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		DC9A2F552FF3ABCD00CE0317 /* XCRemoteSwiftPackageReference "Sparkle" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/sparkle-project/Sparkle";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.0.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		DC9A2F562FF3ABCD00CE0317 /* Sparkle */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = DC9A2F552FF3ABCD00CE0317 /* XCRemoteSwiftPackageReference "Sparkle" */;
+			productName = Sparkle;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = DC17C32E2FF21B870075D0CC /* Project object */;
 	validationLevel = 1;

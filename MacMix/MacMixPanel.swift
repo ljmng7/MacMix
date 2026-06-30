@@ -7,6 +7,7 @@
 
 import AppKit
 import ServiceManagement
+import Sparkle
 import SwiftUI
 
 struct MacMixPanel: View {
@@ -76,13 +77,14 @@ private enum PanelVisibilityPreference {
 struct MacMixControlPanel: View {
     let audioModel: AudioModel
     @Binding var selection: ControlPanelPage
+    let updater: SPUUpdater
     @State private var columnVisibility: NavigationSplitViewVisibility = .all
 
     var body: some View {
         NavigationSplitView(columnVisibility: $columnVisibility) {
             ControlPanelSidebar(selection: $selection)
         } detail: {
-            ControlPanelDetail(selection: selection, audioModel: audioModel)
+            ControlPanelDetail(selection: selection, audioModel: audioModel, updater: updater)
         }
     }
 }
@@ -119,14 +121,15 @@ private struct ControlPanelSidebar: View {
 private struct ControlPanelDetail: View {
     let selection: ControlPanelPage
     let audioModel: AudioModel
+    let updater: SPUUpdater
 
     var body: some View {
         Group {
             switch selection {
             case .settings:
-                ControlPanelSettingsPage(audioModel: audioModel)
+                ControlPanelSettingsPage(audioModel: audioModel, updater: updater)
             case .about:
-                ControlPanelAboutPage(audioModel: audioModel)
+                ControlPanelAboutPage(audioModel: audioModel, updater: updater)
             }
         }
         .navigationSplitViewColumnWidth(
@@ -143,6 +146,7 @@ enum ControlPanelPage: Hashable {
 
 private struct ControlPanelSettingsPage: View {
     let audioModel: AudioModel
+    let updater: SPUUpdater
     @AppStorage(PanelVisibilityPreference.showsOutput) private var showsOutputInPanel = true
     @AppStorage(PanelVisibilityPreference.showsInput) private var showsInputInPanel = true
 
@@ -196,7 +200,11 @@ private struct ControlPanelSettingsPage: View {
 
                 Divider()
 
-                OpenAtLoginToggle()
+                HStack(spacing: 28) {
+                    OpenAtLoginToggle()
+
+                    AutomaticUpdatesToggle(updater: updater)
+                }
             }
             .padding(24)
             .frame(maxWidth: 620, alignment: .topLeading)
@@ -228,6 +236,7 @@ private struct PanelVisibilityHeader: View {
 
 private struct ControlPanelAboutPage: View {
     let audioModel: AudioModel
+    let updater: SPUUpdater
     @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
@@ -244,7 +253,7 @@ private struct ControlPanelAboutPage: View {
                         .shadow(color: .black.opacity(colorScheme == .dark ? 0.34 : 0.22), radius: 18, x: 0, y: 10)
                         .accessibilityHidden(true)
 
-                    Text(verbatim: "MacMic")
+                    Text(verbatim: "MacMix")
                         .font(.system(size: 28, weight: .semibold))
 
                     Text(Self.versionText)
@@ -254,6 +263,11 @@ private struct ControlPanelAboutPage: View {
                         .font(.system(size: 12))
                 }
                 .frame(maxWidth: .infinity)
+
+                CheckForUpdatesView(updater: updater, showsIcon: true)
+                    .buttonStyle(.bordered)
+                    .controlSize(.large)
+                    .frame(maxWidth: .infinity)
 
                 VStack(alignment: .leading, spacing: 12) {
                     Text("Privacy Information")
@@ -369,12 +383,12 @@ private struct PermissionAccessRow: View {
             Spacer(minLength: 16)
 
             if isAuthorized {
-                Text("已授权")
+                Text("Authorized")
                     .font(.system(size: 13, weight: .medium))
                     .foregroundStyle(.green)
             } else {
                 Button(action: action) {
-                    Text("前往授权")
+                    Text("Go to Authorize")
                         .font(.system(size: 13, weight: .semibold))
                         .foregroundStyle(.red)
                 }
@@ -391,6 +405,7 @@ private struct PermissionAccessRow: View {
 private struct OpenAtLoginToggle: View {
     @State private var isEnabled = OpenAtLoginToggle.currentStatus
     @State private var isUpdating = false
+    @AppStorage("MacMix.HasConfiguredOpenAtLoginDefault") private var hasConfiguredDefault = false
 
     var body: some View {
         Toggle(
@@ -404,8 +419,25 @@ private struct OpenAtLoginToggle: View {
         .font(.system(size: 13, weight: .medium))
         .disabled(isUpdating)
         .onAppear {
-            isEnabled = Self.currentStatus
+            enableByDefaultIfNeeded()
         }
+    }
+
+    private func enableByDefaultIfNeeded() {
+        guard !hasConfiguredDefault else {
+            isEnabled = Self.currentStatus
+            return
+        }
+
+        hasConfiguredDefault = true
+
+        do {
+            try SMAppService.mainApp.register()
+        } catch {
+            hasConfiguredDefault = false
+        }
+
+        isEnabled = Self.currentStatus
     }
 
     private func updateLoginItem(_ shouldEnable: Bool) {

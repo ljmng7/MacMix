@@ -20,10 +20,16 @@ DerivedData/
 
 # App distribution artifacts
 *.app
+*.zip
 *.dmg
 *.pkg
 *.ipa
 *.dSYM
+
+# Sparkle signing key exports
+SparklePrivateKey*
+sparkle_private_key*
+*.ed25519
 
 # Playgrounds
 timeline.xctimeline
