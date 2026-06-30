@@ -1,27 +1,55 @@
-# MacMix
-
-Language: English | [简体中文](README.zh-CN.md)
-
-MacMix is a lightweight macOS menu bar audio mixer for quickly controlling system volume, audio devices, microphone input, and per-app output levels.
-
 <p align="center">
-  <img src="Docs/images/screenshot.png" alt="MacMix menu bar audio mixer screenshot" width="440">
+  <img src="Docs/images/app-icon.png" alt="MacMix app icon" width="128" height="128">
 </p>
 
-## Features
+<h1 align="center">MacMix</h1>
 
-- Control system output volume from the menu bar.
-- Switch between available output devices.
-- Switch between available input devices.
-- Adjust microphone input volume.
-- Mix individual app volumes in real time.
-- Keep the menu bar panel focused by showing or hiding output and input sections.
-- Launch automatically at login.
-- Uses a native SwiftUI interface designed for macOS.
+<p align="center">
+  A native macOS menu bar audio mixer for system volume, audio devices, microphone input, and per-app sound control.
+</p>
+
+<p align="center">
+  English | <a href="README.zh-CN.md">简体中文</a>
+</p>
+
+<p align="center">
+  <a href="https://github.com/ljmng7/MacMix/releases/latest">
+    <img src="Docs/images/download-macos.png" alt="Download app for macOS" width="120">
+  </a>
+</p>
+
+<p align="center">
+  <a href="#privacy">Privacy</a>
+  ·
+  <a href="#support">Support</a>
+  ·
+  <a href="#build-from-source">Build from Source</a>
+</p>
+
+<p align="center">
+  <img src="Docs/images/screenshot.png" alt="MacMix menu bar audio mixer screenshot" width="560">
+</p>
+
+## Overview
+
+MacMix keeps everyday audio controls one click away in the macOS menu bar. It is designed for users who frequently switch audio devices, manage microphone input, or need finer control over the volume of individual apps.
+
+Everything is presented in a compact native panel, so you can adjust sound without opening System Settings or interrupting your current workflow.
+
+## Highlights
+
+| Capability | What it does |
+| --- | --- |
+| System volume | Adjust the current output device volume directly from the menu bar. |
+| Output devices | Switch between speakers, headphones, AirPods, external displays, and other available output devices. |
+| Input devices | Switch microphones and control input volume from the same panel. |
+| Per-app mixing | Lower or raise the volume of individual apps while they are producing audio. |
+| Menu bar first | Runs quietly as a menu bar utility, with an optional main window for settings and app information. |
+| Automatic updates | Uses Sparkle to check for and install app updates. |
 
 ## Download
 
-Download the latest release from the [GitHub Releases page](https://github.com/ljmng7/MacMix/releases/latest).
+Download the latest `.dmg` from the [GitHub Releases page](https://github.com/ljmng7/MacMix/releases/latest).
 
 ## Requirements
 
@@ -30,16 +58,29 @@ Download the latest release from the [GitHub Releases page](https://github.com/l
 
 ## Installation
 
-1. Download the `.dmg` file from the latest release.
+1. Download the latest `.dmg`.
 2. Open the disk image.
-3. Drag MacMix into your Applications folder.
-4. Launch MacMix and use the menu bar volume icon to open the mixer.
+3. Drag `MacMix.app` into the Applications folder.
+4. Launch MacMix and open the mixer from the menu bar volume icon.
 
 ## Privacy
 
-MacMix performs audio mixing locally on your Mac. The app requests System Audio Recording permission because macOS requires that permission before an app can process another app's audio for per-app volume control.
+MacMix performs audio processing locally on your Mac.
+
+Per-app mixing uses macOS audio process taps, so macOS requires System Audio Recording permission before MacMix can process another app's audio. MacMix uses this permission only for local real-time volume mixing.
 
 MacMix does not record, save, or upload audio.
+
+## Support
+
+If you enjoy my apps, you can support future updates here. This is completely optional and won't unlock any extra features.
+
+<p align="center">
+  <a href="https://ko-fi.com/ljmng7">
+    <strong>Buy me a coffee on</strong>
+    <img src="Docs/images/ko-fi.jpg" alt="Support on Ko-fi" width="120" align="middle">
+  </a>
+</p>
 
 ## Build From Source
 
@@ -56,4 +97,5 @@ MacMix does not record, save, or upload audio.
 
 ## Notes
 
-Per-app mixing depends on macOS audio process taps, so apps may appear in the mixer only while they are actively producing output audio.
+- Apps appear in the per-app mixer only while macOS reports that they are actively producing output audio.
+- Per-app volume changes are stored locally and restored when matching apps appear again.
