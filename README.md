@@ -73,7 +73,7 @@ MacMix does not record, save, or upload audio.
 
 ## Support
 
-If you enjoy my apps, you can support future updates here. This is completely optional and won't unlock any extra features.
+MacMix is compeletely free and open source.If you enjoy it, you can buy me a coffee to support future updates here, but genuinely not expected 🙏
 
 <p align="center">
   <a href="https://ko-fi.com/ljmng7">
