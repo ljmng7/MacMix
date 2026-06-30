@@ -261,7 +261,7 @@ private struct ControlPanelAboutPage: View {
 
                     PermissionAccessRow(
                         state: audioModel.outputAppsState,
-                        action: audioModel.requestSystemAudioPermission
+                        action: audioModel.openSystemAudioRecordingSettingsForAuthorization
                     )
 
                     Text("Mixing needs System Audio Recording permission because macOS requires this permission before an app can process another app's audio. MacMix uses it only for local real-time mixing when you adjust per-app volume, and does not record, save, or upload audio.")
@@ -279,9 +279,6 @@ private struct ControlPanelAboutPage: View {
         }
         .frame(minWidth: ControlPanelLayout.detailMinWidth, maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .navigationTitle("About")
-        .onAppear {
-            audioModel.refreshSystemAudioPermissionStatus()
-        }
     }
 
     private static var versionText: String {
@@ -372,12 +369,12 @@ private struct PermissionAccessRow: View {
             Spacer(minLength: 16)
 
             if isAuthorized {
-                Text("Authorized")
+                Text("已授权")
                     .font(.system(size: 13, weight: .medium))
                     .foregroundStyle(.green)
             } else {
                 Button(action: action) {
-                    Text("Go to Authorize")
+                    Text("前往授权")
                         .font(.system(size: 13, weight: .semibold))
                         .foregroundStyle(.red)
                 }

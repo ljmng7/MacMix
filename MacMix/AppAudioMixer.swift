@@ -22,25 +22,23 @@ nonisolated final class AppAudioMixer {
     }
 
     private var engines: [String: any AppGainEngine] = [:]
-    private var lastPermissionRequestSucceeded: Bool?
 
     private init() {}
 
     func hasSystemAudioPermission() -> Bool {
-        lastPermissionRequestSucceeded == true || requestSystemAudioPermission()
+        probeSystemAudioPermission()
     }
 
     func requestSystemAudioPermissionIfNeeded() -> Bool {
-        if lastPermissionRequestSucceeded == true {
-            return true
-        }
-
-        return requestSystemAudioPermission()
+        probeSystemAudioPermission()
     }
 
     func requestSystemAudioPermission() -> Bool {
+        probeSystemAudioPermission()
+    }
+
+    private func probeSystemAudioPermission() -> Bool {
         guard #available(macOS 14.4, *) else {
-            lastPermissionRequestSucceeded = false
             return false
         }
 
@@ -53,12 +51,10 @@ nonisolated final class AppAudioMixer {
         let status = AudioHardwareCreateProcessTap(tapDescription, &tapID)
 
         guard status == noErr, tapID != kAudioObjectUnknown else {
-            lastPermissionRequestSucceeded = false
             return false
         }
 
         AudioHardwareDestroyProcessTap(tapID)
-        lastPermissionRequestSucceeded = true
         return true
     }
 
@@ -77,6 +73,15 @@ nonisolated final class AppAudioMixer {
         if let engine = engines[app.id] {
             if engine.tappedObjects == app.audioObjectIDs,
                engine.outputDeviceUID == outputDeviceUID {
+                guard canCreateProcessTap(
+                    audioObjectIDs: app.audioObjectIDs,
+                    outputDeviceUID: outputDeviceUID
+                ) else {
+                    engine.stop()
+                    engines.removeValue(forKey: app.id)
+                    return false
+                }
+
                 engine.gain = clampedVolume
                 return true
             }
@@ -127,6 +132,48 @@ nonisolated final class AppAudioMixer {
     private func isUnity(_ volume: Double) -> Bool {
         abs(volume - 1) < 0.005
     }
+
+    private func canCreateProcessTap(audioObjectIDs: [AudioObjectID], outputDeviceUID: String) -> Bool {
+        guard #available(macOS 14.4, *),
+              !audioObjectIDs.isEmpty else {
+            return false
+        }
+
+        let candidates = [
+            Self.configurePermissionCheckTap(
+                CATapDescription(stereoMixdownOfProcesses: audioObjectIDs),
+                name: "MacMix Permission Recheck"
+            ),
+            Self.configurePermissionCheckTap(
+                CATapDescription(processes: audioObjectIDs, deviceUID: outputDeviceUID, stream: 0),
+                name: "MacMix Permission Recheck Output"
+            ),
+        ]
+
+        for tapDescription in candidates {
+            var tapID = AudioObjectID(kAudioObjectUnknown)
+
+            if AudioHardwareCreateProcessTap(tapDescription, &tapID) == noErr,
+               tapID != kAudioObjectUnknown {
+                AudioHardwareDestroyProcessTap(tapID)
+                return true
+            }
+        }
+
+        return false
+    }
+
+    @available(macOS 14.4, *)
+    @discardableResult
+    private static func configurePermissionCheckTap(
+        _ tapDescription: CATapDescription,
+        name: String
+    ) -> CATapDescription {
+        tapDescription.name = name
+        tapDescription.muteBehavior = .unmuted
+        tapDescription.isPrivate = true
+        return tapDescription
+    }
 }
 
 private protocol AppGainEngine: AnyObject {
@@ -163,21 +210,13 @@ nonisolated private final class ProcessTapGainEngine: AppGainEngine {
         self.gainPointer = UnsafeMutablePointer<Float>.allocate(capacity: 1)
         self.gainPointer.initialize(to: max(0, min(1, gain)))
 
-        var tapDescription = CATapDescription(processes: audioObjectIDs, deviceUID: outputDeviceUID, stream: 0)
-        Self.configure(tapDescription)
-
-        if AudioHardwareCreateProcessTap(tapDescription, &tapID) != noErr || tapID == kAudioObjectUnknown {
-            let fallbackTapDescription = CATapDescription(stereoMixdownOfProcesses: audioObjectIDs)
-            Self.configure(fallbackTapDescription)
-            tapID = AudioObjectID(kAudioObjectUnknown)
-
-            guard AudioHardwareCreateProcessTap(fallbackTapDescription, &tapID) == noErr,
-                  tapID != kAudioObjectUnknown else {
-                destroyGainPointer()
-                return nil
-            }
-
-            tapDescription = fallbackTapDescription
+        guard let tapDescription = Self.createProcessTap(
+            audioObjectIDs: audioObjectIDs,
+            outputDeviceUID: outputDeviceUID,
+            tapID: &tapID
+        ) else {
+            destroyGainPointer()
+            return nil
         }
 
         guard let tapFormat = Self.tapFormat(for: tapID) else {
@@ -265,9 +304,42 @@ nonisolated private final class ProcessTapGainEngine: AppGainEngine {
         destroyedGainPointer = true
     }
 
-    private static func configure(_ tapDescription: CATapDescription) {
+    private static func createProcessTap(
+        audioObjectIDs: [AudioObjectID],
+        outputDeviceUID: String,
+        tapID: inout AudioObjectID
+    ) -> CATapDescription? {
+        // Some virtual output devices expose stream 0 but do not route app audio through it.
+        let candidates = [
+            Self.configure(
+                CATapDescription(stereoMixdownOfProcesses: audioObjectIDs),
+                name: "MacMix Stereo Mixdown"
+            ),
+            Self.configure(
+                CATapDescription(processes: audioObjectIDs, deviceUID: outputDeviceUID, stream: 0),
+                name: "MacMix Output Stream 0"
+            ),
+        ]
+
+        for tapDescription in candidates {
+            tapID = AudioObjectID(kAudioObjectUnknown)
+
+            if AudioHardwareCreateProcessTap(tapDescription, &tapID) == noErr,
+               tapID != kAudioObjectUnknown {
+                return tapDescription
+            }
+        }
+
+        tapID = AudioObjectID(kAudioObjectUnknown)
+        return nil
+    }
+
+    @discardableResult
+    private static func configure(_ tapDescription: CATapDescription, name: String) -> CATapDescription {
+        tapDescription.name = name
         tapDescription.muteBehavior = .mutedWhenTapped
         tapDescription.isPrivate = true
+        return tapDescription
     }
 
     private static func tapFormat(for tapID: AudioObjectID) -> AudioStreamBasicDescription? {

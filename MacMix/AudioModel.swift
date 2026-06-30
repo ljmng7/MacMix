@@ -72,10 +72,11 @@ final class AudioModel: NSObject, ObservableObject {
         outputVolumeObserver = CoreAudioVolumeObserver { [weak self] in
             self?.refreshOutputState()
         }
+
         outputVolumeObserver?.start()
         refresh()
         refreshTimer = Timer.scheduledTimer(
-            timeInterval: 2,
+            timeInterval: 1,
             target: self,
             selector: #selector(refreshFromTimer),
             userInfo: nil,
@@ -142,6 +143,7 @@ final class AudioModel: NSObject, ObservableObject {
 
         guard !audioAppsMatch(outputAppsState.apps, apps) else {
             pendingOutputApps = nil
+            reconcileOutputApps()
             return
         }
 
@@ -160,28 +162,27 @@ final class AudioModel: NSObject, ObservableObject {
 
     func requestSystemAudioPermissionIfNeeded() {
         let permissionAvailable = appAudioMixer.requestSystemAudioPermissionIfNeeded()
-        setSystemAudioPermissionAuthorized(permissionAvailable)
-        setNeedsSystemAudioPermission(!permissionAvailable)
+        handleSystemAudioPermissionRequest(permissionAvailable)
     }
 
     func requestSystemAudioPermission() {
         let permissionAvailable = appAudioMixer.requestSystemAudioPermission()
-        setSystemAudioPermissionAuthorized(permissionAvailable)
-        setNeedsSystemAudioPermission(!permissionAvailable)
-
-        if !permissionAvailable {
-            openSystemAudioRecordingSettings()
-        } else {
-            reconcileOutputApps()
-        }
+        handleSystemAudioPermissionRequest(permissionAvailable)
     }
 
-    func refreshSystemAudioPermissionStatus() {
-        let permissionAvailable = appAudioMixer.hasSystemAudioPermission()
-        setSystemAudioPermissionAuthorized(permissionAvailable)
+    func openSystemAudioRecordingSettingsForAuthorization() {
+        let privacyURLs = [
+            "x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture",
+            "x-apple.systempreferences:com.apple.preference.security?Privacy",
+        ]
 
-        if permissionAvailable {
-            setNeedsSystemAudioPermission(false)
+        for privacyURL in privacyURLs {
+            guard let url = URL(string: privacyURL),
+                  NSWorkspace.shared.open(url) else {
+                continue
+            }
+
+            return
         }
     }
 
@@ -241,27 +242,64 @@ final class AudioModel: NSObject, ObservableObject {
 
             apps[index].volume = clampedVolume
             outputAppsState.apps = apps
-            setNeedsSystemAudioPermission(!appAudioMixer.apply(
-                clampedVolume,
-                to: apps[index],
-                outputDeviceUID: currentOutputDevice?.uid
-            ))
+            updateSystemAudioPermissionAfterMixAttempt(
+                appAudioMixer.apply(
+                    clampedVolume,
+                    to: apps[index],
+                    outputDeviceUID: currentOutputDevice?.uid
+                ),
+                requiresPermission: appVolumeRequiresSystemAudioPermission(clampedVolume),
+                requestAuthorizationIfDenied: true
+            )
         } else {
             var updatedApp = app
             updatedApp.volume = clampedVolume
-            setNeedsSystemAudioPermission(!appAudioMixer.apply(
-                clampedVolume,
-                to: updatedApp,
-                outputDeviceUID: currentOutputDevice?.uid
-            ))
+            updateSystemAudioPermissionAfterMixAttempt(
+                appAudioMixer.apply(
+                    clampedVolume,
+                    to: updatedApp,
+                    outputDeviceUID: currentOutputDevice?.uid
+                ),
+                requiresPermission: appVolumeRequiresSystemAudioPermission(clampedVolume),
+                requestAuthorizationIfDenied: true
+            )
         }
     }
 
     private func reconcileOutputApps() {
-        setNeedsSystemAudioPermission(!appAudioMixer.reconcile(
-            apps: outputAppsState.apps,
-            outputDeviceUID: currentOutputDevice?.uid
-        ))
+        updateSystemAudioPermissionAfterMixAttempt(
+            appAudioMixer.reconcile(
+                apps: outputAppsState.apps,
+                outputDeviceUID: currentOutputDevice?.uid
+            ),
+            requiresPermission: activeOutputMixRequiresSystemAudioPermission,
+            requestAuthorizationIfDenied: false
+        )
+    }
+
+    private func updateSystemAudioPermissionAfterMixAttempt(
+        _ isMixingAvailable: Bool,
+        requiresPermission: Bool,
+        requestAuthorizationIfDenied: Bool
+    ) {
+        guard !isMixingAvailable else {
+            if requiresPermission {
+                setSystemAudioPermissionAuthorized(true)
+            }
+            setNeedsSystemAudioPermission(false)
+            return
+        }
+
+        if requiresPermission {
+            setSystemAudioPermissionAuthorized(false)
+            setNeedsSystemAudioPermission(true)
+
+            if requestAuthorizationIfDenied {
+                requestSystemAudioPermission()
+            }
+        } else {
+            setNeedsSystemAudioPermission(false)
+        }
     }
 
     private func suppressOutputAppRefresh() {
@@ -355,6 +393,23 @@ final class AudioModel: NSObject, ObservableObject {
         outputAppsState.isSystemAudioPermissionAuthorized = isAuthorized
     }
 
+    private func handleSystemAudioPermissionRequest(_ permissionAvailable: Bool) {
+        if permissionAvailable {
+            setNeedsSystemAudioPermission(false)
+            reconcileOutputApps()
+        } else {
+            setNeedsSystemAudioPermission(true)
+        }
+    }
+
+    private var activeOutputMixRequiresSystemAudioPermission: Bool {
+        outputAppsState.apps.contains { appVolumeRequiresSystemAudioPermission($0.volume) }
+    }
+
+    private func appVolumeRequiresSystemAudioPermission(_ volume: Double) -> Bool {
+        !nearlyEqual(volume, 1)
+    }
+
     private func audioAppsMatch(_ lhs: [AudioApp], _ rhs: [AudioApp]) -> Bool {
         guard lhs.count == rhs.count else {
             return false
@@ -388,18 +443,4 @@ final class AudioModel: NSObject, ObservableObject {
         "AppVolume.\(bundleID)"
     }
 
-    private func openSystemAudioRecordingSettings() {
-        let privacyURLs = [
-            "x-apple.systempreferences:com.apple.preference.security?Privacy",
-        ]
-
-        for privacyURL in privacyURLs {
-            guard let url = URL(string: privacyURL),
-                  NSWorkspace.shared.open(url) else {
-                continue
-            }
-
-            return
-        }
-    }
 }

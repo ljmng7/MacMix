@@ -13,7 +13,7 @@ struct MacMixApp: App {
     @StateObject private var audioModel = AudioModel()
     @State private var controlPanelSelection: ControlPanelPage = .settings
     @State private var isRunningFirstLaunchFlow = false
-    @AppStorage("MacMix.HasRunFirstLaunchPermissionFlow") private var hasRunFirstLaunchPermissionFlow = false
+    @AppStorage("MacMix.HasRunFirstLaunchPermissionFlow") private var hasOpenedFirstLaunchAboutPage = false
     @Environment(\.openWindow) private var openWindow
 
     var body: some Scene {
@@ -22,7 +22,7 @@ struct MacMixApp: App {
         } label: {
             MenuBarVolumeIcon(state: audioModel.outputState)
                 .task {
-                    await runFirstLaunchPermissionFlowIfNeeded()
+                    await openAboutPageOnFirstLaunchIfNeeded()
                 }
         }
         .menuBarExtraStyle(.window)
@@ -52,21 +52,19 @@ struct MacMixApp: App {
     }
 
     @MainActor
-    private func runFirstLaunchPermissionFlowIfNeeded() async {
-        guard !hasRunFirstLaunchPermissionFlow,
+    private func openAboutPageOnFirstLaunchIfNeeded() async {
+        guard !hasOpenedFirstLaunchAboutPage,
               !isRunningFirstLaunchFlow else {
             return
         }
 
         isRunningFirstLaunchFlow = true
-        hasRunFirstLaunchPermissionFlow = true
+        hasOpenedFirstLaunchAboutPage = true
         controlPanelSelection = .about
         NSApp.setActivationPolicy(.regular)
         openWindow(id: "control-panel")
         NSApp.activate(ignoringOtherApps: true)
 
-        try? await Task.sleep(nanoseconds: 500_000_000)
-        audioModel.requestSystemAudioPermission()
         isRunningFirstLaunchFlow = false
     }
 }
