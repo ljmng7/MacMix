@@ -66,6 +66,7 @@ final class AudioModel: NSObject, ObservableObject {
     private var refreshTimer: Timer?
     private var pendingOutputApps: [AudioApp]?
     private var outputAppRefreshSuppressedUntil: Date?
+    private var outputRouteRefreshTask: Task<Void, Never>?
 
     override init() {
         super.init()
@@ -87,6 +88,7 @@ final class AudioModel: NSObject, ObservableObject {
     deinit {
         outputVolumeObserver?.stop()
         refreshTimer?.invalidate()
+        outputRouteRefreshTask?.cancel()
         appAudioMixer.stopAll()
     }
 
@@ -116,9 +118,7 @@ final class AudioModel: NSObject, ObservableObject {
         let currentOutputUID = devices.first(where: \.isCurrent)?.uid
 
         if let previousOutputUID, previousOutputUID != currentOutputUID {
-            suppressOutputAppRefresh()
-            reconcileOutputApps()
-            refreshOutputAppsAfterRouteSettles()
+            handleOutputRouteChange()
         }
     }
 
@@ -215,7 +215,7 @@ final class AudioModel: NSObject, ObservableObject {
             return
         }
 
-        suppressOutputAppRefresh()
+        prepareForOutputRouteChange()
         hardware.setDefaultDevice(device.id, direction: .output)
         refreshOutputState()
         refreshOutputAppsAfterRouteSettles()
@@ -307,9 +307,24 @@ final class AudioModel: NSObject, ObservableObject {
         outputAppRefreshSuppressedUntil = Date().addingTimeInterval(1.25)
     }
 
+    private func handleOutputRouteChange() {
+        prepareForOutputRouteChange()
+        refreshOutputAppsAfterRouteSettles()
+    }
+
+    private func prepareForOutputRouteChange() {
+        suppressOutputAppRefresh()
+        appAudioMixer.stopAll()
+    }
+
     private func refreshOutputAppsAfterRouteSettles() {
-        Task { @MainActor [weak self] in
+        outputRouteRefreshTask?.cancel()
+        outputRouteRefreshTask = Task { @MainActor [weak self] in
             try? await Task.sleep(nanoseconds: 1_300_000_000)
+            guard !Task.isCancelled else {
+                return
+            }
+
             self?.refreshOutputApps(stabilize: false)
         }
     }

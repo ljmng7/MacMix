@@ -73,15 +73,6 @@ nonisolated final class AppAudioMixer {
         if let engine = engines[app.id] {
             if engine.tappedObjects == app.audioObjectIDs,
                engine.outputDeviceUID == outputDeviceUID {
-                guard canCreateProcessTap(
-                    audioObjectIDs: app.audioObjectIDs,
-                    outputDeviceUID: outputDeviceUID
-                ) else {
-                    engine.stop()
-                    engines.removeValue(forKey: app.id)
-                    return false
-                }
-
                 engine.gain = clampedVolume
                 return true
             }
@@ -133,47 +124,6 @@ nonisolated final class AppAudioMixer {
         abs(volume - 1) < 0.005
     }
 
-    private func canCreateProcessTap(audioObjectIDs: [AudioObjectID], outputDeviceUID: String) -> Bool {
-        guard #available(macOS 14.4, *),
-              !audioObjectIDs.isEmpty else {
-            return false
-        }
-
-        let candidates = [
-            Self.configurePermissionCheckTap(
-                CATapDescription(stereoMixdownOfProcesses: audioObjectIDs),
-                name: "MacMix Permission Recheck"
-            ),
-            Self.configurePermissionCheckTap(
-                CATapDescription(processes: audioObjectIDs, deviceUID: outputDeviceUID, stream: 0),
-                name: "MacMix Permission Recheck Output"
-            ),
-        ]
-
-        for tapDescription in candidates {
-            var tapID = AudioObjectID(kAudioObjectUnknown)
-
-            if AudioHardwareCreateProcessTap(tapDescription, &tapID) == noErr,
-               tapID != kAudioObjectUnknown {
-                AudioHardwareDestroyProcessTap(tapID)
-                return true
-            }
-        }
-
-        return false
-    }
-
-    @available(macOS 14.4, *)
-    @discardableResult
-    private static func configurePermissionCheckTap(
-        _ tapDescription: CATapDescription,
-        name: String
-    ) -> CATapDescription {
-        tapDescription.name = name
-        tapDescription.muteBehavior = .unmuted
-        tapDescription.isPrivate = true
-        return tapDescription
-    }
 }
 
 private protocol AppGainEngine: AnyObject {
