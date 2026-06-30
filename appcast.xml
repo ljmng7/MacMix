@@ -1,0 +1,15 @@
+<rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle">
+  <channel>
+    <title>MacMix Updates</title>
+    <item>
+      <title>MacMix 1.1</title>
+      <sparkle:shortVersionString>1.1</sparkle:shortVersionString>
+      <sparkle:version>2</sparkle:version>
+      <enclosure
+        url="https://github.com/ljmng7/MacMix/releases/download/v1.1/MacMix-1.1.zip"
+        sparkle:edSignature="YVenIoJv8AuXARnT0MYFu6EN265CdaUHC0I6T428FUcJbnKzD818tZFugxqb3apNwsNvzyLDFvWtd6JV0AGwBw=="
+        length="5973938"
+        type="application/octet-stream" />
+    </item>
+  </channel>
+</rss>
