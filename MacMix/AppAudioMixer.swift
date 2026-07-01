@@ -12,6 +12,7 @@ import Foundation
 
 nonisolated final class AppAudioMixer {
     static let shared = AppAudioMixer()
+    fileprivate static let maximumGain: Float = 2
 
     static var isSupported: Bool {
         if #available(macOS 14.4, *) {
@@ -59,7 +60,7 @@ nonisolated final class AppAudioMixer {
     }
 
     func apply(_ volume: Double, to app: AudioApp, outputDeviceUID: String?) -> Bool {
-        let clampedVolume = Float(max(0, min(1, volume)))
+        let clampedVolume = Float(max(0, min(Double(Self.maximumGain), volume)))
 
         guard !isUnity(Double(clampedVolume)), let outputDeviceUID else {
             engines.removeValue(forKey: app.id)?.stop()
@@ -141,7 +142,7 @@ nonisolated private final class ProcessTapGainEngine: AppGainEngine {
 
     nonisolated var gain: Float {
         get { gainPointer.pointee }
-        set { gainPointer.pointee = max(0, min(1, newValue)) }
+        set { gainPointer.pointee = max(0, min(AppAudioMixer.maximumGain, newValue)) }
     }
 
     private let gainPointer: UnsafeMutablePointer<Float>
@@ -164,7 +165,7 @@ nonisolated private final class ProcessTapGainEngine: AppGainEngine {
         self.tappedObjects = audioObjectIDs
         self.outputDeviceUID = outputDeviceUID
         self.gainPointer = UnsafeMutablePointer<Float>.allocate(capacity: 1)
-        self.gainPointer.initialize(to: max(0, min(1, gain)))
+        self.gainPointer.initialize(to: max(0, min(AppAudioMixer.maximumGain, gain)))
 
         guard let tapDescription = Self.createProcessTap(
             audioObjectIDs: audioObjectIDs,

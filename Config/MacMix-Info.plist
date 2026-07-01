@@ -14,8 +14,6 @@
 	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
-	<key>CFBundleGetInfoString</key>
-	<string>$(MARKETING_VERSION)</string>
 	<key>CFBundleName</key>
 	<string>$(PRODUCT_NAME)</string>
 	<key>CFBundlePackageType</key>
@@ -32,8 +30,6 @@
 	<true/>
 	<key>NSAudioCaptureUsageDescription</key>
 	<string>MacMix only captures app audio when you adjust individual app volume for local real-time mixing. It does not record, save, or upload audio.</string>
-	<key>NSHumanReadableCopyright</key>
-	<string>Ⓒ2026 Jazmín</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
 	<key>SUAllowsAutomaticUpdates</key>

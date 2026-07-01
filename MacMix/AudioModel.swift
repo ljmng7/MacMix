@@ -235,7 +235,7 @@ final class AudioModel: NSObject, ObservableObject {
     }
 
     func setAppVolume(_ volume: Double, for app: AudioApp) {
-        let clampedVolume = max(0, min(1, volume))
+        let clampedVolume = max(0, min(maximumAppVolume, volume))
         defaults.set(clampedVolume, forKey: defaultsKey(for: app.bundleID))
 
         if let index = outputAppsState.apps.firstIndex(where: { $0.id == app.id }) {
@@ -267,6 +267,12 @@ final class AudioModel: NSObject, ObservableObject {
                 requiresPermission: appVolumeRequiresSystemAudioPermission(clampedVolume),
                 requestAuthorizationIfDenied: true
             )
+        }
+    }
+
+    func clampAppVolumesToUnity() {
+        for app in outputAppsState.apps where app.volume > 1 {
+            setAppVolume(1, for: app)
         }
     }
 
@@ -467,11 +473,15 @@ final class AudioModel: NSObject, ObservableObject {
             return 1
         }
 
-        return defaults.double(forKey: key)
+        return max(0, min(maximumAppVolume, defaults.double(forKey: key)))
     }
 
     private func defaultsKey(for bundleID: String) -> String {
         "AppVolume.\(bundleID)"
+    }
+
+    private var maximumAppVolume: Double {
+        defaults.bool(forKey: MixVolumePreference.enables200PercentVolume) ? 2 : 1
     }
 
 }

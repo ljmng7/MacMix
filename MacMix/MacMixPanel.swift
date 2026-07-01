@@ -149,6 +149,7 @@ private struct ControlPanelSettingsPage: View {
     let updater: SPUUpdater
     @AppStorage(PanelVisibilityPreference.showsOutput) private var showsOutputInPanel = true
     @AppStorage(PanelVisibilityPreference.showsInput) private var showsInputInPanel = true
+    @AppStorage(MixVolumePreference.enables200PercentVolume) private var enables200PercentVolume = false
 
     var body: some View {
         ScrollView {
@@ -171,6 +172,7 @@ private struct ControlPanelSettingsPage: View {
 
                     MixSection(
                         state: audioModel.outputAppsState,
+                        boostPreference: $enables200PercentVolume,
                         onRequestPermission: audioModel.requestSystemAudioPermission,
                         onVolumeChange: { volume, app in
                             audioModel.setAppVolume(volume, for: app)
@@ -212,6 +214,11 @@ private struct ControlPanelSettingsPage: View {
         }
         .frame(minWidth: ControlPanelLayout.detailMinWidth, maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .navigationTitle("Settings")
+        .onChange(of: enables200PercentVolume) { _, isEnabled in
+            if !isEnabled {
+                audioModel.clampAppVolumesToUnity()
+            }
+        }
     }
 }
 
@@ -565,13 +572,33 @@ private struct OutputDeviceGroup: View {
 
 private struct MixSection: View {
     @ObservedObject var state: OutputAppsState
+    var boostPreference: Binding<Bool>? = nil
     let onRequestPermission: () -> Void
     let onVolumeChange: (Double, AudioApp) -> Void
+    @AppStorage(MixVolumePreference.enables200PercentVolume) private var enables200PercentVolume = false
+
+    private var maximumVolume: Double {
+        enables200PercentVolume ? 2 : 1
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("Mix")
-                .font(.headline.weight(.semibold))
+            HStack {
+                Text("Mix")
+                    .font(.headline.weight(.semibold))
+
+                Spacer()
+
+                if let boostPreference {
+                    Toggle(isOn: boostPreference) {
+                        Text(
+                            "Enable \(2.0, format: .percent.precision(.fractionLength(0))) Volume",
+                            comment: "Settings toggle that lets per-app mix volume sliders boost above 100 percent."
+                        )
+                    }
+                    .toggleStyle(.switch)
+                }
+            }
 
             if state.needsSystemAudioPermission {
                 PermissionRequestRow(action: onRequestPermission)
@@ -579,7 +606,11 @@ private struct MixSection: View {
                 EmptyRow(iconName: "app.dashed", title: "No apps are playing audio")
             } else {
                 ForEach(state.apps) { app in
-                    AppVolumeRow(app: app, onVolumeChange: onVolumeChange)
+                    AppVolumeRow(
+                        app: app,
+                        maximumVolume: maximumVolume,
+                        onVolumeChange: onVolumeChange
+                    )
                 }
             }
         }
@@ -684,7 +715,13 @@ private struct DeviceGroup: View {
 
 private struct AppVolumeRow: View {
     let app: AudioApp
+    let maximumVolume: Double
     let onVolumeChange: (Double, AudioApp) -> Void
+    @State private var isAtUnity = false
+
+    private var sliderTint: Color {
+        app.volume > 1 ? .yellow : .blue
+    }
 
     var body: some View {
         HStack(spacing: 10) {
@@ -695,18 +732,43 @@ private struct AppVolumeRow: View {
                 .lineLimit(1)
                 .frame(width: 60, alignment: .leading)
 
-            Slider(
-                value: Binding(
-                    get: { app.volume },
-                    set: { onVolumeChange($0, app) }
-                ),
-                in: 0...1
-            )
-            .tint(.blue)
+            VStack(spacing: 2) {
+                if #available(macOS 26.0, *), maximumVolume > 1 {
+                    Slider(
+                        value: volumeBinding,
+                        in: 0...maximumVolume,
+                        label: {
+                            EmptyView()
+                        },
+                        ticks: {
+                            SliderTick(1)
+                        }
+                    )
+                    .tint(sliderTint)
+                } else {
+                    Slider(value: volumeBinding, in: 0...maximumVolume)
+                    .tint(sliderTint)
+                }
+            }
 
             PercentageText(value: app.volume)
         }
         .padding(.vertical, 2)
+        .sensoryFeedback(.alignment, trigger: isAtUnity) { _, isAtUnity in
+            isAtUnity
+        }
+    }
+
+    private func updateVolume(_ volume: Double) {
+        isAtUnity = abs(volume - 1) < 0.005
+        onVolumeChange(volume, app)
+    }
+
+    private var volumeBinding: Binding<Double> {
+        Binding(
+            get: { min(app.volume, maximumVolume) },
+            set: { updateVolume($0) }
+        )
     }
 }
 

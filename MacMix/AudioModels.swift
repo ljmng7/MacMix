@@ -9,6 +9,10 @@ import AppKit
 import CoreAudio
 import Foundation
 
+enum MixVolumePreference {
+    static let enables200PercentVolume = "MacMix.Enables200PercentVolume"
+}
+
 enum AudioDeviceDirection {
     case input
     case output
