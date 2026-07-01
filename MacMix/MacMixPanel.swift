@@ -271,10 +271,7 @@ private struct ControlPanelAboutPage: View {
                 }
                 .frame(maxWidth: .infinity)
 
-                CheckForUpdatesView(updater: updater, showsIcon: true)
-                    .buttonStyle(.bordered)
-                    .controlSize(.large)
-                    .frame(maxWidth: .infinity)
+                AboutCheckForUpdatesButton(updater: updater)
 
                 VStack(alignment: .leading, spacing: 12) {
                     Text("Privacy Information")
@@ -341,13 +338,50 @@ private struct ControlPanelAboutPage: View {
     }
 }
 
+private struct AboutCheckForUpdatesButton: View {
+    let updater: SPUUpdater
+
+    var body: some View {
+        if #available(macOS 26.0, *) {
+            HStack {
+                Spacer(minLength: 0)
+
+                checkForUpdatesButton
+                    .buttonStyle(.plain)
+                    .controlSize(.large)
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 9)
+                    .contentShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+                    .glassEffect(.regular.interactive())
+
+                Spacer(minLength: 0)
+            }
+        } else {
+            HStack {
+                Spacer(minLength: 0)
+
+                checkForUpdatesButton
+                    .buttonStyle(.bordered)
+                    .buttonBorderShape(.roundedRectangle(radius: 8))
+                    .controlSize(.large)
+
+                Spacer(minLength: 0)
+            }
+        }
+    }
+
+    private var checkForUpdatesButton: some View {
+        CheckForUpdatesView(updater: updater, showsIcon: true, showsEllipsis: false)
+    }
+}
+
 private struct StarOnGitHubLink: View {
     private let repositoryURL = URL(string: "https://github.com/ljmng7/MacMix")!
 
     var body: some View {
         Link(destination: repositoryURL) {
             HStack(spacing: 8) {
-                Text("Star me on GitHub!")
+                Text("Star me on GitHub🤗")
                     .font(.system(size: 14, weight: .semibold))
 
                 Image("GitHub")
@@ -368,7 +402,7 @@ private struct StarOnGitHubLink: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .accessibilityLabel("Star me on GitHub!")
+        .accessibilityLabel("Star me on GitHub🤗")
         .frame(maxWidth: .infinity, alignment: .center)
         .padding(.top, 8)
     }

@@ -12,10 +12,12 @@ import SwiftUI
 struct CheckForUpdatesView: View {
     @StateObject private var viewModel: CheckForUpdatesViewModel
     private let showsIcon: Bool
+    private let showsEllipsis: Bool
 
-    init(updater: SPUUpdater, showsIcon: Bool = false) {
+    init(updater: SPUUpdater, showsIcon: Bool = false, showsEllipsis: Bool = true) {
         _viewModel = StateObject(wrappedValue: CheckForUpdatesViewModel(updater: updater))
         self.showsIcon = showsIcon
+        self.showsEllipsis = showsEllipsis
     }
 
     var body: some View {
@@ -23,12 +25,16 @@ struct CheckForUpdatesView: View {
             viewModel.checkForUpdates()
         } label: {
             if showsIcon {
-                Label("Check for Updates...", systemImage: "arrow.triangle.2.circlepath")
+                Label(title, systemImage: "arrow.triangle.2.circlepath")
             } else {
-                Text("Check for Updates...")
+                Text(title)
             }
         }
         .disabled(!viewModel.canCheckForUpdates)
+    }
+
+    private var title: LocalizedStringKey {
+        showsEllipsis ? "Check for Updates..." : "Check for Updates"
     }
 }
 

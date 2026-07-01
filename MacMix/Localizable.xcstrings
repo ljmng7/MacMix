@@ -566,6 +566,119 @@
         }
       }
     },
+    "Check for Updates" : {
+      "comment" : "About page button that opens Sparkle update checking.",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "التحقق من وجود تحديثات"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nach Updates suchen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Buscar actualizaciones"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rechercher les mises à jour"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "अपडेट देखें"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Periksa Pembaruan"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cerca aggiornamenti"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "アップデートを確認"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "업데이트 확인"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zoek naar updates"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sprawdź uaktualnienia"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Buscar Atualizações"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Проверить обновления"
+          }
+        },
+        "th" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ตรวจหาการอัปเดต"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Güncellemeleri denetle"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kiểm tra bản cập nhật"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "检查更新"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "檢查更新"
+          }
+        }
+      }
+    },
     "Check for Updates..." : {
       "comment" : "App menu item that opens Sparkle update checking.",
       "localizations" : {
@@ -2487,115 +2600,115 @@
         }
       }
     },
-    "Star me on GitHub!" : {
+    "Star me on GitHub🤗" : {
       "comment" : "About page link that opens the MacMix GitHub repository.",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "ضع نجمة لي على GitHub!"
+            "value" : "ضع نجمة لي على GitHub🤗"
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Gib mir einen Stern auf GitHub!"
+            "value" : "Gib mir einen Stern auf GitHub🤗"
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "¡Dame una estrella en GitHub!"
+            "value" : "¡Dame una estrella en GitHub🤗"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ajoutez une étoile sur GitHub !"
+            "value" : "Ajoutez une étoile sur GitHub 🤗"
           }
         },
         "hi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "GitHub पर मुझे स्टार करें!"
+            "value" : "GitHub पर मुझे स्टार करें🤗"
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Beri saya bintang di GitHub!"
+            "value" : "Beri saya bintang di GitHub🤗"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Mettimi una stella su GitHub!"
+            "value" : "Mettimi una stella su GitHub🤗"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "GitHubでスターしてください！"
+            "value" : "GitHubでスターしてください🤗"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "GitHub에서 별표를 눌러 주세요!"
+            "value" : "GitHub에서 별표를 눌러 주세요🤗"
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Geef me een ster op GitHub!"
+            "value" : "Geef me een ster op GitHub🤗"
           }
         },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Daj mi gwiazdkę na GitHubie!"
+            "value" : "Daj mi gwiazdkę na GitHubie🤗"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Dê uma estrela no GitHub!"
+            "value" : "Dê uma estrela no GitHub🤗"
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Поставьте мне звезду на GitHub!"
+            "value" : "Поставьте мне звезду на GitHub🤗"
           }
         },
         "th" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "กดดาวให้ฉันบน GitHub!"
+            "value" : "กดดาวให้ฉันบน GitHub🤗"
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "GitHub'da bana yıldız ver!"
+            "value" : "GitHub'da bana yıldız ver🤗"
           }
         },
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Hãy gắn sao cho tôi trên GitHub!"
+            "value" : "Hãy gắn sao cho tôi trên GitHub🤗"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "在 GitHub 上星标我！"
+            "value" : "在 GitHub 上星标我🤗"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "在 GitHub 上星標我！"
+            "value" : "在 GitHub 上星標我🤗"
           }
         }
       }
