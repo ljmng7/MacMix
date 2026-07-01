@@ -259,17 +259,20 @@ nonisolated private final class ProcessTapGainEngine: AppGainEngine {
         outputDeviceUID: String,
         tapID: inout AudioObjectID
     ) -> CATapDescription? {
-        // Some virtual output devices expose stream 0 but do not route app audio through it.
-        let candidates = [
-            Self.configure(
-                CATapDescription(stereoMixdownOfProcesses: audioObjectIDs),
-                name: "MacMix Stereo Mixdown"
-            ),
-            Self.configure(
-                CATapDescription(processes: audioObjectIDs, deviceUID: outputDeviceUID, stream: 0),
-                name: "MacMix Output Stream 0"
-            ),
-        ]
+        // Prefer the output stream path for multichannel devices so the tap can match
+        // the device's PCM format. Some virtual stereo devices expose stream 0 without
+        // routing app audio, so keep the established stereo path first for normal output.
+        let outputStreamTap = Self.configure(
+            CATapDescription(processes: audioObjectIDs, deviceUID: outputDeviceUID, stream: 0),
+            name: "MacMix Output Stream 0"
+        )
+        let stereoMixdownTap = Self.configure(
+            CATapDescription(stereoMixdownOfProcesses: audioObjectIDs),
+            name: "MacMix Stereo Mixdown"
+        )
+        let candidates = shouldPreferOutputStreamTap(outputDeviceUID: outputDeviceUID)
+            ? [outputStreamTap, stereoMixdownTap]
+            : [stereoMixdownTap, outputStreamTap]
 
         for tapDescription in candidates {
             tapID = AudioObjectID(kAudioObjectUnknown)
@@ -290,6 +293,100 @@ nonisolated private final class ProcessTapGainEngine: AppGainEngine {
         tapDescription.muteBehavior = .mutedWhenTapped
         tapDescription.isPrivate = true
         return tapDescription
+    }
+
+    private static func shouldPreferOutputStreamTap(outputDeviceUID: String) -> Bool {
+        guard let streamFormat = outputStreamFormat(deviceUID: outputDeviceUID, streamIndex: 0) else {
+            return false
+        }
+
+        return streamFormat.mChannelsPerFrame > 2
+    }
+
+    private static func outputStreamFormat(deviceUID: String, streamIndex: Int) -> AudioStreamBasicDescription? {
+        guard let deviceID = deviceID(forUID: deviceUID) else {
+            return nil
+        }
+
+        let streams = audioObjectIDs(
+            objectID: deviceID,
+            selector: kAudioDevicePropertyStreams,
+            scope: kAudioDevicePropertyScopeOutput
+        )
+
+        guard streams.indices.contains(streamIndex) else {
+            return nil
+        }
+
+        return streamFormat(streamID: streams[streamIndex])
+    }
+
+    private static func deviceID(forUID uid: String) -> AudioObjectID? {
+        audioObjectIDs(
+            objectID: AudioObjectID(kAudioObjectSystemObject),
+            selector: kAudioHardwarePropertyDevices
+        )
+        .first { deviceID in
+            stringProperty(deviceID, selector: kAudioDevicePropertyDeviceUID) == uid
+        }
+    }
+
+    private static func audioObjectIDs(
+        objectID: AudioObjectID,
+        selector: AudioObjectPropertySelector,
+        scope: AudioObjectPropertyScope = kAudioObjectPropertyScopeGlobal
+    ) -> [AudioObjectID] {
+        var address = propertyAddress(selector: selector, scope: scope)
+        var dataSize: UInt32 = 0
+
+        guard AudioObjectGetPropertyDataSize(objectID, &address, 0, nil, &dataSize) == noErr else {
+            return []
+        }
+
+        let count = Int(dataSize) / MemoryLayout<AudioObjectID>.size
+        guard count > 0 else {
+            return []
+        }
+
+        var objectIDs = Array(repeating: AudioObjectID(kAudioObjectUnknown), count: count)
+        let status = AudioObjectGetPropertyData(objectID, &address, 0, nil, &dataSize, &objectIDs)
+        return status == noErr ? objectIDs.filter { $0 != kAudioObjectUnknown } : []
+    }
+
+    private static func stringProperty(_ objectID: AudioObjectID, selector: AudioObjectPropertySelector) -> String? {
+        var address = propertyAddress(selector: selector)
+        var value: CFString?
+        var dataSize = UInt32(MemoryLayout<CFString?>.size)
+        let status = withUnsafeMutablePointer(to: &value) { pointer in
+            AudioObjectGetPropertyData(objectID, &address, 0, nil, &dataSize, pointer)
+        }
+
+        guard status == noErr else {
+            return nil
+        }
+
+        return value as String?
+    }
+
+    private static func streamFormat(streamID: AudioStreamID) -> AudioStreamBasicDescription? {
+        var address = propertyAddress(selector: kAudioStreamPropertyVirtualFormat)
+        var format = AudioStreamBasicDescription()
+        var dataSize = UInt32(MemoryLayout<AudioStreamBasicDescription>.size)
+        let status = AudioObjectGetPropertyData(streamID, &address, 0, nil, &dataSize, &format)
+
+        return status == noErr ? format : nil
+    }
+
+    private static func propertyAddress(
+        selector: AudioObjectPropertySelector,
+        scope: AudioObjectPropertyScope = kAudioObjectPropertyScopeGlobal,
+        element: AudioObjectPropertyElement = kAudioObjectPropertyElementMain
+    ) -> AudioObjectPropertyAddress {
+        AudioObjectPropertyAddress(
+            mSelector: selector,
+            mScope: scope,
+            mElement: element
+        )
     }
 
     private static func tapFormat(for tapID: AudioObjectID) -> AudioStreamBasicDescription? {
@@ -346,6 +443,10 @@ nonisolated private final class ProcessTapGainEngine: AppGainEngine {
             switch format.mBitsPerChannel {
             case 16:
                 writeScaledInt16(from: source, to: destination, gain: gain, byteCount: byteCount)
+            case 24:
+                if !writeScaledInt24(from: source, to: destination, gain: gain, byteCount: byteCount, format: format) {
+                    copyAudio(from: source, to: destination, byteCount: byteCount, outputByteCount: outputByteCount)
+                }
             case 32:
                 writeScaledInt32(from: source, to: destination, gain: gain, byteCount: byteCount)
             default:
@@ -434,6 +535,152 @@ nonisolated private final class ProcessTapGainEngine: AppGainEngine {
             let scaledSample = (Double(source[index]) * gain).rounded()
             destination[index] = Int32(clamping: Int64(scaledSample))
         }
+    }
+
+    private static func writeScaledInt24(
+        from source: UnsafeMutableRawPointer,
+        to destination: UnsafeMutableRawPointer,
+        gain: Float,
+        byteCount: Int,
+        format: AudioStreamBasicDescription
+    ) -> Bool {
+        let flags = format.mFormatFlags
+        let isBigEndian = flags & kAudioFormatFlagIsBigEndian != 0
+        let isAlignedHigh = flags & kAudioFormatFlagIsAlignedHigh != 0
+        let isNonInterleaved = flags & kAudioFormatFlagIsNonInterleaved != 0
+        let channelsPerFrame = max(1, Int(format.mChannelsPerFrame))
+        let bytesPerFrame = Int(format.mBytesPerFrame)
+        let bytesPerSample = bytesPerFrame > 0
+            ? (isNonInterleaved ? bytesPerFrame : max(1, bytesPerFrame / channelsPerFrame))
+            : 3
+
+        guard bytesPerSample == 3 || bytesPerSample == 4 else {
+            return false
+        }
+
+        let sampleCount = byteCount / bytesPerSample
+        guard sampleCount > 0 else {
+            return true
+        }
+
+        let source = source.assumingMemoryBound(to: UInt8.self)
+        let destination = destination.assumingMemoryBound(to: UInt8.self)
+        let gain = Double(gain)
+
+        for index in 0..<sampleCount {
+            let offset = index * bytesPerSample
+            let sample = readSignedInt24(
+                from: source.advanced(by: offset),
+                bytesPerSample: bytesPerSample,
+                isBigEndian: isBigEndian,
+                isAlignedHigh: isAlignedHigh
+            )
+            let scaledSample = clampInt24((Double(sample) * gain).rounded())
+
+            writeSignedInt24(
+                scaledSample,
+                to: destination.advanced(by: offset),
+                bytesPerSample: bytesPerSample,
+                isBigEndian: isBigEndian,
+                isAlignedHigh: isAlignedHigh
+            )
+        }
+
+        return true
+    }
+
+    private static func readSignedInt24(
+        from source: UnsafePointer<UInt8>,
+        bytesPerSample: Int,
+        isBigEndian: Bool,
+        isAlignedHigh: Bool
+    ) -> Int32 {
+        if bytesPerSample == 4 {
+            let raw32 = readSignedInt32Bytes(from: source, isBigEndian: isBigEndian)
+            return isAlignedHigh ? raw32 >> 8 : signExtendInt24(raw32 & 0x00FF_FFFF)
+        }
+
+        let raw24: Int32
+        if isBigEndian {
+            raw24 = Int32(source[0]) << 16
+                | Int32(source[1]) << 8
+                | Int32(source[2])
+        } else {
+            raw24 = Int32(source[0])
+                | Int32(source[1]) << 8
+                | Int32(source[2]) << 16
+        }
+
+        return signExtendInt24(raw24)
+    }
+
+    private static func writeSignedInt24(
+        _ sample: Int32,
+        to destination: UnsafeMutablePointer<UInt8>,
+        bytesPerSample: Int,
+        isBigEndian: Bool,
+        isAlignedHigh: Bool
+    ) {
+        if bytesPerSample == 4 {
+            let raw32 = isAlignedHigh ? sample << 8 : sample & 0x00FF_FFFF
+            writeSignedInt32Bytes(raw32, to: destination, isBigEndian: isBigEndian)
+            return
+        }
+
+        let raw24 = sample & 0x00FF_FFFF
+        if isBigEndian {
+            destination[0] = UInt8((raw24 >> 16) & 0xFF)
+            destination[1] = UInt8((raw24 >> 8) & 0xFF)
+            destination[2] = UInt8(raw24 & 0xFF)
+        } else {
+            destination[0] = UInt8(raw24 & 0xFF)
+            destination[1] = UInt8((raw24 >> 8) & 0xFF)
+            destination[2] = UInt8((raw24 >> 16) & 0xFF)
+        }
+    }
+
+    private static func readSignedInt32Bytes(from source: UnsafePointer<UInt8>, isBigEndian: Bool) -> Int32 {
+        let raw: UInt32
+        if isBigEndian {
+            raw = UInt32(source[0]) << 24
+                | UInt32(source[1]) << 16
+                | UInt32(source[2]) << 8
+                | UInt32(source[3])
+        } else {
+            raw = UInt32(source[0])
+                | UInt32(source[1]) << 8
+                | UInt32(source[2]) << 16
+                | UInt32(source[3]) << 24
+        }
+
+        return Int32(bitPattern: raw)
+    }
+
+    private static func writeSignedInt32Bytes(
+        _ sample: Int32,
+        to destination: UnsafeMutablePointer<UInt8>,
+        isBigEndian: Bool
+    ) {
+        let raw = UInt32(bitPattern: sample)
+        if isBigEndian {
+            destination[0] = UInt8((raw >> 24) & 0xFF)
+            destination[1] = UInt8((raw >> 16) & 0xFF)
+            destination[2] = UInt8((raw >> 8) & 0xFF)
+            destination[3] = UInt8(raw & 0xFF)
+        } else {
+            destination[0] = UInt8(raw & 0xFF)
+            destination[1] = UInt8((raw >> 8) & 0xFF)
+            destination[2] = UInt8((raw >> 16) & 0xFF)
+            destination[3] = UInt8((raw >> 24) & 0xFF)
+        }
+    }
+
+    private static func signExtendInt24(_ value: Int32) -> Int32 {
+        value & 0x0080_0000 != 0 ? value | ~0x00FF_FFFF : value
+    }
+
+    private static func clampInt24(_ value: Double) -> Int32 {
+        Int32(max(-8_388_608, min(8_388_607, value)))
     }
 
     private static func copyAudio(

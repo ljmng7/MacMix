@@ -23,6 +23,8 @@
   ·
   <a href="#support">Support</a>
   ·
+  <a href="#license">License</a>
+  ·
   <a href="#build-from-source">Build from Source</a>
 </p>
 
@@ -73,7 +75,7 @@ MacMix does not record, save, or upload audio.
 
 ## Support
 
-MacMix is compeletely free and open source.If you enjoy it, you can buy me a coffee to support future updates here, but genuinely not expected 🙏
+MacMix is completely free and open source. If you enjoy it, you can buy me a coffee to support future updates here, but genuinely not expected 🙏
 
 <p align="center">
   <a href="https://ko-fi.com/ljmng7">
@@ -81,6 +83,12 @@ MacMix is compeletely free and open source.If you enjoy it, you can buy me a cof
     <img src="Docs/images/ko-fi.jpg" alt="Support on Ko-fi" width="120" align="middle">
   </a>
 </p>
+
+## License
+
+Code is MIT; app icon/assets remain copyrighted.
+
+The source code is licensed under the [MIT License](LICENSE). The app icon, screenshots, and brand assets are not licensed under MIT and may not be reused without permission.
 
 ## Build From Source
 
