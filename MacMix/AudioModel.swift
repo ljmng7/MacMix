@@ -67,9 +67,13 @@ final class AudioModel: NSObject, ObservableObject {
     private var pendingOutputApps: [AudioApp]?
     private var outputAppRefreshSuppressedUntil: Date?
     private var outputRouteRefreshTask: Task<Void, Never>?
+    private let systemAudioPermissionNeedsAuthorizationKey = "MacMix.SystemAudioPermissionNeedsAuthorization"
+    private let systemAudioPermissionAuthorizedKey = "MacMix.SystemAudioPermissionAuthorized"
 
     override init() {
         super.init()
+        restoreCachedSystemAudioPermissionState()
+
         outputVolumeObserver = CoreAudioVolumeObserver { [weak self] in
             self?.refreshOutputState()
         }
@@ -393,27 +397,39 @@ final class AudioModel: NSObject, ObservableObject {
     }
 
     private func setNeedsSystemAudioPermission(_ isNeeded: Bool) {
-        guard outputAppsState.needsSystemAudioPermission != isNeeded else {
-            return
+        if outputAppsState.needsSystemAudioPermission != isNeeded {
+            outputAppsState.needsSystemAudioPermission = isNeeded
         }
 
-        outputAppsState.needsSystemAudioPermission = isNeeded
+        defaults.set(isNeeded, forKey: systemAudioPermissionNeedsAuthorizationKey)
     }
 
     private func setSystemAudioPermissionAuthorized(_ isAuthorized: Bool) {
-        guard outputAppsState.isSystemAudioPermissionAuthorized != isAuthorized else {
-            return
+        if outputAppsState.isSystemAudioPermissionAuthorized != isAuthorized {
+            outputAppsState.isSystemAudioPermissionAuthorized = isAuthorized
         }
 
-        outputAppsState.isSystemAudioPermissionAuthorized = isAuthorized
+        defaults.set(isAuthorized, forKey: systemAudioPermissionAuthorizedKey)
     }
 
     private func handleSystemAudioPermissionRequest(_ permissionAvailable: Bool) {
         if permissionAvailable {
+            setSystemAudioPermissionAuthorized(true)
             setNeedsSystemAudioPermission(false)
             reconcileOutputApps()
         } else {
+            setSystemAudioPermissionAuthorized(false)
             setNeedsSystemAudioPermission(true)
+        }
+    }
+
+    private func restoreCachedSystemAudioPermissionState() {
+        if defaults.object(forKey: systemAudioPermissionNeedsAuthorizationKey) != nil {
+            outputAppsState.needsSystemAudioPermission = defaults.bool(forKey: systemAudioPermissionNeedsAuthorizationKey)
+        }
+
+        if defaults.object(forKey: systemAudioPermissionAuthorizedKey) != nil {
+            outputAppsState.isSystemAudioPermissionAuthorized = defaults.bool(forKey: systemAudioPermissionAuthorizedKey)
         }
     }
 

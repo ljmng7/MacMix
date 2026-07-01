@@ -150,6 +150,12 @@ nonisolated private final class ProcessTapGainEngine: AppGainEngine {
     private var aggregateID = AudioObjectID(kAudioObjectUnknown)
     private var ioProc: AudioDeviceIOProcID?
 
+    private struct OutputStreamCandidate {
+        let index: UInt
+        let format: AudioStreamBasicDescription
+        let isActive: Bool
+    }
+
     init?(audioObjectIDs: [AudioObjectID], gain: Float, outputDeviceUID: String) {
         guard !audioObjectIDs.isEmpty else {
             return nil
@@ -259,20 +265,22 @@ nonisolated private final class ProcessTapGainEngine: AppGainEngine {
         outputDeviceUID: String,
         tapID: inout AudioObjectID
     ) -> CATapDescription? {
-        // Prefer the output stream path for multichannel devices so the tap can match
-        // the device's PCM format. Some virtual stereo devices expose stream 0 without
-        // routing app audio, so keep the established stereo path first for normal output.
-        let outputStreamTap = Self.configure(
-            CATapDescription(processes: audioObjectIDs, deviceUID: outputDeviceUID, stream: 0),
-            name: "MacMix Output Stream 0"
-        )
+        // Automatic mode: multichannel devices get first chance to keep the output PCM stream.
+        // If that tap cannot be created, fall back to the established stereo mixdown path.
         let stereoMixdownTap = Self.configure(
             CATapDescription(stereoMixdownOfProcesses: audioObjectIDs),
             name: "MacMix Stereo Mixdown"
         )
-        let candidates = shouldPreferOutputStreamTap(outputDeviceUID: outputDeviceUID)
-            ? [outputStreamTap, stereoMixdownTap]
-            : [stereoMixdownTap, outputStreamTap]
+        let candidates: [CATapDescription]
+        if let outputStreamIndex = preferredMultichannelOutputStreamIndex(outputDeviceUID: outputDeviceUID) {
+            let outputStreamTap = Self.configure(
+                CATapDescription(processes: audioObjectIDs, deviceUID: outputDeviceUID, stream: outputStreamIndex),
+                name: "MacMix Output Stream \(outputStreamIndex)"
+            )
+            candidates = [outputStreamTap, stereoMixdownTap]
+        } else {
+            candidates = [stereoMixdownTap]
+        }
 
         for tapDescription in candidates {
             tapID = AudioObjectID(kAudioObjectUnknown)
@@ -295,30 +303,46 @@ nonisolated private final class ProcessTapGainEngine: AppGainEngine {
         return tapDescription
     }
 
-    private static func shouldPreferOutputStreamTap(outputDeviceUID: String) -> Bool {
-        guard let streamFormat = outputStreamFormat(deviceUID: outputDeviceUID, streamIndex: 0) else {
-            return false
-        }
-
-        return streamFormat.mChannelsPerFrame > 2
-    }
-
-    private static func outputStreamFormat(deviceUID: String, streamIndex: Int) -> AudioStreamBasicDescription? {
-        guard let deviceID = deviceID(forUID: deviceUID) else {
+    private static func preferredMultichannelOutputStreamIndex(outputDeviceUID: String) -> UInt? {
+        guard let deviceID = deviceID(forUID: outputDeviceUID) else {
             return nil
         }
 
-        let streams = audioObjectIDs(
+        return outputStreamCandidates(deviceID: deviceID)
+            .filter { $0.format.mChannelsPerFrame > 2 }
+            .sorted { lhs, rhs in
+                if lhs.isActive != rhs.isActive {
+                    return lhs.isActive
+                }
+
+                if lhs.format.mChannelsPerFrame != rhs.format.mChannelsPerFrame {
+                    return lhs.format.mChannelsPerFrame > rhs.format.mChannelsPerFrame
+                }
+
+                return lhs.index < rhs.index
+            }
+            .first?
+            .index
+    }
+
+    private static func outputStreamCandidates(deviceID: AudioObjectID) -> [OutputStreamCandidate] {
+        audioObjectIDs(
             objectID: deviceID,
             selector: kAudioDevicePropertyStreams,
             scope: kAudioDevicePropertyScopeOutput
         )
+        .enumerated()
+        .compactMap { streamIndex, streamID in
+            guard let format = streamFormat(streamID: streamID) else {
+                return nil
+            }
 
-        guard streams.indices.contains(streamIndex) else {
-            return nil
+            return OutputStreamCandidate(
+                index: UInt(streamIndex),
+                format: format,
+                isActive: boolProperty(streamID, selector: kAudioStreamPropertyIsActive)
+            )
         }
-
-        return streamFormat(streamID: streams[streamIndex])
     }
 
     private static func deviceID(forUID uid: String) -> AudioObjectID? {
@@ -366,6 +390,14 @@ nonisolated private final class ProcessTapGainEngine: AppGainEngine {
         }
 
         return value as String?
+    }
+
+    private static func boolProperty(_ objectID: AudioObjectID, selector: AudioObjectPropertySelector) -> Bool {
+        var address = propertyAddress(selector: selector)
+        var value = UInt32(0)
+        var dataSize = UInt32(MemoryLayout<UInt32>.size)
+        let status = AudioObjectGetPropertyData(objectID, &address, 0, nil, &dataSize, &value)
+        return status == noErr && value != 0
     }
 
     private static func streamFormat(streamID: AudioStreamID) -> AudioStreamBasicDescription? {
