@@ -45,7 +45,7 @@ Everything is presented in a compact native panel, so you can adjust sound witho
 | System volume | Adjust the current output device volume directly from the menu bar. |
 | Output devices | Switch between speakers, headphones, AirPods, external displays, and other available output devices. |
 | Input devices | Switch microphones and control input volume from the same panel. |
-| Per-app mixing | Lower or raise the volume of individual apps while they are producing audio. |
+| Per-app mixing | Lower individual apps or optionally boost them up to 200% while they are producing audio. |
 | Menu bar first | Runs quietly as a menu bar utility, with an optional main window for settings and app information. |
 | Automatic updates | Uses Sparkle to check for and install app updates. |
 
@@ -107,3 +107,4 @@ The source code is licensed under the [MIT License](LICENSE). The app icon, scre
 
 - Apps appear in the per-app mixer only while macOS reports that they are actively producing output audio.
 - Per-app volume changes are stored locally and restored when matching apps appear again.
+- 200% per-app volume boost is optional and can be enabled in Settings.
