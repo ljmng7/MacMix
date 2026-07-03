@@ -62,7 +62,7 @@ final class AudioModel: NSObject, ObservableObject {
     private let hardware = CoreAudioHardware()
     private let appAudioMixer = AppAudioMixer.shared
     private let defaults = UserDefaults.standard
-    private var outputVolumeObserver: CoreAudioVolumeObserver?
+    private var deviceObserver: CoreAudioDeviceObserver?
     private var refreshTimer: Timer?
     private var pendingOutputApps: [AudioApp]?
     private var outputAppRefreshSuppressedUntil: Date?
@@ -74,11 +74,16 @@ final class AudioModel: NSObject, ObservableObject {
         super.init()
         restoreCachedSystemAudioPermissionState()
 
-        outputVolumeObserver = CoreAudioVolumeObserver { [weak self] in
-            self?.refreshOutputState()
-        }
+        deviceObserver = CoreAudioDeviceObserver(
+            onOutputChange: { [weak self] in
+                self?.refreshOutputState()
+            },
+            onInputChange: { [weak self] in
+                self?.refreshInputState()
+            }
+        )
 
-        outputVolumeObserver?.start()
+        deviceObserver?.start()
         refresh()
         refreshTimer = Timer.scheduledTimer(
             timeInterval: 1,
@@ -90,7 +95,7 @@ final class AudioModel: NSObject, ObservableObject {
     }
 
     deinit {
-        outputVolumeObserver?.stop()
+        deviceObserver?.stop()
         refreshTimer?.invalidate()
         outputRouteRefreshTask?.cancel()
         appAudioMixer.stopAll()

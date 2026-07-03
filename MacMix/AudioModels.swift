@@ -17,7 +17,7 @@ enum AudioDeviceDirection {
     case input
     case output
 
-    var scope: AudioObjectPropertyScope {
+    nonisolated var scope: AudioObjectPropertyScope {
         switch self {
         case .input:
             return kAudioDevicePropertyScopeInput
@@ -26,7 +26,7 @@ enum AudioDeviceDirection {
         }
     }
 
-    var defaultDeviceSelector: AudioObjectPropertySelector {
+    nonisolated var defaultDeviceSelector: AudioObjectPropertySelector {
         switch self {
         case .input:
             return kAudioHardwarePropertyDefaultInputDevice

@@ -604,17 +604,27 @@ struct CoreAudioHardware {
     }
 }
 
-nonisolated final class CoreAudioVolumeObserver {
-    private let queue = DispatchQueue(label: "MacMix.CoreAudioVolumeObserver")
+nonisolated final class CoreAudioDeviceObserver {
+    private let queue = DispatchQueue(label: "MacMix.CoreAudioDeviceObserver")
     private var outputDeviceID: AudioObjectID?
-    private var isObservingSystemDefault = false
-    private var observedVolumeAddresses: [AudioObjectPropertyAddress] = []
-    private var defaultDeviceListener: AudioObjectPropertyListenerBlock?
-    private var volumeListener: AudioObjectPropertyListenerBlock?
-    private let onChange: @MainActor () -> Void
+    private var inputDeviceID: AudioObjectID?
+    private var isObservingSystem = false
+    private var outputVolumeAddresses: [AudioObjectPropertyAddress] = []
+    private var inputVolumeAddresses: [AudioObjectPropertyAddress] = []
+    private var deviceListListener: AudioObjectPropertyListenerBlock?
+    private var defaultOutputDeviceListener: AudioObjectPropertyListenerBlock?
+    private var defaultInputDeviceListener: AudioObjectPropertyListenerBlock?
+    private var outputVolumeListener: AudioObjectPropertyListenerBlock?
+    private var inputVolumeListener: AudioObjectPropertyListenerBlock?
+    private let onOutputChange: @MainActor () -> Void
+    private let onInputChange: @MainActor () -> Void
 
-    init(onChange: @escaping @MainActor () -> Void) {
-        self.onChange = onChange
+    init(
+        onOutputChange: @escaping @MainActor () -> Void,
+        onInputChange: @escaping @MainActor () -> Void
+    ) {
+        self.onOutputChange = onOutputChange
+        self.onInputChange = onInputChange
     }
 
     deinit {
@@ -622,87 +632,81 @@ nonisolated final class CoreAudioVolumeObserver {
     }
 
     func start() {
-        guard !isObservingSystemDefault else {
+        guard !isObservingSystem else {
             return
         }
 
-        isObservingSystemDefault = true
-        var address = AudioObjectPropertyAddress(
-            mSelector: kAudioHardwarePropertyDefaultOutputDevice,
-            mScope: kAudioObjectPropertyScopeGlobal,
-            mElement: kAudioObjectPropertyElementMain
-        )
+        isObservingSystem = true
 
-        let listener: AudioObjectPropertyListenerBlock = { [weak self] _, _ in
-            self?.rebindOutputDevice()
-            self?.notifyChange()
+        let deviceListListener: AudioObjectPropertyListenerBlock = { [weak self] _, _ in
+            self?.rebindDevice(for: .output)
+            self?.rebindDevice(for: .input)
+            self?.notifyChange(for: .output)
+            self?.notifyChange(for: .input)
         }
-        defaultDeviceListener = listener
-        AudioObjectAddPropertyListenerBlock(
-            AudioObjectID(kAudioObjectSystemObject),
-            &address,
-            queue,
-            listener
-        )
+        self.deviceListListener = deviceListListener
+        addSystemListener(selector: kAudioHardwarePropertyDevices, listener: deviceListListener)
 
-        rebindOutputDevice()
+        let defaultOutputDeviceListener: AudioObjectPropertyListenerBlock = { [weak self] _, _ in
+            self?.rebindDevice(for: .output)
+            self?.notifyChange(for: .output)
+        }
+        self.defaultOutputDeviceListener = defaultOutputDeviceListener
+        addSystemListener(selector: kAudioHardwarePropertyDefaultOutputDevice, listener: defaultOutputDeviceListener)
+
+        let defaultInputDeviceListener: AudioObjectPropertyListenerBlock = { [weak self] _, _ in
+            self?.rebindDevice(for: .input)
+            self?.notifyChange(for: .input)
+        }
+        self.defaultInputDeviceListener = defaultInputDeviceListener
+        addSystemListener(selector: kAudioHardwarePropertyDefaultInputDevice, listener: defaultInputDeviceListener)
+
+        rebindDevice(for: .output)
+        rebindDevice(for: .input)
     }
 
     func stop() {
-        removeOutputDeviceListeners()
+        removeDeviceListeners(for: .output)
+        removeDeviceListeners(for: .input)
 
-        if isObservingSystemDefault {
-            var address = AudioObjectPropertyAddress(
-                mSelector: kAudioHardwarePropertyDefaultOutputDevice,
-                mScope: kAudioObjectPropertyScopeGlobal,
-                mElement: kAudioObjectPropertyElementMain
-            )
-            if let defaultDeviceListener {
-                AudioObjectRemovePropertyListenerBlock(
-                    AudioObjectID(kAudioObjectSystemObject),
-                    &address,
-                    queue,
-                    defaultDeviceListener
-                )
-            }
-            defaultDeviceListener = nil
-            isObservingSystemDefault = false
+        if isObservingSystem {
+            removeSystemListener(selector: kAudioHardwarePropertyDevices, listener: deviceListListener)
+            removeSystemListener(selector: kAudioHardwarePropertyDefaultOutputDevice, listener: defaultOutputDeviceListener)
+            removeSystemListener(selector: kAudioHardwarePropertyDefaultInputDevice, listener: defaultInputDeviceListener)
+            deviceListListener = nil
+            defaultOutputDeviceListener = nil
+            defaultInputDeviceListener = nil
+            isObservingSystem = false
         }
     }
 
-    private func rebindOutputDevice() {
-        let nextDeviceID = currentDefaultOutputDeviceID()
-        guard outputDeviceID != nextDeviceID else {
+    private func rebindDevice(for direction: AudioDeviceDirection) {
+        let nextDeviceID = currentDefaultDeviceID(for: direction)
+        guard deviceID(for: direction) != nextDeviceID else {
             return
         }
 
-        removeOutputDeviceListeners()
-        outputDeviceID = nextDeviceID
+        removeDeviceListeners(for: direction)
+        setDeviceID(nextDeviceID, for: direction)
 
         guard let nextDeviceID else {
             return
         }
 
-        observedVolumeAddresses = volumeAddresses(for: nextDeviceID)
-        let listener: AudioObjectPropertyListenerBlock = { [weak self] _, _ in
-            self?.notifyChange()
-        }
-        volumeListener = listener
+        let addresses = volumeAddresses(for: nextDeviceID, direction: direction)
+        setVolumeAddresses(addresses, for: direction)
 
-        for address in observedVolumeAddresses {
-            var mutableAddress = address
-            AudioObjectAddPropertyListenerBlock(
-                nextDeviceID,
-                &mutableAddress,
-                queue,
-                listener
-            )
+        let listener: AudioObjectPropertyListenerBlock = { [weak self] _, _ in
+            self?.notifyChange(for: direction)
         }
+        setVolumeListener(listener, for: direction)
+
+        addDeviceListeners(addresses, deviceID: nextDeviceID, listener: listener)
     }
 
-    private func currentDefaultOutputDeviceID() -> AudioObjectID? {
+    private func currentDefaultDeviceID(for direction: AudioDeviceDirection) -> AudioObjectID? {
         var address = AudioObjectPropertyAddress(
-            mSelector: kAudioHardwarePropertyDefaultOutputDevice,
+            mSelector: direction.defaultDeviceSelector,
             mScope: kAudioObjectPropertyScopeGlobal,
             mElement: kAudioObjectPropertyElementMain
         )
@@ -720,30 +724,77 @@ nonisolated final class CoreAudioVolumeObserver {
         return status == noErr && deviceID != kAudioObjectUnknown ? deviceID : nil
     }
 
-    private func removeOutputDeviceListeners() {
-        guard let outputDeviceID else {
-            observedVolumeAddresses.removeAll()
+    private func addSystemListener(
+        selector: AudioObjectPropertySelector,
+        listener: @escaping AudioObjectPropertyListenerBlock
+    ) {
+        var address = systemAddress(selector: selector)
+        AudioObjectAddPropertyListenerBlock(
+            AudioObjectID(kAudioObjectSystemObject),
+            &address,
+            queue,
+            listener
+        )
+    }
+
+    private func removeSystemListener(
+        selector: AudioObjectPropertySelector,
+        listener: AudioObjectPropertyListenerBlock?
+    ) {
+        guard let listener else {
             return
         }
 
-        if let volumeListener {
-            for address in observedVolumeAddresses {
+        var address = systemAddress(selector: selector)
+        AudioObjectRemovePropertyListenerBlock(
+            AudioObjectID(kAudioObjectSystemObject),
+            &address,
+            queue,
+            listener
+        )
+    }
+
+    private func addDeviceListeners(
+        _ addresses: [AudioObjectPropertyAddress],
+        deviceID: AudioObjectID,
+        listener: @escaping AudioObjectPropertyListenerBlock
+    ) {
+        for address in addresses {
+            var mutableAddress = address
+            AudioObjectAddPropertyListenerBlock(
+                deviceID,
+                &mutableAddress,
+                queue,
+                listener
+            )
+        }
+    }
+
+    private func removeDeviceListeners(for direction: AudioDeviceDirection) {
+        guard let deviceID = deviceID(for: direction) else {
+            setVolumeAddresses([], for: direction)
+            setVolumeListener(nil, for: direction)
+            return
+        }
+
+        if let listener = volumeListener(for: direction) {
+            for address in volumeAddresses(for: direction) {
                 var mutableAddress = address
                 AudioObjectRemovePropertyListenerBlock(
-                    outputDeviceID,
+                    deviceID,
                     &mutableAddress,
                     queue,
-                    volumeListener
+                    listener
                 )
             }
         }
 
-        observedVolumeAddresses.removeAll()
-        volumeListener = nil
-        self.outputDeviceID = nil
+        setVolumeAddresses([], for: direction)
+        setVolumeListener(nil, for: direction)
+        setDeviceID(nil, for: direction)
     }
 
-    private func volumeAddresses(for deviceID: AudioObjectID) -> [AudioObjectPropertyAddress] {
+    private func volumeAddresses(for deviceID: AudioObjectID, direction: AudioDeviceDirection) -> [AudioObjectPropertyAddress] {
         let elements = [
             kAudioObjectPropertyElementMain,
             AudioObjectPropertyElement(1),
@@ -759,7 +810,7 @@ nonisolated final class CoreAudioVolumeObserver {
             elements.compactMap { element in
                 var address = AudioObjectPropertyAddress(
                     mSelector: selector,
-                    mScope: kAudioDevicePropertyScopeOutput,
+                    mScope: direction.scope,
                     mElement: element
                 )
 
@@ -768,10 +819,77 @@ nonisolated final class CoreAudioVolumeObserver {
         }
     }
 
-    private func notifyChange() {
-        Task { @MainActor in
-            onChange()
+    private func deviceID(for direction: AudioDeviceDirection) -> AudioObjectID? {
+        switch direction {
+        case .input:
+            return inputDeviceID
+        case .output:
+            return outputDeviceID
         }
+    }
+
+    private func setDeviceID(_ deviceID: AudioObjectID?, for direction: AudioDeviceDirection) {
+        switch direction {
+        case .input:
+            inputDeviceID = deviceID
+        case .output:
+            outputDeviceID = deviceID
+        }
+    }
+
+    private func volumeAddresses(for direction: AudioDeviceDirection) -> [AudioObjectPropertyAddress] {
+        switch direction {
+        case .input:
+            return inputVolumeAddresses
+        case .output:
+            return outputVolumeAddresses
+        }
+    }
+
+    private func setVolumeAddresses(_ addresses: [AudioObjectPropertyAddress], for direction: AudioDeviceDirection) {
+        switch direction {
+        case .input:
+            inputVolumeAddresses = addresses
+        case .output:
+            outputVolumeAddresses = addresses
+        }
+    }
+
+    private func volumeListener(for direction: AudioDeviceDirection) -> AudioObjectPropertyListenerBlock? {
+        switch direction {
+        case .input:
+            return inputVolumeListener
+        case .output:
+            return outputVolumeListener
+        }
+    }
+
+    private func setVolumeListener(_ listener: AudioObjectPropertyListenerBlock?, for direction: AudioDeviceDirection) {
+        switch direction {
+        case .input:
+            inputVolumeListener = listener
+        case .output:
+            outputVolumeListener = listener
+        }
+    }
+
+    private func notifyChange(for direction: AudioDeviceDirection) {
+        Task { @MainActor in
+            switch direction {
+            case .input:
+                onInputChange()
+            case .output:
+                onOutputChange()
+            }
+        }
+    }
+
+    private func systemAddress(selector: AudioObjectPropertySelector) -> AudioObjectPropertyAddress {
+        AudioObjectPropertyAddress(
+            mSelector: selector,
+            mScope: kAudioObjectPropertyScopeGlobal,
+            mElement: kAudioObjectPropertyElementMain
+        )
     }
 }
 
