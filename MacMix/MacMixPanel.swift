@@ -785,7 +785,9 @@ private struct AppVolumeRow: View {
                 }
             }
 
-            PercentageText(value: app.volume)
+            MixVolumeRestoreControl(value: app.volume) {
+                updateVolume(1)
+            }
         }
         .padding(.vertical, 2)
         .sensoryFeedback(.alignment, trigger: isAtUnity) { _, isAtUnity in
@@ -802,6 +804,40 @@ private struct AppVolumeRow: View {
         Binding(
             get: { min(app.volume, maximumVolume) },
             set: { updateVolume($0) }
+        )
+    }
+}
+
+private struct MixVolumeRestoreControl: View {
+    let value: Double
+    let onRestore: () -> Void
+    @State private var isHovering = false
+
+    var body: some View {
+        Button(action: onRestore) {
+            ZStack {
+                PercentageText(value: value)
+                    .opacity(isHovering ? 0 : 1)
+
+                Image(systemName: "arrow.clockwise")
+                    .font(.caption.weight(.semibold))
+                    .imageScale(.medium)
+                    .foregroundStyle(.secondary)
+                    .opacity(isHovering ? 1 : 0)
+            }
+            .frame(width: 34, alignment: .trailing)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .onHover { isHovering = $0 }
+        .help(restoreTitle)
+        .accessibilityLabel(Text(restoreTitle))
+    }
+
+    private var restoreTitle: String {
+        String(
+            localized: "Restore to \(1.0, format: .percent.precision(.fractionLength(0)))",
+            comment: "Tooltip and accessibility label for the per-app mix volume restore button."
         )
     }
 }

@@ -224,10 +224,8 @@ final class AudioModel: NSObject, ObservableObject {
             return
         }
 
-        prepareForOutputRouteChange()
         hardware.setDefaultDevice(device.id, direction: .output)
         refreshOutputState()
-        refreshOutputAppsAfterRouteSettles()
     }
 
     func selectInputDevice(_ device: AudioDevice) {
@@ -323,8 +321,7 @@ final class AudioModel: NSObject, ObservableObject {
     }
 
     private func handleOutputRouteChange() {
-        prepareForOutputRouteChange()
-        refreshOutputAppsAfterRouteSettles()
+        pendingOutputApps = nil
     }
 
     private func prepareForOutputRouteChange() {
