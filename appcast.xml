@@ -2,13 +2,13 @@
   <channel>
     <title>MacMix Updates</title>
     <item>
-      <title>MacMix 1.2</title>
-      <sparkle:shortVersionString>1.2</sparkle:shortVersionString>
-      <sparkle:version>3</sparkle:version>
+      <title>MacMix 1.3</title>
+      <sparkle:shortVersionString>1.3</sparkle:shortVersionString>
+      <sparkle:version>4</sparkle:version>
       <enclosure
-        url="https://github.com/ljmng7/MacMix/releases/download/v1.2/MacMix.dmg"
-        sparkle:edSignature="ocztH3YoHclH6QuX9GnX+6OLe6AdcoJnaAqtfGMX9EzUgo5OWaOBRqf708fvvpv7mQJMVtXT5Od643OXJPSsCQ=="
-        length="6056317"
+        url="https://github.com/ljmng7/MacMix/releases/download/v1.3/MacMix.dmg"
+        sparkle:edSignature="uo4pPACjkbWDHsQE2s6G9JcveXXM6ziYHPaYMuzvWeaBnQiLycmrKDM2l47lq2BYQoT79pbE+Rh+THCp96EvCA=="
+        length="6065867"
         type="application/octet-stream" />
     </item>
   </channel>
