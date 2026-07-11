@@ -580,13 +580,14 @@ private struct SystemVolumeControl: View {
 
     var body: some View {
         VolumeSliderRow(
-            leadingIcon: state.systemVolume <= 0.001 ? "speaker.slash.fill" : "speaker.fill",
+            leadingIcon: (state.systemVolume ?? 1) <= 0.001 ? "speaker.slash.fill" : "speaker.fill",
             trailingIcon: "speaker.wave.3.fill",
             percentage: state.systemVolume,
             value: Binding(
-                get: { state.systemVolume },
+                get: { state.systemVolume ?? 0 },
                 set: onVolumeChange
-            )
+            ),
+            isEnabled: state.systemVolume != nil
         )
     }
 }
@@ -673,9 +674,10 @@ private struct InputVolumeControl: View {
             leadingIcon: "mic.fill",
             trailingIcon: "mic.and.signal.meter.fill",
             value: Binding(
-                get: { state.inputVolume },
+                get: { state.inputVolume ?? 0 },
                 set: onVolumeChange
-            )
+            ),
+            isEnabled: state.inputVolume != nil
         )
     }
 }
@@ -847,6 +849,7 @@ private struct VolumeSliderRow: View {
     let trailingIcon: String
     var percentage: Double? = nil
     @Binding var value: Double
+    var isEnabled = true
 
     var body: some View {
         HStack(spacing: 10) {
@@ -854,6 +857,7 @@ private struct VolumeSliderRow: View {
 
             Slider(value: $value, in: 0...1)
                 .tint(.blue)
+                .disabled(!isEnabled)
 
             SliderSymbol(name: trailingIcon)
 

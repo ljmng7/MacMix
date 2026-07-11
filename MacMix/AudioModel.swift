@@ -13,13 +13,17 @@ import Foundation
 @MainActor
 final class OutputAudioState: ObservableObject {
     @Published var devices: [AudioDevice] = []
-    @Published var systemVolume: Double = 0
+    @Published var systemVolume: Double?
 
     var currentDevice: AudioDevice? {
         devices.first(where: \.isCurrent)
     }
 
     var menuBarSymbolName: String {
+        guard let systemVolume else {
+            return "speaker.wave.3.fill"
+        }
+
         if systemVolume <= 0.001 {
             return "speaker.slash.fill"
         }
@@ -39,7 +43,7 @@ final class OutputAudioState: ObservableObject {
 @MainActor
 final class InputAudioState: ObservableObject {
     @Published var devices: [AudioDevice] = []
-    @Published var inputVolume: Double = 0
+    @Published var inputVolume: Double?
 
     var currentDevice: AudioDevice? {
         devices.first(where: \.isCurrent)
@@ -61,12 +65,30 @@ final class AudioModel: NSObject, ObservableObject {
 
     private let hardware = CoreAudioHardware()
     private let appAudioMixer = AppAudioMixer.shared
+    private let outputRouteProbe = DefaultOutputRouteProbe()
+    private let outputDeviceWriter = DefaultOutputDeviceWriter()
     private let defaults = UserDefaults.standard
     private var deviceObserver: CoreAudioDeviceObserver?
     private var refreshTimer: Timer?
     private var pendingOutputApps: [AudioApp]?
-    private var outputAppRefreshSuppressedUntil: Date?
     private var outputRouteRefreshTask: Task<Void, Never>?
+    private var outputDeviceWriteTimeoutTask: Task<Void, Never>?
+    private var outputRouteGeneration: UInt64 = 0
+    private var outputDeviceSelectionGeneration: UInt64 = 0
+    private var mixerCommandRevision: UInt64 = 0
+    private var lastSubmittedMixerSnapshot: AppMixerSnapshot?
+    private var isOutputRouteTransitioning = false
+    private var isMixerLifecycleBusy = false
+    private var mixerLifecycleRevision: UInt64?
+    private var needsOutputHardwareRefresh = false
+    private var needsInputHardwareRefresh = false
+    private var hasPendingOutputRouteTransition = false
+    private var pendingOutputRouteUID: String?
+    private let outputRouteStableReadIntervalNanoseconds: UInt64 = 80_000_000
+    private let outputDeviceRouteReleaseGraceNanoseconds: UInt64 = 80_000_000
+    private let outputDeviceWriteTimeoutNanoseconds: UInt64 = 3_000_000_000
+    private let requiredOutputRouteStableReads = 3
+    private let maximumOutputRouteStableReadAttempts = 10
     private let systemAudioPermissionNeedsAuthorizationKey = "MacMix.SystemAudioPermissionNeedsAuthorization"
     private let systemAudioPermissionAuthorizedKey = "MacMix.SystemAudioPermissionAuthorized"
 
@@ -76,10 +98,10 @@ final class AudioModel: NSObject, ObservableObject {
 
         deviceObserver = CoreAudioDeviceObserver(
             onOutputChange: { [weak self] in
-                self?.refreshOutputState()
+                self?.handleOutputHardwareChange()
             },
             onInputChange: { [weak self] in
-                self?.refreshInputState()
+                self?.handleInputHardwareChange()
             }
         )
 
@@ -98,6 +120,7 @@ final class AudioModel: NSObject, ObservableObject {
         deviceObserver?.stop()
         refreshTimer?.invalidate()
         outputRouteRefreshTask?.cancel()
+        outputDeviceWriteTimeoutTask?.cancel()
         appAudioMixer.stopAll()
     }
 
@@ -120,14 +143,12 @@ final class AudioModel: NSObject, ObservableObject {
         let devices = hardware.devices(for: .output)
         setOutputDevicesIfChanged(devices)
 
-        if let outputVolume = devices.first(where: \.isCurrent)?.volume {
-            setSystemOutputVolumeIfChanged(outputVolume)
-        }
+        setSystemOutputVolumeIfChanged(devices.first(where: \.isCurrent)?.volume)
 
         let currentOutputUID = devices.first(where: \.isCurrent)?.uid
 
-        if let previousOutputUID, previousOutputUID != currentOutputUID {
-            handleOutputRouteChange()
+        if previousOutputUID != currentOutputUID {
+            handleOutputRouteChange(to: currentOutputUID)
         }
     }
 
@@ -135,14 +156,11 @@ final class AudioModel: NSObject, ObservableObject {
         let devices = hardware.devices(for: .input)
         setInputDevicesIfChanged(devices)
 
-        if let inputVolume = devices.first(where: \.isCurrent)?.volume {
-            setInputVolumeIfChanged(inputVolume)
-        }
+        setInputVolumeIfChanged(devices.first(where: \.isCurrent)?.volume)
     }
 
     func refreshOutputApps(stabilize: Bool = true) {
-        if let outputAppRefreshSuppressedUntil,
-           Date() < outputAppRefreshSuppressedUntil {
+        guard !isOutputRouteTransitioning else {
             return
         }
 
@@ -170,13 +188,19 @@ final class AudioModel: NSObject, ObservableObject {
     }
 
     func requestSystemAudioPermissionIfNeeded() {
-        let permissionAvailable = appAudioMixer.requestSystemAudioPermissionIfNeeded()
-        handleSystemAudioPermissionRequest(permissionAvailable)
+        let appAudioMixer = appAudioMixer
+        Task { @MainActor [weak self] in
+            let permissionAvailable = await appAudioMixer.requestSystemAudioPermissionIfNeeded()
+            self?.handleSystemAudioPermissionRequest(permissionAvailable)
+        }
     }
 
     func requestSystemAudioPermission() {
-        let permissionAvailable = appAudioMixer.requestSystemAudioPermission()
-        handleSystemAudioPermissionRequest(permissionAvailable)
+        let appAudioMixer = appAudioMixer
+        Task { @MainActor [weak self] in
+            let permissionAvailable = await appAudioMixer.requestSystemAudioPermission()
+            self?.handleSystemAudioPermissionRequest(permissionAvailable)
+        }
     }
 
     func openSystemAudioRecordingSettingsForAuthorization() {
@@ -196,27 +220,41 @@ final class AudioModel: NSObject, ObservableObject {
     }
 
     @objc private func refreshFromTimer() {
+        guard !isMixerLifecycleBusy, !isOutputRouteTransitioning else {
+            return
+        }
+
         refreshOutputApps()
     }
 
     func setSystemOutputVolume(_ volume: Double) {
-        setSystemOutputVolumeIfChanged(volume)
         guard let deviceID = currentOutputDevice?.id else {
             return
         }
 
-        hardware.setVolume(volume, for: deviceID, direction: .output)
-        setCurrentOutputDeviceVolume(volume)
+        guard hardware.setVolume(volume, for: deviceID, direction: .output) else {
+            refreshOutputState()
+            return
+        }
+
+        let appliedVolume = hardware.volume(for: deviceID, direction: .output) ?? volume
+        setSystemOutputVolumeIfChanged(appliedVolume)
+        setCurrentOutputDeviceVolume(appliedVolume)
     }
 
     func setInputVolume(_ volume: Double) {
-        setInputVolumeIfChanged(volume)
         guard let deviceID = currentInputDevice?.id else {
             return
         }
 
-        hardware.setVolume(volume, for: deviceID, direction: .input)
-        setCurrentInputDeviceVolume(volume)
+        guard hardware.setVolume(volume, for: deviceID, direction: .input) else {
+            refreshInputState()
+            return
+        }
+
+        let appliedVolume = hardware.volume(for: deviceID, direction: .input) ?? volume
+        setInputVolumeIfChanged(appliedVolume)
+        setCurrentInputDeviceVolume(appliedVolume)
     }
 
     func selectOutputDevice(_ device: AudioDevice) {
@@ -224,8 +262,106 @@ final class AudioModel: NSObject, ObservableObject {
             return
         }
 
-        hardware.setDefaultDevice(device.id, direction: .output)
-        refreshOutputState()
+        outputDeviceSelectionGeneration &+= 1
+        outputRouteGeneration &+= 1
+        mixerCommandRevision &+= 1
+        let selectionGeneration = outputDeviceSelectionGeneration
+        let commandRevision = mixerCommandRevision
+
+        outputRouteRefreshTask?.cancel()
+        outputRouteRefreshTask = nil
+        outputDeviceWriteTimeoutTask?.cancel()
+        outputDeviceWriteTimeoutTask = nil
+        pendingOutputApps = nil
+        hasPendingOutputRouteTransition = false
+        pendingOutputRouteUID = nil
+        lastSubmittedMixerSnapshot = nil
+        isOutputRouteTransitioning = true
+        appAudioMixer.noteLatestCommand(revision: commandRevision)
+        beginMixerLifecycle(revision: commandRevision)
+
+        appAudioMixer.submitQuiesceForOutputSwitch(revision: commandRevision) { [weak self] result in
+            Task { @MainActor [weak self] in
+                guard let self else {
+                    return
+                }
+
+                guard outputDeviceSelectionGeneration == selectionGeneration,
+                      mixerCommandRevision == commandRevision else {
+                    return
+                }
+
+                guard result == .applied else {
+                    finishMixerLifecycle(revision: commandRevision)
+                    recoverFromOutputDeviceSelectionFailure(revision: commandRevision)
+                    return
+                }
+
+                do {
+                    try await Task.sleep(
+                        nanoseconds: outputDeviceRouteReleaseGraceNanoseconds
+                    )
+                } catch {
+                    finishMixerLifecycle(revision: commandRevision)
+                    recoverFromOutputDeviceSelectionFailure(revision: commandRevision)
+                    return
+                }
+
+                guard outputDeviceSelectionGeneration == selectionGeneration,
+                      mixerCommandRevision == commandRevision else {
+                    return
+                }
+
+                let writeTimeoutNanoseconds = outputDeviceWriteTimeoutNanoseconds
+                outputDeviceWriteTimeoutTask = Task { @MainActor [weak self] in
+                    do {
+                        try await Task.sleep(
+                            nanoseconds: writeTimeoutNanoseconds
+                        )
+                    } catch {
+                        return
+                    }
+
+                    guard let self,
+                          outputDeviceSelectionGeneration == selectionGeneration,
+                          mixerCommandRevision == commandRevision else {
+                        return
+                    }
+
+                    outputDeviceWriteTimeoutTask = nil
+                    outputDeviceSelectionGeneration &+= 1
+                    finishMixerLifecycle(revision: commandRevision)
+                    recoverFromOutputDeviceSelectionFailure(
+                        revision: commandRevision
+                    )
+                }
+
+                outputDeviceWriter.select(device.id) { [weak self] didApply in
+                    Task { @MainActor [weak self] in
+                        guard let self,
+                              outputDeviceSelectionGeneration == selectionGeneration else {
+                            return
+                        }
+
+                        outputDeviceWriteTimeoutTask?.cancel()
+                        outputDeviceWriteTimeoutTask = nil
+                        let routeGenerationBeforeRefresh = outputRouteGeneration
+                        finishMixerLifecycle(revision: commandRevision)
+
+                        if didApply {
+                            refreshOutputState()
+                            if outputRouteGeneration == routeGenerationBeforeRefresh {
+                                handleOutputRouteChange(to: currentOutputDevice?.uid)
+                            }
+                        } else {
+                            recoverFromOutputDeviceSelectionFailure(
+                                revision: commandRevision
+                            )
+                        }
+                    }
+                }
+            }
+        }
     }
 
     func selectInputDevice(_ device: AudioDevice) {
@@ -249,25 +385,12 @@ final class AudioModel: NSObject, ObservableObject {
 
             apps[index].volume = clampedVolume
             outputAppsState.apps = apps
-            updateSystemAudioPermissionAfterMixAttempt(
-                appAudioMixer.apply(
-                    clampedVolume,
-                    to: apps[index],
-                    outputDeviceUID: currentOutputDevice?.uid
-                ),
-                requiresPermission: appVolumeRequiresSystemAudioPermission(clampedVolume),
-                requestAuthorizationIfDenied: true
-            )
+            scheduleMixerReconcile(requestAuthorizationIfDenied: true)
         } else {
             var updatedApp = app
             updatedApp.volume = clampedVolume
-            updateSystemAudioPermissionAfterMixAttempt(
-                appAudioMixer.apply(
-                    clampedVolume,
-                    to: updatedApp,
-                    outputDeviceUID: currentOutputDevice?.uid
-                ),
-                requiresPermission: appVolumeRequiresSystemAudioPermission(clampedVolume),
+            scheduleMixerReconcile(
+                additionalTarget: updatedApp,
                 requestAuthorizationIfDenied: true
             )
         }
@@ -280,13 +403,81 @@ final class AudioModel: NSObject, ObservableObject {
     }
 
     private func reconcileOutputApps() {
-        updateSystemAudioPermissionAfterMixAttempt(
-            appAudioMixer.reconcile(
-                apps: outputAppsState.apps,
-                outputDeviceUID: currentOutputDevice?.uid
-            ),
-            requiresPermission: activeOutputMixRequiresSystemAudioPermission,
-            requestAuthorizationIfDenied: false
+        scheduleMixerReconcile(requestAuthorizationIfDenied: false)
+    }
+
+    private func scheduleMixerReconcile(
+        additionalTarget: AudioApp? = nil,
+        requestAuthorizationIfDenied: Bool
+    ) {
+        guard !isOutputRouteTransitioning else {
+            return
+        }
+
+        var apps = outputAppsState.apps
+        if let additionalTarget,
+           !apps.contains(where: { $0.id == additionalTarget.id }) {
+            apps.append(additionalTarget)
+        }
+
+        let outputDeviceUID = currentOutputDevice?.uid
+        let targets = outputDeviceUID == nil ? [] : apps.map(mixTarget).sorted { $0.id < $1.id }
+        let snapshot = AppMixerSnapshot(
+            routeGeneration: outputRouteGeneration,
+            outputDeviceUID: outputDeviceUID,
+            targets: targets
+        )
+        guard snapshot != lastSubmittedMixerSnapshot else {
+            return
+        }
+
+        mixerCommandRevision &+= 1
+        let command = AppMixerCommand(
+            revision: mixerCommandRevision,
+            routeGeneration: snapshot.routeGeneration,
+            outputDeviceUID: snapshot.outputDeviceUID,
+            targets: snapshot.targets
+        )
+        let requiresPermission = command.targets.contains {
+            appVolumeRequiresSystemAudioPermission($0.volume)
+        }
+        lastSubmittedMixerSnapshot = snapshot
+        appAudioMixer.noteLatestCommand(revision: command.revision)
+        beginMixerLifecycle(revision: command.revision)
+        appAudioMixer.submitReconcile(command) { [weak self] result in
+            Task { @MainActor [weak self] in
+                guard let self else {
+                    return
+                }
+                finishMixerLifecycle(revision: command.revision)
+
+                guard mixerCommandRevision == command.revision,
+                      outputRouteGeneration == command.routeGeneration,
+                      !isOutputRouteTransitioning else {
+                    return
+                }
+
+                guard result != .superseded else {
+                    return
+                }
+
+                if result == .failed {
+                    lastSubmittedMixerSnapshot = nil
+                }
+                updateSystemAudioPermissionAfterMixAttempt(
+                    result == .applied,
+                    requiresPermission: requiresPermission,
+                    requestAuthorizationIfDenied: requestAuthorizationIfDenied
+                )
+            }
+        }
+    }
+
+    private func mixTarget(_ app: AudioApp) -> AppMixTarget {
+        AppMixTarget(
+            id: app.id,
+            audioObjectIDs: app.audioObjectIDs,
+            volume: app.volume
         )
     }
 
@@ -315,30 +506,236 @@ final class AudioModel: NSObject, ObservableObject {
         }
     }
 
-    private func suppressOutputAppRefresh() {
+    private func handleOutputRouteChange(to outputDeviceUID: String?) {
         pendingOutputApps = nil
-        outputAppRefreshSuppressedUntil = Date().addingTimeInterval(1.25)
-    }
+        hasPendingOutputRouteTransition = false
+        pendingOutputRouteUID = nil
+        outputRouteGeneration &+= 1
+        mixerCommandRevision &+= 1
+        let routeGeneration = outputRouteGeneration
+        let commandRevision = mixerCommandRevision
+        lastSubmittedMixerSnapshot = nil
+        appAudioMixer.noteLatestCommand(revision: commandRevision)
 
-    private func handleOutputRouteChange() {
-        pendingOutputApps = nil
-    }
-
-    private func prepareForOutputRouteChange() {
-        suppressOutputAppRefresh()
-        appAudioMixer.stopAll()
-    }
-
-    private func refreshOutputAppsAfterRouteSettles() {
         outputRouteRefreshTask?.cancel()
+        isOutputRouteTransitioning = true
+        // The system route changes first. Rebuild private tap aggregates only after the
+        // actual default-output UID has remained stable across consecutive HAL reads.
         outputRouteRefreshTask = Task { @MainActor [weak self] in
-            try? await Task.sleep(nanoseconds: 1_300_000_000)
-            guard !Task.isCancelled else {
+            guard let self else {
                 return
             }
 
-            self?.refreshOutputApps(stabilize: false)
+            var lastObservedUID = outputDeviceUID
+            var hasObservedUID = false
+            var stableReadCount = 0
+            var didReachStableRoute = false
+            var stableOutputDeviceUID: String?
+
+            for _ in 0..<maximumOutputRouteStableReadAttempts {
+                do {
+                    try await Task.sleep(nanoseconds: outputRouteStableReadIntervalNanoseconds)
+                } catch {
+                    return
+                }
+
+                guard outputRouteGeneration == routeGeneration else {
+                    return
+                }
+
+                let observedUID: String?
+                switch await outputRouteProbe.read() {
+                case let .device(uid):
+                    observedUID = uid
+                case .noDevice:
+                    observedUID = nil
+                case .failed:
+                    continue
+                }
+                if hasObservedUID, observedUID == lastObservedUID {
+                    stableReadCount += 1
+                } else {
+                    lastObservedUID = observedUID
+                    hasObservedUID = true
+                    stableReadCount = 1
+                }
+
+                if stableReadCount >= requiredOutputRouteStableReads {
+                    stableOutputDeviceUID = observedUID
+                    didReachStableRoute = true
+                    break
+                }
+            }
+
+            guard didReachStableRoute,
+                  outputRouteGeneration == routeGeneration else {
+                if outputRouteGeneration == routeGeneration {
+                    isOutputRouteTransitioning = false
+                    if isMixerLifecycleBusy {
+                        deferOutputRouteTransition(to: outputDeviceUID)
+                        return
+                    }
+                    scheduleMixerReconcile(requestAuthorizationIfDenied: false)
+                }
+                return
+            }
+
+            guard !isMixerLifecycleBusy else {
+                deferOutputRouteTransition(to: stableOutputDeviceUID)
+                return
+            }
+
+            refreshOutputState()
+            guard outputRouteGeneration == routeGeneration else {
+                return
+            }
+
+            guard currentOutputDevice?.uid == stableOutputDeviceUID else {
+                isOutputRouteTransitioning = false
+                handleOutputRouteChange(to: currentOutputDevice?.uid)
+                return
+            }
+
+            var apps: [AudioApp] = []
+            if stableOutputDeviceUID != nil {
+                apps = hardware.runningOutputApps { [weak self] bundleID in
+                    self?.storedAppVolume(for: bundleID) ?? 1
+                }
+
+                if !outputAppsState.apps.isEmpty, apps.isEmpty {
+                    do {
+                        try await Task.sleep(nanoseconds: outputRouteStableReadIntervalNanoseconds)
+                    } catch {
+                        return
+                    }
+
+                    guard outputRouteGeneration == routeGeneration else {
+                        return
+                    }
+                    apps = hardware.runningOutputApps { [weak self] bundleID in
+                        self?.storedAppVolume(for: bundleID) ?? 1
+                    }
+                }
+            }
+
+            pendingOutputApps = nil
+            if !audioAppsMatch(outputAppsState.apps, apps) {
+                outputAppsState.apps = apps
+            }
+            let requiresPermission = activeOutputMixRequiresSystemAudioPermission
+            let command = AppMixerCommand(
+                revision: commandRevision,
+                routeGeneration: routeGeneration,
+                outputDeviceUID: stableOutputDeviceUID,
+                targets: apps.map(mixTarget).sorted { $0.id < $1.id }
+            )
+            lastSubmittedMixerSnapshot = command.snapshot
+            isOutputRouteTransitioning = false
+            beginMixerLifecycle(revision: commandRevision)
+
+            let completion: @Sendable (AppMixerResult) -> Void = { [weak self] result in
+                Task { @MainActor [weak self] in
+                    guard let self else {
+                        return
+                    }
+                    finishMixerLifecycle(revision: commandRevision)
+
+                    guard outputRouteGeneration == routeGeneration,
+                          mixerCommandRevision == commandRevision else {
+                        return
+                    }
+
+                    guard result != .superseded else {
+                        return
+                    }
+
+                    if result == .failed {
+                        lastSubmittedMixerSnapshot = nil
+                    }
+                    updateSystemAudioPermissionAfterMixAttempt(
+                        result == .applied,
+                        requiresPermission: requiresPermission,
+                        requestAuthorizationIfDenied: false
+                    )
+                    refreshOutputApps(stabilize: false)
+                }
+            }
+
+            if stableOutputDeviceUID == nil {
+                appAudioMixer.submitReconcile(command, completion: completion)
+            } else {
+                appAudioMixer.submitTransition(command, completion: completion)
+            }
         }
+    }
+
+    private func handleOutputHardwareChange() {
+        guard !isMixerLifecycleBusy else {
+            needsOutputHardwareRefresh = true
+            return
+        }
+
+        refreshOutputState()
+    }
+
+    private func handleInputHardwareChange() {
+        guard !isMixerLifecycleBusy else {
+            needsInputHardwareRefresh = true
+            return
+        }
+
+        refreshInputState()
+    }
+
+    private func recoverFromOutputDeviceSelectionFailure(revision: UInt64) {
+        guard mixerCommandRevision == revision else {
+            return
+        }
+
+        isOutputRouteTransitioning = false
+        lastSubmittedMixerSnapshot = nil
+        refreshOutputState()
+        scheduleMixerReconcile(requestAuthorizationIfDenied: false)
+    }
+
+    private func beginMixerLifecycle(revision: UInt64) {
+        mixerLifecycleRevision = revision
+        isMixerLifecycleBusy = true
+    }
+
+    private func finishMixerLifecycle(revision: UInt64) {
+        guard mixerLifecycleRevision == revision else {
+            return
+        }
+
+        mixerLifecycleRevision = nil
+        isMixerLifecycleBusy = false
+
+        if hasPendingOutputRouteTransition {
+            let outputDeviceUID = pendingOutputRouteUID
+            hasPendingOutputRouteTransition = false
+            pendingOutputRouteUID = nil
+            needsOutputHardwareRefresh = false
+            handleOutputRouteChange(to: outputDeviceUID)
+            return
+        }
+
+        if needsOutputHardwareRefresh {
+            needsOutputHardwareRefresh = false
+            refreshOutputState()
+        }
+
+        if needsInputHardwareRefresh {
+            needsInputHardwareRefresh = false
+            refreshInputState()
+        }
+    }
+
+    private func deferOutputRouteTransition(to outputDeviceUID: String?) {
+        pendingOutputRouteUID = outputDeviceUID
+        hasPendingOutputRouteTransition = true
+        needsOutputHardwareRefresh = true
+        isOutputRouteTransitioning = false
     }
 
     private func setOutputDevicesIfChanged(_ devices: [AudioDevice]) {
@@ -388,16 +785,16 @@ final class AudioModel: NSObject, ObservableObject {
         return updatedDevices
     }
 
-    private func setSystemOutputVolumeIfChanged(_ volume: Double) {
-        guard !nearlyEqual(outputState.systemVolume, volume) else {
+    private func setSystemOutputVolumeIfChanged(_ volume: Double?) {
+        guard !optionalVolumesMatch(outputState.systemVolume, volume) else {
             return
         }
 
         outputState.systemVolume = volume
     }
 
-    private func setInputVolumeIfChanged(_ volume: Double) {
-        guard !nearlyEqual(inputState.inputVolume, volume) else {
+    private func setInputVolumeIfChanged(_ volume: Double?) {
+        guard !optionalVolumesMatch(inputState.inputVolume, volume) else {
             return
         }
 
@@ -466,6 +863,17 @@ final class AudioModel: NSObject, ObservableObject {
 
     private func nearlyEqual(_ lhs: Double, _ rhs: Double) -> Bool {
         abs(lhs - rhs) < 0.001
+    }
+
+    private func optionalVolumesMatch(_ lhs: Double?, _ rhs: Double?) -> Bool {
+        switch (lhs, rhs) {
+        case let (.some(lhs), .some(rhs)):
+            nearlyEqual(lhs, rhs)
+        case (.none, .none):
+            true
+        default:
+            false
+        }
     }
 
     private func storedAppVolume(for bundleID: String) -> Double {

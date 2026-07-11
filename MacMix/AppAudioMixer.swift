@@ -9,10 +9,47 @@ import Accelerate
 import AudioToolbox
 import CoreAudio
 import Foundation
+import Synchronization
 
-nonisolated final class AppAudioMixer {
+nonisolated struct AppMixTarget: Sendable, Equatable {
+    let id: String
+    let audioObjectIDs: [AudioObjectID]
+    let volume: Double
+}
+
+nonisolated struct AppMixerSnapshot: Sendable, Equatable {
+    let routeGeneration: UInt64
+    let outputDeviceUID: String?
+    let targets: [AppMixTarget]
+}
+
+nonisolated struct AppMixerCommand: Sendable {
+    let revision: UInt64
+    let routeGeneration: UInt64
+    let outputDeviceUID: String?
+    let targets: [AppMixTarget]
+
+    var snapshot: AppMixerSnapshot {
+        AppMixerSnapshot(
+            routeGeneration: routeGeneration,
+            outputDeviceUID: outputDeviceUID,
+            targets: targets
+        )
+    }
+}
+
+nonisolated enum AppMixerResult: Sendable, Equatable {
+    case applied
+    case failed
+    case superseded
+}
+
+nonisolated final class AppAudioMixer: @unchecked Sendable {
     static let shared = AppAudioMixer()
     fileprivate static let maximumGain: Float = 2
+    private static let maximumGainHandoffDuration: TimeInterval = 0.065
+    private static let outputSwitchQuiescenceTimeoutNanoseconds: UInt64 = 3_000_000_000
+    private static let outputSwitchQuiescencePollNanoseconds: UInt64 = 20_000_000
 
     static var isSupported: Bool {
         if #available(macOS 14.4, *) {
@@ -22,20 +59,107 @@ nonisolated final class AppAudioMixer {
         return false
     }
 
+    // HAL lifecycle calls can block while Core Audio renegotiates a route. MainActor only
+    // submits immutable commands and never waits for this queue.
+    private let lifecycleQueue = DispatchQueue(
+        label: "MacMix.AppAudioMixer.Lifecycle",
+        qos: .userInitiated
+    )
+    private let retirementQueue = DispatchQueue(
+        label: "MacMix.AppAudioMixer.Retirement",
+        qos: .userInitiated,
+        attributes: .concurrent
+    )
+    // The following mutable state is confined to lifecycleQueue.
     private var engines: [String: any AppGainEngine] = [:]
+    private var pendingRetirements: [AppGainEngineRetirement] = []
+    private let latestCommandRevision = Atomic<UInt64>(0)
 
     private init() {}
 
-    func hasSystemAudioPermission() -> Bool {
-        probeSystemAudioPermission()
+    func noteLatestCommand(revision: UInt64) {
+        latestCommandRevision.store(revision, ordering: .releasing)
     }
 
-    func requestSystemAudioPermissionIfNeeded() -> Bool {
-        probeSystemAudioPermission()
+    func hasSystemAudioPermission() async -> Bool {
+        await probeSystemAudioPermissionOnLifecycleQueue()
     }
 
-    func requestSystemAudioPermission() -> Bool {
-        probeSystemAudioPermission()
+    func requestSystemAudioPermissionIfNeeded() async -> Bool {
+        await probeSystemAudioPermissionOnLifecycleQueue()
+    }
+
+    func requestSystemAudioPermission() async -> Bool {
+        await probeSystemAudioPermissionOnLifecycleQueue()
+    }
+
+    func submitReconcile(
+        _ command: AppMixerCommand,
+        completion: @escaping @Sendable (AppMixerResult) -> Void
+    ) {
+        lifecycleQueue.async { [self] in
+            completion(reconcile(command))
+        }
+    }
+
+    func submitTransition(
+        _ command: AppMixerCommand,
+        completion: @escaping @Sendable (AppMixerResult) -> Void
+    ) {
+        lifecycleQueue.async { [self] in
+            completion(transition(command))
+        }
+    }
+
+    /// Releases every process tap, aggregate device, and IOProc before the system
+    /// default output is changed. Keeping the old Bluetooth-backed aggregate alive
+    /// during the write lets Bluetooth Smart Routing claim the route again.
+    func submitQuiesceForOutputSwitch(
+        revision: UInt64,
+        completion: @escaping @Sendable (AppMixerResult) -> Void
+    ) {
+        lifecycleQueue.async { [self] in
+            guard isCurrent(revision: revision) else {
+                completion(.superseded)
+                return
+            }
+
+            let enginesToRetire = Array(engines.values)
+            prepareForUnityHandoff(enginesToRetire)
+
+            guard isCurrent(revision: revision) else {
+                completion(.superseded)
+                return
+            }
+
+            engines.removeAll()
+            for engine in enginesToRetire {
+                enqueueRetirement(engine)
+            }
+
+            let deadline = DispatchTime.now().uptimeNanoseconds
+                &+ Self.outputSwitchQuiescenceTimeoutNanoseconds
+            pollForOutputSwitchQuiescence(
+                revision: revision,
+                deadline: deadline,
+                completion: completion
+            )
+        }
+    }
+
+    func stopAll() {
+        latestCommandRevision.wrappingAdd(1, ordering: .releasing)
+        lifecycleQueue.async { [self] in
+            stopAllNow()
+        }
+    }
+
+    private func probeSystemAudioPermissionOnLifecycleQueue() async -> Bool {
+        await withCheckedContinuation { continuation in
+            lifecycleQueue.async { [self] in
+                continuation.resume(returning: probeSystemAudioPermission())
+            }
+        }
     }
 
     private func probeSystemAudioPermission() -> Bool {
@@ -59,53 +183,139 @@ nonisolated final class AppAudioMixer {
         return true
     }
 
-    func apply(_ volume: Double, to app: AudioApp, outputDeviceUID: String?) -> Bool {
-        let clampedVolume = Float(max(0, min(Double(Self.maximumGain), volume)))
+    private func apply(_ target: AppMixTarget, command: AppMixerCommand) -> Bool {
+        guard isCurrent(command) else {
+            return false
+        }
 
-        guard !isUnity(Double(clampedVolume)), let outputDeviceUID else {
-            engines.removeValue(forKey: app.id)?.stop()
-            return true
+        let clampedVolume = Float(max(0, min(Double(Self.maximumGain), target.volume)))
+
+        guard !isUnity(Double(clampedVolume)), let outputDeviceUID = command.outputDeviceUID else {
+            guard let engine = engines.removeValue(forKey: target.id) else {
+                return true
+            }
+
+            prepareForUnityHandoff([engine])
+            enqueueRetirement(engine)
+            return waitForPendingAggregateRemoval(command: command)
         }
 
         guard Self.isSupported else {
             return false
         }
 
-        if let engine = engines[app.id] {
-            if engine.tappedObjects == app.audioObjectIDs,
+        if let engine = engines[target.id] {
+            if engine.tappedObjects == target.audioObjectIDs,
                engine.outputDeviceUID == outputDeviceUID {
+                guard isCurrent(command) else {
+                    return false
+                }
+
                 engine.gain = clampedVolume
                 return true
             }
 
-            engine.stop()
-            engines.removeValue(forKey: app.id)
+            engines.removeValue(forKey: target.id)
+            prepareForUnityHandoff([engine])
+            enqueueRetirement(engine)
+            guard waitForPendingAggregateRemoval(command: command), isCurrent(command) else {
+                return false
+            }
+        }
+
+        guard waitForPendingAggregateRemoval(command: command) else {
+            return false
         }
 
         guard #available(macOS 14.4, *),
               let engine = ProcessTapGainEngine(
-                audioObjectIDs: app.audioObjectIDs,
+                audioObjectIDs: target.audioObjectIDs,
                 gain: clampedVolume,
                 outputDeviceUID: outputDeviceUID
               ) else {
             return false
         }
 
-        engines[app.id] = engine
+        guard isCurrent(command) else {
+            enqueueRetirement(engine)
+            _ = waitForPendingAggregateRemoval(command: command)
+            return false
+        }
+
+        engines[target.id] = engine
         return true
     }
 
-    func reconcile(apps: [AudioApp], outputDeviceUID: String?) -> Bool {
-        let currentIDs = Set(apps.map(\.id))
+    private func reconcile(_ command: AppMixerCommand) -> AppMixerResult {
+        guard isCurrent(command) else {
+            return .superseded
+        }
+
+        return reconcileCurrentRoute(command) ? .applied : .failed
+    }
+
+    private func transition(_ command: AppMixerCommand) -> AppMixerResult {
+        guard isCurrent(command),
+              let outputDeviceUID = command.outputDeviceUID else {
+            return .superseded
+        }
+
+        let targetByID = Dictionary(uniqueKeysWithValues: command.targets.map { ($0.id, $0) })
+        let enginesToReplace = engines.filter { appID, engine in
+            guard let target = targetByID[appID] else {
+                return true
+            }
+
+            return isUnity(target.volume)
+                || engine.tappedObjects != target.audioObjectIDs
+                || engine.outputDeviceUID != outputDeviceUID
+        }
+
+        prepareForUnityHandoff(Array(enginesToReplace.values))
+
+        for (appID, engine) in enginesToReplace {
+            guard isCurrent(command) else {
+                return .superseded
+            }
+
+            engines.removeValue(forKey: appID)
+            enqueueRetirement(engine)
+        }
+
+        guard isCurrent(command) else {
+            return .superseded
+        }
+
+        guard waitForPendingAggregateRemoval(command: command) else {
+            return .failed
+        }
+
+        return reconcileCurrentRoute(command) ? .applied : .failed
+    }
+
+    private func reconcileCurrentRoute(_ command: AppMixerCommand) -> Bool {
+        let currentIDs = Set(command.targets.map(\.id))
         var success = true
 
         for (appID, engine) in Array(engines) where !currentIDs.contains(appID) {
-            engine.stop()
+            guard isCurrent(command) else {
+                return false
+            }
+
             engines.removeValue(forKey: appID)
+            enqueueRetirement(engine)
         }
 
-        for app in apps {
-            if !apply(app.volume, to: app, outputDeviceUID: outputDeviceUID) {
+        guard waitForPendingAggregateRemoval(command: command) else {
+            return false
+        }
+
+        for target in command.targets {
+            guard isCurrent(command) else {
+                return false
+            }
+
+            if !apply(target, command: command) {
                 success = false
             }
         }
@@ -113,16 +323,105 @@ nonisolated final class AppAudioMixer {
         return success
     }
 
-    func stopAll() {
+    private func stopAllNow() {
         for engine in engines.values {
-            engine.stop()
+            enqueueRetirement(engine)
         }
 
         engines.removeAll()
+        _ = waitForPendingAggregateRemoval()
     }
 
     private func isUnity(_ volume: Double) -> Bool {
         abs(volume - 1) < 0.005
+    }
+
+    private func isCurrent(_ command: AppMixerCommand) -> Bool {
+        isCurrent(revision: command.revision)
+    }
+
+    private func isCurrent(revision: UInt64) -> Bool {
+        latestCommandRevision.load(ordering: .acquiring) == revision
+    }
+
+    private func enqueueRetirement(_ engine: any AppGainEngine) {
+        let retirement = AppGainEngineRetirement(engine: engine)
+        pendingRetirements.append(retirement)
+        retirement.start(on: retirementQueue)
+    }
+
+    private func prepareForUnityHandoff(_ engines: [any AppGainEngine]) {
+        guard !engines.isEmpty else {
+            return
+        }
+
+        for engine in engines {
+            engine.gain = 1
+        }
+
+        let deadline = Date().addingTimeInterval(Self.maximumGainHandoffDuration)
+        while Date() < deadline {
+            if engines.allSatisfy({ $0.hasRenderedGain(1) }) {
+                return
+            }
+
+            Thread.sleep(forTimeInterval: 0.002)
+        }
+    }
+
+    private func pollForOutputSwitchQuiescence(
+        revision: UInt64,
+        deadline: UInt64,
+        completion: @escaping @Sendable (AppMixerResult) -> Void
+    ) {
+        pendingRetirements.removeAll(where: \.isComplete)
+
+        guard isCurrent(revision: revision) else {
+            completion(.superseded)
+            return
+        }
+
+        guard pendingRetirements.contains(where: { !$0.hasReleasedRoute }) else {
+            completion(.applied)
+            return
+        }
+
+        guard DispatchTime.now().uptimeNanoseconds < deadline else {
+            completion(.failed)
+            return
+        }
+
+        lifecycleQueue.asyncAfter(
+            deadline: .now() + .nanoseconds(Int(Self.outputSwitchQuiescencePollNanoseconds))
+        ) { [self] in
+            pollForOutputSwitchQuiescence(
+                revision: revision,
+                deadline: deadline,
+                completion: completion
+            )
+        }
+    }
+
+    private func waitForPendingAggregateRemoval(command: AppMixerCommand? = nil) -> Bool {
+        guard !pendingRetirements.isEmpty else {
+            return true
+        }
+
+        let deadline = Date().addingTimeInterval(0.8)
+        while Date() < deadline {
+            if let command, !isCurrent(command) {
+                return false
+            }
+
+            pendingRetirements.removeAll(where: \.shouldStopBlockingCommands)
+            if pendingRetirements.isEmpty {
+                return true
+            }
+
+            Thread.sleep(forTimeInterval: 0.02)
+        }
+
+        return false
     }
 
 }
@@ -131,8 +430,175 @@ private protocol AppGainEngine: AnyObject {
     nonisolated var gain: Float { get set }
     nonisolated var tappedObjects: [AudioObjectID] { get }
     nonisolated var outputDeviceUID: String { get }
+    nonisolated var isStopped: Bool { get }
+    nonisolated func hasRenderedGain(_ gain: Float) -> Bool
 
-    nonisolated func stop()
+    @discardableResult
+    nonisolated func stop() -> AudioObjectID?
+}
+
+nonisolated private final class AppGainEngineRetirement: @unchecked Sendable {
+    private static let maximumCoordinationWaitNanoseconds: UInt64 = 750_000_000
+    private let engine: any AppGainEngine
+    private let teardownCompletedAt = Atomic<UInt64>(0)
+    private let completed = Atomic<Bool>(false)
+
+    init(engine: any AppGainEngine) {
+        self.engine = engine
+    }
+
+    var isComplete: Bool {
+        completed.load(ordering: .acquiring)
+    }
+
+    var hasReleasedRoute: Bool {
+        isComplete || teardownCompletedAt.load(ordering: .acquiring) > 0
+    }
+
+    var shouldStopBlockingCommands: Bool {
+        if isComplete {
+            return true
+        }
+
+        let completedAt = teardownCompletedAt.load(ordering: .acquiring)
+        guard completedAt > 0 else {
+            return false
+        }
+
+        let elapsed = DispatchTime.now().uptimeNanoseconds &- completedAt
+        return elapsed >= Self.maximumCoordinationWaitNanoseconds
+    }
+
+    func start(on queue: DispatchQueue) {
+        queue.async { [self] in
+            var retiredAggregateID: AudioObjectID?
+            while !engine.isStopped {
+                if let aggregateID = engine.stop() {
+                    retiredAggregateID = retiredAggregateID ?? aggregateID
+                }
+
+                if !engine.isStopped {
+                    Thread.sleep(forTimeInterval: 0.02)
+                }
+            }
+            teardownCompletedAt.store(DispatchTime.now().uptimeNanoseconds, ordering: .releasing)
+
+            if let retiredAggregateID {
+                while true {
+                    if let activeDeviceIDs = Self.activeAudioDeviceIDs(),
+                       !activeDeviceIDs.contains(retiredAggregateID) {
+                        break
+                    }
+
+                    Thread.sleep(forTimeInterval: 0.02)
+                }
+            }
+
+            completed.store(true, ordering: .releasing)
+        }
+    }
+
+    private static func activeAudioDeviceIDs() -> Set<AudioObjectID>? {
+        var address = AudioObjectPropertyAddress(
+            mSelector: kAudioHardwarePropertyDevices,
+            mScope: kAudioObjectPropertyScopeGlobal,
+            mElement: kAudioObjectPropertyElementMain
+        )
+        var dataSize: UInt32 = 0
+        let systemObject = AudioObjectID(kAudioObjectSystemObject)
+
+        guard AudioObjectGetPropertyDataSize(systemObject, &address, 0, nil, &dataSize) == noErr else {
+            return nil
+        }
+
+        let count = Int(dataSize) / MemoryLayout<AudioObjectID>.size
+        guard count > 0 else {
+            return []
+        }
+
+        var deviceIDs = Array(repeating: AudioObjectID(kAudioObjectUnknown), count: count)
+        guard AudioObjectGetPropertyData(systemObject, &address, 0, nil, &dataSize, &deviceIDs) == noErr else {
+            return nil
+        }
+
+        return Set(deviceIDs.filter { $0 != kAudioObjectUnknown })
+    }
+}
+
+nonisolated private final class GainState: @unchecked Sendable {
+    private static let rampDurationSeconds = 0.04
+    private static let fallbackSampleRate = 48_000.0
+    private let targetGain: Atomic<Float>
+    private let renderedGain: Atomic<Float>
+    // targetGain crosses threads atomically; the remaining fields belong exclusively to
+    // the realtime IO callback after the engine starts.
+    private var currentGain: Float
+    private var lastTargetGain: Float
+    private var remainingRampFrames: UInt32 = 0
+
+    init(initialGain: Float, targetGain: Float) {
+        let initialGain = Self.clamp(initialGain)
+        let targetGain = Self.clamp(targetGain)
+        self.currentGain = initialGain
+        self.lastTargetGain = initialGain
+        self.targetGain = Atomic(targetGain)
+        self.renderedGain = Atomic(initialGain)
+    }
+
+    var target: Float {
+        get { targetGain.load(ordering: .relaxed) }
+        set { targetGain.store(Self.clamp(newValue), ordering: .relaxed) }
+    }
+
+    func hasRendered(_ gain: Float) -> Bool {
+        abs(renderedGain.load(ordering: .relaxed) - Self.clamp(gain)) < 0.0001
+    }
+
+    func markRendered(_ ramp: GainRamp) {
+        renderedGain.store(ramp.end, ordering: .relaxed)
+    }
+
+    func nextRamp(frameCount: UInt32, sampleRate: Float64) -> GainRamp {
+        let target = targetGain.load(ordering: .relaxed)
+        if abs(target - lastTargetGain) > 0.0001 {
+            lastTargetGain = target
+            let sampleRate = sampleRate.isFinite && sampleRate > 0
+                ? sampleRate
+                : Self.fallbackSampleRate
+            let rampFrames = min(
+                sampleRate * Self.rampDurationSeconds,
+                Double(UInt32.max)
+            )
+            remainingRampFrames = max(UInt32(rampFrames.rounded(.up)), 1)
+        }
+
+        let start = currentGain
+        guard remainingRampFrames > 0, frameCount > 0 else {
+            currentGain = target
+            return GainRamp(start: target, end: target, frameCount: 0)
+        }
+
+        let framesThisBuffer = min(frameCount, remainingRampFrames)
+        let progress = Float(framesThisBuffer) / Float(remainingRampFrames)
+        currentGain += (target - currentGain) * progress
+        remainingRampFrames -= framesThisBuffer
+
+        if remainingRampFrames == 0 {
+            currentGain = target
+        }
+
+        return GainRamp(start: start, end: currentGain, frameCount: framesThisBuffer)
+    }
+
+    private static func clamp(_ gain: Float) -> Float {
+        max(0, min(AppAudioMixer.maximumGain, gain))
+    }
+}
+
+nonisolated private struct GainRamp: Sendable {
+    let start: Float
+    let end: Float
+    let frameCount: UInt32
 }
 
 @available(macOS 14.4, *)
@@ -141,15 +607,25 @@ nonisolated private final class ProcessTapGainEngine: AppGainEngine {
     nonisolated let outputDeviceUID: String
 
     nonisolated var gain: Float {
-        get { gainPointer.pointee }
-        set { gainPointer.pointee = max(0, min(AppAudioMixer.maximumGain, newValue)) }
+        get { gainState.target }
+        set { gainState.target = newValue }
     }
 
-    private let gainPointer: UnsafeMutablePointer<Float>
-    private var destroyedGainPointer = false
+    nonisolated func hasRenderedGain(_ gain: Float) -> Bool {
+        gainState.hasRendered(gain)
+    }
+
+    nonisolated var isStopped: Bool {
+        ioProc == nil
+            && aggregateID == kAudioObjectUnknown
+            && tapID == kAudioObjectUnknown
+    }
+
+    private let gainState: GainState
     private var tapID = AudioObjectID(kAudioObjectUnknown)
     private var aggregateID = AudioObjectID(kAudioObjectUnknown)
     private var ioProc: AudioDeviceIOProcID?
+    private var isRunning = false
 
     private struct OutputStreamCandidate {
         let index: UInt
@@ -157,28 +633,34 @@ nonisolated private final class ProcessTapGainEngine: AppGainEngine {
         let isActive: Bool
     }
 
-    init?(audioObjectIDs: [AudioObjectID], gain: Float, outputDeviceUID: String) {
+    private struct ProcessTapConfiguration {
+        let description: CATapDescription
+        let outputBufferOffset: Int
+    }
+
+    init?(
+        audioObjectIDs: [AudioObjectID],
+        gain: Float,
+        outputDeviceUID: String
+    ) {
         guard !audioObjectIDs.isEmpty else {
             return nil
         }
 
         self.tappedObjects = audioObjectIDs
         self.outputDeviceUID = outputDeviceUID
-        self.gainPointer = UnsafeMutablePointer<Float>.allocate(capacity: 1)
-        self.gainPointer.initialize(to: max(0, min(AppAudioMixer.maximumGain, gain)))
+        self.gainState = GainState(initialGain: 1, targetGain: gain)
 
-        guard let tapDescription = Self.createProcessTap(
+        guard let tapConfiguration = Self.createProcessTap(
             audioObjectIDs: audioObjectIDs,
             outputDeviceUID: outputDeviceUID,
             tapID: &tapID
         ) else {
-            destroyGainPointer()
             return nil
         }
 
         guard let tapFormat = Self.tapFormat(for: tapID) else {
             AudioHardwareDestroyProcessTap(tapID)
-            destroyGainPointer()
             return nil
         }
 
@@ -192,7 +674,7 @@ nonisolated private final class ProcessTapGainEngine: AppGainEngine {
             ],
             kAudioAggregateDeviceTapListKey: [
                 [
-                    kAudioSubTapUIDKey: tapDescription.uuid.uuidString,
+                    kAudioSubTapUIDKey: tapConfiguration.description.uuid.uuidString,
                     kAudioSubTapDriftCompensationKey: true,
                 ],
             ],
@@ -202,93 +684,232 @@ nonisolated private final class ProcessTapGainEngine: AppGainEngine {
         guard AudioHardwareCreateAggregateDevice(aggregateDescription as CFDictionary, &aggregateID) == noErr,
               aggregateID != kAudioObjectUnknown else {
             AudioHardwareDestroyProcessTap(tapID)
-            destroyGainPointer()
             return nil
         }
 
-        let gainPointer = gainPointer
+        let gainState = gainState
+        let outputBufferOffset = tapConfiguration.outputBufferOffset
         let status = AudioDeviceCreateIOProcIDWithBlock(&ioProc, aggregateID, nil) { _, inputData, _, outputData, _ in
             let inputBuffers = UnsafeMutableAudioBufferListPointer(UnsafeMutablePointer(mutating: inputData))
             let outputBuffers = UnsafeMutableAudioBufferListPointer(outputData)
-            let gain = gainPointer.pointee
+            let bytesPerFrame = max(tapFormat.mBytesPerFrame, 1)
+            var frameCount: UInt32?
+            for (index, inputBuffer) in inputBuffers.enumerated() {
+                let outputIndex = outputBufferOffset + index
+                guard outputIndex < outputBuffers.count,
+                      inputBuffer.mData != nil,
+                      outputBuffers[outputIndex].mData != nil,
+                      inputBuffer.mNumberChannels == outputBuffers[outputIndex].mNumberChannels,
+                      outputBuffers[outputIndex].mDataByteSize >= inputBuffer.mDataByteSize,
+                      inputBuffer.mDataByteSize > 0 else {
+                    continue
+                }
 
-            for (index, inputBuffer) in inputBuffers.enumerated() where index < outputBuffers.count {
-                Self.writeScaledAudio(from: inputBuffer, to: outputBuffers[index], gain: gain, format: tapFormat)
+                frameCount = inputBuffer.mDataByteSize / bytesPerFrame
+                break
+            }
+
+            guard let frameCount, frameCount > 0 else {
+                return
+            }
+
+            let gainRamp = gainState.nextRamp(frameCount: frameCount, sampleRate: tapFormat.mSampleRate)
+            var didWriteAudio = false
+
+            for (index, inputBuffer) in inputBuffers.enumerated() {
+                let outputIndex = outputBufferOffset + index
+                guard outputIndex < outputBuffers.count,
+                      inputBuffer.mData != nil,
+                      outputBuffers[outputIndex].mData != nil,
+                      inputBuffer.mNumberChannels == outputBuffers[outputIndex].mNumberChannels,
+                      outputBuffers[outputIndex].mDataByteSize >= inputBuffer.mDataByteSize else {
+                    continue
+                }
+
+                if Self.writeScaledAudio(
+                    from: inputBuffer,
+                    to: outputBuffers[outputIndex],
+                    gainRamp: gainRamp,
+                    format: tapFormat
+                ) {
+                    didWriteAudio = true
+                }
+            }
+
+            if didWriteAudio {
+                gainState.markRendered(gainRamp)
             }
         }
 
         guard status == noErr, let ioProc else {
-            stop()
+            stopAfterInitializationFailure()
             return nil
         }
 
         guard AudioDeviceStart(aggregateID, ioProc) == noErr else {
-            stop()
+            stopAfterInitializationFailure()
             return nil
         }
+
+        isRunning = true
     }
 
-    nonisolated func stop() {
-        if let ioProc {
-            AudioDeviceStop(aggregateID, ioProc)
-            AudioDeviceDestroyIOProcID(aggregateID, ioProc)
-            self.ioProc = nil
-        }
+    @discardableResult
+    nonisolated func stop() -> AudioObjectID? {
+        let retiredAggregateID = aggregateID != kAudioObjectUnknown ? aggregateID : nil
 
-        if aggregateID != kAudioObjectUnknown {
-            AudioHardwareDestroyAggregateDevice(aggregateID)
+        if aggregateID != kAudioObjectUnknown,
+           !Self.audioObjectExists(aggregateID) {
+            ioProc = nil
+            isRunning = false
             aggregateID = kAudioObjectUnknown
         }
 
-        if tapID != kAudioObjectUnknown {
-            AudioHardwareDestroyProcessTap(tapID)
+        if tapID != kAudioObjectUnknown,
+           !Self.audioObjectExists(tapID) {
             tapID = kAudioObjectUnknown
         }
+
+        if let ioProc {
+            if isRunning {
+                let status = AudioDeviceStop(aggregateID, ioProc)
+                if Self.didStop(status) {
+                    isRunning = false
+                } else {
+                    return retiredAggregateID
+                }
+            }
+
+            let status = AudioDeviceDestroyIOProcID(aggregateID, ioProc)
+            if Self.didDestroy(status) || !Self.audioObjectExists(aggregateID) {
+                self.ioProc = nil
+            } else {
+                return retiredAggregateID
+            }
+        }
+
+        if aggregateID != kAudioObjectUnknown {
+            let status = AudioHardwareDestroyAggregateDevice(aggregateID)
+            if Self.didDestroy(status) || !Self.audioObjectExists(aggregateID) {
+                aggregateID = kAudioObjectUnknown
+            } else {
+                return retiredAggregateID
+            }
+        }
+
+        if tapID != kAudioObjectUnknown {
+            let status = AudioHardwareDestroyProcessTap(tapID)
+            if Self.didDestroy(status) || !Self.audioObjectExists(tapID) {
+                tapID = kAudioObjectUnknown
+            }
+        }
+
+        return retiredAggregateID
     }
 
     deinit {
         stop()
-        destroyGainPointer()
     }
 
-    private func destroyGainPointer() {
-        guard !destroyedGainPointer else {
-            return
+    private func stopAfterInitializationFailure() {
+        var retiredAggregateIDs: Set<AudioObjectID> = []
+        let deadline = Date().addingTimeInterval(0.8)
+        while Date() < deadline {
+            if let retiredAggregateID = stop() {
+                retiredAggregateIDs.insert(retiredAggregateID)
+            }
+
+            if let activeDeviceIDs = Self.activeAudioDeviceIDs() {
+                retiredAggregateIDs.formIntersection(activeDeviceIDs)
+                if isStopped, retiredAggregateIDs.isEmpty {
+                    return
+                }
+            }
+
+            Thread.sleep(forTimeInterval: 0.02)
+        }
+    }
+
+    private static func didStop(_ status: OSStatus) -> Bool {
+        status == noErr
+            || status == kAudioHardwareNotRunningError
+            || didDestroy(status)
+    }
+
+    private static func didDestroy(_ status: OSStatus) -> Bool {
+        status == noErr
+            || status == kAudioHardwareBadObjectError
+            || status == kAudioHardwareBadDeviceError
+    }
+
+    private static func audioObjectExists(_ objectID: AudioObjectID) -> Bool {
+        guard objectID != kAudioObjectUnknown else {
+            return false
         }
 
-        gainPointer.deinitialize(count: 1)
-        gainPointer.deallocate()
-        destroyedGainPointer = true
+        var address = propertyAddress(selector: kAudioObjectPropertyClass)
+        return AudioObjectHasProperty(objectID, &address)
+    }
+
+    private static func activeAudioDeviceIDs() -> Set<AudioObjectID>? {
+        var address = propertyAddress(selector: kAudioHardwarePropertyDevices)
+        var dataSize: UInt32 = 0
+        let systemObject = AudioObjectID(kAudioObjectSystemObject)
+
+        guard AudioObjectGetPropertyDataSize(systemObject, &address, 0, nil, &dataSize) == noErr else {
+            return nil
+        }
+
+        let count = Int(dataSize) / MemoryLayout<AudioObjectID>.size
+        var deviceIDs = Array(repeating: AudioObjectID(kAudioObjectUnknown), count: count)
+        guard AudioObjectGetPropertyData(systemObject, &address, 0, nil, &dataSize, &deviceIDs) == noErr else {
+            return nil
+        }
+
+        return Set(deviceIDs.filter { $0 != kAudioObjectUnknown })
     }
 
     private static func createProcessTap(
         audioObjectIDs: [AudioObjectID],
         outputDeviceUID: String,
         tapID: inout AudioObjectID
-    ) -> CATapDescription? {
-        // Automatic mode: multichannel devices get first chance to keep the output PCM stream.
-        // If that tap cannot be created, fall back to the established stereo mixdown path.
+    ) -> ProcessTapConfiguration? {
+        // A stream tap preserves a multichannel device's PCM layout. Falling back to a stereo
+        // tap on that device would make the aggregate input/output buffer layouts incompatible.
         let stereoMixdownTap = Self.configure(
             CATapDescription(stereoMixdownOfProcesses: audioObjectIDs),
             name: "MacMix Stereo Mixdown"
         )
-        let candidates: [CATapDescription]
+        let candidates: [ProcessTapConfiguration]
         if let outputStreamIndex = preferredMultichannelOutputStreamIndex(outputDeviceUID: outputDeviceUID) {
             let outputStreamTap = Self.configure(
                 CATapDescription(processes: audioObjectIDs, deviceUID: outputDeviceUID, stream: outputStreamIndex),
                 name: "MacMix Output Stream \(outputStreamIndex)"
             )
-            candidates = [outputStreamTap, stereoMixdownTap]
+            candidates = [
+                ProcessTapConfiguration(
+                    description: outputStreamTap,
+                    outputBufferOffset: outputBufferOffset(
+                        outputDeviceUID: outputDeviceUID,
+                        streamIndex: outputStreamIndex
+                    )
+                ),
+            ]
         } else {
-            candidates = [stereoMixdownTap]
+            candidates = [
+                ProcessTapConfiguration(
+                    description: stereoMixdownTap,
+                    outputBufferOffset: 0
+                ),
+            ]
         }
 
-        for tapDescription in candidates {
+        for configuration in candidates {
             tapID = AudioObjectID(kAudioObjectUnknown)
 
-            if AudioHardwareCreateProcessTap(tapDescription, &tapID) == noErr,
+            if AudioHardwareCreateProcessTap(configuration.description, &tapID) == noErr,
                tapID != kAudioObjectUnknown {
-                return tapDescription
+                return configuration
             }
         }
 
@@ -324,6 +945,20 @@ nonisolated private final class ProcessTapGainEngine: AppGainEngine {
             }
             .first?
             .index
+    }
+
+    private static func outputBufferOffset(outputDeviceUID: String, streamIndex: UInt) -> Int {
+        guard let deviceID = deviceID(forUID: outputDeviceUID) else {
+            return 0
+        }
+
+        return outputStreamCandidates(deviceID: deviceID)
+            .filter { $0.index < streamIndex }
+            .reduce(0) { offset, candidate in
+                let isNonInterleaved = candidate.format.mFormatFlags
+                    & kAudioFormatFlagIsNonInterleaved != 0
+                return offset + (isNonInterleaved ? Int(candidate.format.mChannelsPerFrame) : 1)
+            }
     }
 
     private static func outputStreamCandidates(deviceID: AudioObjectID) -> [OutputStreamCandidate] {
@@ -438,12 +1073,12 @@ nonisolated private final class ProcessTapGainEngine: AppGainEngine {
     private static func writeScaledAudio(
         from inputBuffer: AudioBuffer,
         to outputBuffer: AudioBuffer,
-        gain: Float,
+        gainRamp: GainRamp,
         format: AudioStreamBasicDescription
-    ) {
+    ) -> Bool {
         guard let source = inputBuffer.mData,
               let destination = outputBuffer.mData else {
-            return
+            return false
         }
 
         let inputByteCount = Int(inputBuffer.mDataByteSize)
@@ -451,37 +1086,69 @@ nonisolated private final class ProcessTapGainEngine: AppGainEngine {
         let byteCount = min(inputByteCount, outputByteCount)
 
         guard byteCount > 0 else {
-            return
+            return false
         }
 
         guard format.mFormatID == kAudioFormatLinearPCM else {
             copyAudio(from: source, to: destination, byteCount: byteCount, outputByteCount: outputByteCount)
-            return
+            return true
         }
 
         let flags = format.mFormatFlags
         let isFloat = flags & kAudioFormatFlagIsFloat != 0
         let isSignedInteger = flags & kAudioFormatFlagIsSignedInteger != 0
+        let channelCount = max(1, Int(inputBuffer.mNumberChannels))
 
         if isFloat {
             switch format.mBitsPerChannel {
             case 32:
-                writeScaledFloat32(from: source, to: destination, gain: gain, byteCount: byteCount)
+                writeScaledFloat32(
+                    from: source,
+                    to: destination,
+                    gainRamp: gainRamp,
+                    channelCount: channelCount,
+                    byteCount: byteCount
+                )
             case 64:
-                writeScaledFloat64(from: source, to: destination, gain: gain, byteCount: byteCount)
+                writeScaledFloat64(
+                    from: source,
+                    to: destination,
+                    gainRamp: gainRamp,
+                    channelCount: channelCount,
+                    byteCount: byteCount
+                )
             default:
                 copyAudio(from: source, to: destination, byteCount: byteCount, outputByteCount: outputByteCount)
             }
         } else if isSignedInteger {
             switch format.mBitsPerChannel {
             case 16:
-                writeScaledInt16(from: source, to: destination, gain: gain, byteCount: byteCount)
+                writeScaledInt16(
+                    from: source,
+                    to: destination,
+                    gainRamp: gainRamp,
+                    channelCount: channelCount,
+                    byteCount: byteCount
+                )
             case 24:
-                if !writeScaledInt24(from: source, to: destination, gain: gain, byteCount: byteCount, format: format) {
+                if !writeScaledInt24(
+                    from: source,
+                    to: destination,
+                    gainRamp: gainRamp,
+                    channelCount: channelCount,
+                    byteCount: byteCount,
+                    format: format
+                ) {
                     copyAudio(from: source, to: destination, byteCount: byteCount, outputByteCount: outputByteCount)
                 }
             case 32:
-                writeScaledInt32(from: source, to: destination, gain: gain, byteCount: byteCount)
+                writeScaledInt32(
+                    from: source,
+                    to: destination,
+                    gainRamp: gainRamp,
+                    channelCount: channelCount,
+                    byteCount: byteCount
+                )
             default:
                 copyAudio(from: source, to: destination, byteCount: byteCount, outputByteCount: outputByteCount)
             }
@@ -490,12 +1157,14 @@ nonisolated private final class ProcessTapGainEngine: AppGainEngine {
         }
 
         zeroRemainingAudio(in: destination, byteCount: byteCount, outputByteCount: outputByteCount)
+        return true
     }
 
     private static func writeScaledFloat32(
         from source: UnsafeMutableRawPointer,
         to destination: UnsafeMutableRawPointer,
-        gain: Float,
+        gainRamp: GainRamp,
+        channelCount: Int,
         byteCount: Int
     ) {
         let sampleCount = byteCount / MemoryLayout<Float>.size
@@ -503,21 +1172,46 @@ nonisolated private final class ProcessTapGainEngine: AppGainEngine {
             return
         }
 
-        var gain = gain
-        vDSP_vsmul(
-            source.assumingMemoryBound(to: Float.self),
-            1,
-            &gain,
-            destination.assumingMemoryBound(to: Float.self),
-            1,
-            vDSP_Length(sampleCount)
+        let channelCount = max(1, min(channelCount, sampleCount))
+        let frameCount = sampleCount / channelCount
+        guard frameCount > 0 else {
+            return
+        }
+
+        let source = source.assumingMemoryBound(to: Float.self)
+        let destination = destination.assumingMemoryBound(to: Float.self)
+        let rampFrameCount = min(Int(gainRamp.frameCount), frameCount)
+
+        if rampFrameCount > 0 {
+            var step = (gainRamp.end - gainRamp.start) / Float(rampFrameCount)
+            for channel in 0..<channelCount {
+                var start = gainRamp.start
+                vDSP_vrampmul(
+                    source.advanced(by: channel),
+                    vDSP_Stride(channelCount),
+                    &start,
+                    &step,
+                    destination.advanced(by: channel),
+                    vDSP_Stride(channelCount),
+                    vDSP_Length(rampFrameCount)
+                )
+            }
+        }
+
+        scaleRemainingSamples(
+            from: source,
+            to: destination,
+            startIndex: rampFrameCount * channelCount,
+            sampleCount: sampleCount,
+            gain: gainRamp.end
         )
     }
 
     private static func writeScaledFloat64(
         from source: UnsafeMutableRawPointer,
         to destination: UnsafeMutableRawPointer,
-        gain: Float,
+        gainRamp: GainRamp,
+        channelCount: Int,
         byteCount: Int
     ) {
         let sampleCount = byteCount / MemoryLayout<Double>.size
@@ -525,30 +1219,97 @@ nonisolated private final class ProcessTapGainEngine: AppGainEngine {
             return
         }
 
-        var gain = Double(gain)
-        vDSP_vsmulD(
-            source.assumingMemoryBound(to: Double.self),
-            1,
-            &gain,
-            destination.assumingMemoryBound(to: Double.self),
-            1,
-            vDSP_Length(sampleCount)
+        let channelCount = max(1, min(channelCount, sampleCount))
+        let frameCount = sampleCount / channelCount
+        guard frameCount > 0 else {
+            return
+        }
+
+        let source = source.assumingMemoryBound(to: Double.self)
+        let destination = destination.assumingMemoryBound(to: Double.self)
+        let rampFrameCount = min(Int(gainRamp.frameCount), frameCount)
+
+        if rampFrameCount > 0 {
+            let startGain = Double(gainRamp.start)
+            var step = (Double(gainRamp.end) - startGain) / Double(rampFrameCount)
+            for channel in 0..<channelCount {
+                var start = startGain
+                vDSP_vrampmulD(
+                    source.advanced(by: channel),
+                    vDSP_Stride(channelCount),
+                    &start,
+                    &step,
+                    destination.advanced(by: channel),
+                    vDSP_Stride(channelCount),
+                    vDSP_Length(rampFrameCount)
+                )
+            }
+        }
+
+        scaleRemainingSamples(
+            from: source,
+            to: destination,
+            startIndex: rampFrameCount * channelCount,
+            sampleCount: sampleCount,
+            gain: Double(gainRamp.end)
         )
+    }
+
+    private static func scaleRemainingSamples(
+        from source: UnsafePointer<Float>,
+        to destination: UnsafeMutablePointer<Float>,
+        startIndex: Int,
+        sampleCount: Int,
+        gain: Float
+    ) {
+        guard startIndex < sampleCount else {
+            return
+        }
+
+        for index in startIndex..<sampleCount {
+            destination[index] = source[index] * gain
+        }
+    }
+
+    private static func scaleRemainingSamples(
+        from source: UnsafePointer<Double>,
+        to destination: UnsafeMutablePointer<Double>,
+        startIndex: Int,
+        sampleCount: Int,
+        gain: Double
+    ) {
+        guard startIndex < sampleCount else {
+            return
+        }
+
+        for index in startIndex..<sampleCount {
+            destination[index] = source[index] * gain
+        }
     }
 
     private static func writeScaledInt16(
         from source: UnsafeMutableRawPointer,
         to destination: UnsafeMutableRawPointer,
-        gain: Float,
+        gainRamp: GainRamp,
+        channelCount: Int,
         byteCount: Int
     ) {
         let sampleCount = byteCount / MemoryLayout<Int16>.size
         let source = source.assumingMemoryBound(to: Int16.self)
         let destination = destination.assumingMemoryBound(to: Int16.self)
-        let gain = Double(gain)
+        let channelCount = max(1, min(channelCount, max(sampleCount, 1)))
+        let frameCount = sampleCount / channelCount
+        let rampFrameCount = min(Int(gainRamp.frameCount), frameCount)
+        let gainStep = rampFrameCount > 0
+            ? (gainRamp.end - gainRamp.start) / Float(rampFrameCount)
+            : 0
 
         for index in 0..<sampleCount {
-            let scaledSample = (Double(source[index]) * gain).rounded()
+            let frame = min(index / channelCount, max(frameCount - 1, 0))
+            let gain = frame < rampFrameCount
+                ? gainRamp.start + Float(frame) * gainStep
+                : gainRamp.end
+            let scaledSample = (Double(source[index]) * Double(gain)).rounded()
             destination[index] = Int16(clamping: Int(scaledSample))
         }
     }
@@ -556,16 +1317,26 @@ nonisolated private final class ProcessTapGainEngine: AppGainEngine {
     private static func writeScaledInt32(
         from source: UnsafeMutableRawPointer,
         to destination: UnsafeMutableRawPointer,
-        gain: Float,
+        gainRamp: GainRamp,
+        channelCount: Int,
         byteCount: Int
     ) {
         let sampleCount = byteCount / MemoryLayout<Int32>.size
         let source = source.assumingMemoryBound(to: Int32.self)
         let destination = destination.assumingMemoryBound(to: Int32.self)
-        let gain = Double(gain)
+        let channelCount = max(1, min(channelCount, max(sampleCount, 1)))
+        let frameCount = sampleCount / channelCount
+        let rampFrameCount = min(Int(gainRamp.frameCount), frameCount)
+        let gainStep = rampFrameCount > 0
+            ? (gainRamp.end - gainRamp.start) / Float(rampFrameCount)
+            : 0
 
         for index in 0..<sampleCount {
-            let scaledSample = (Double(source[index]) * gain).rounded()
+            let frame = min(index / channelCount, max(frameCount - 1, 0))
+            let gain = frame < rampFrameCount
+                ? gainRamp.start + Float(frame) * gainStep
+                : gainRamp.end
+            let scaledSample = (Double(source[index]) * Double(gain)).rounded()
             destination[index] = Int32(clamping: Int64(scaledSample))
         }
     }
@@ -573,7 +1344,8 @@ nonisolated private final class ProcessTapGainEngine: AppGainEngine {
     private static func writeScaledInt24(
         from source: UnsafeMutableRawPointer,
         to destination: UnsafeMutableRawPointer,
-        gain: Float,
+        gainRamp: GainRamp,
+        channelCount: Int,
         byteCount: Int,
         format: AudioStreamBasicDescription
     ) -> Bool {
@@ -598,17 +1370,26 @@ nonisolated private final class ProcessTapGainEngine: AppGainEngine {
 
         let source = source.assumingMemoryBound(to: UInt8.self)
         let destination = destination.assumingMemoryBound(to: UInt8.self)
-        let gain = Double(gain)
+        let channelCount = max(1, min(channelCount, sampleCount))
+        let frameCount = sampleCount / channelCount
+        let rampFrameCount = min(Int(gainRamp.frameCount), frameCount)
+        let gainStep = rampFrameCount > 0
+            ? (gainRamp.end - gainRamp.start) / Float(rampFrameCount)
+            : 0
 
         for index in 0..<sampleCount {
             let offset = index * bytesPerSample
+            let frame = min(index / channelCount, max(frameCount - 1, 0))
+            let gain = frame < rampFrameCount
+                ? gainRamp.start + Float(frame) * gainStep
+                : gainRamp.end
             let sample = readSignedInt24(
                 from: source.advanced(by: offset),
                 bytesPerSample: bytesPerSample,
                 isBigEndian: isBigEndian,
                 isAlignedHigh: isAlignedHigh
             )
-            let scaledSample = clampInt24((Double(sample) * gain).rounded())
+            let scaledSample = clampInt24((Double(sample) * Double(gain)).rounded())
 
             writeSignedInt24(
                 scaledSample,

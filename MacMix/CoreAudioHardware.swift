@@ -11,6 +11,12 @@ import CoreAudio
 import Darwin
 import Foundation
 
+nonisolated enum DefaultAudioDeviceUIDRead: Sendable, Equatable {
+    case device(String)
+    case noDevice
+    case failed
+}
+
 struct CoreAudioHardware {
     func devices(for direction: AudioDeviceDirection) -> [AudioDevice] {
         let defaultID = defaultDeviceID(for: direction)
@@ -19,7 +25,10 @@ struct CoreAudioHardware {
             objectID: AudioObjectID(kAudioObjectSystemObject),
             selector: kAudioHardwarePropertyDevices
         )
-        .filter { hasStreams(deviceID: $0, direction: direction) }
+        .filter {
+            hasStreams(deviceID: $0, direction: direction)
+                && canBeDefaultDevice($0, direction: direction)
+        }
         .compactMap { deviceID in
             let name = stringProperty(deviceID, selector: kAudioObjectPropertyName)
                 ?? String(localized: "Unknown Device", comment: "Fallback audio device name when Core Audio does not provide one.")
@@ -63,9 +72,19 @@ struct CoreAudioHardware {
 
     func setDefaultDevice(_ deviceID: AudioObjectID, direction: AudioDeviceDirection) {
         setSystemDevice(deviceID, selector: direction.defaultDeviceSelector)
+    }
 
-        if direction == .output {
-            setSystemDevice(deviceID, selector: kAudioHardwarePropertyDefaultSystemOutputDevice)
+    private func canBeDefaultDevice(
+        _ deviceID: AudioObjectID,
+        direction: AudioDeviceDirection
+    ) -> Bool {
+        let device = AudioHardwareDevice(id: deviceID)
+
+        switch direction {
+        case .input:
+            return (try? device.canBeDefaultInputDevice) == true
+        case .output:
+            return (try? device.canBeDefaultOutputDevice) == true
         }
     }
 
@@ -79,7 +98,7 @@ struct CoreAudioHardware {
             return Double(masterVolume)
         }
 
-        let channelVolumes = [UInt32(1), UInt32(2)].compactMap { channel in
+        let channelVolumes = audioVolumeChannelElements(deviceID: deviceID, direction: direction).compactMap { channel in
             scalarProperty(
                 objectID: deviceID,
                 selector: kAudioDevicePropertyVolumeScalar,
@@ -96,7 +115,8 @@ struct CoreAudioHardware {
         return Double(total / Float32(channelVolumes.count))
     }
 
-    func setVolume(_ volume: Double, for deviceID: AudioObjectID, direction: AudioDeviceDirection) {
+    @discardableResult
+    func setVolume(_ volume: Double, for deviceID: AudioObjectID, direction: AudioDeviceDirection) -> Bool {
         let clampedVolume = Float32(max(0, min(1, volume)))
 
         if setScalarProperty(
@@ -106,18 +126,23 @@ struct CoreAudioHardware {
             scope: direction.scope,
             element: kAudioObjectPropertyElementMain
         ) {
-            return
+            return true
         }
 
-        for channel in [UInt32(1), UInt32(2)] {
-            _ = setScalarProperty(
+        var didSetVolume = false
+        for channel in audioVolumeChannelElements(deviceID: deviceID, direction: direction) {
+            if setScalarProperty(
                 clampedVolume,
                 objectID: deviceID,
                 selector: kAudioDevicePropertyVolumeScalar,
                 scope: direction.scope,
                 element: channel
-            )
+            ) {
+                didSetVolume = true
+            }
         }
+
+        return didSetVolume
     }
 
     func runningOutputApps(storedVolume: (String) -> Double) -> [AudioApp] {
@@ -436,6 +461,12 @@ struct CoreAudioHardware {
             return false
         }
 
+        var isSettable = DarwinBoolean(false)
+        guard AudioObjectIsPropertySettable(objectID, &address, &isSettable) == noErr,
+              isSettable.boolValue else {
+            return false
+        }
+
         var mutableValue = value
         let status = AudioObjectSetPropertyData(
             objectID,
@@ -604,6 +635,278 @@ struct CoreAudioHardware {
     }
 }
 
+nonisolated final class DefaultOutputRouteProbe: @unchecked Sendable {
+    private let queryQueue = DispatchQueue(
+        label: "MacMix.DefaultOutputRouteProbe",
+        qos: .userInitiated
+    )
+    private let timeoutQueue = DispatchQueue(label: "MacMix.DefaultOutputRouteProbe.Timeout")
+    private let stateLock = NSLock()
+    private var isQueryInFlight = false
+
+    func read(timeout: TimeInterval = 0.15) async -> DefaultAudioDeviceUIDRead {
+        guard beginQuery() else {
+            return .failed
+        }
+
+        return await withCheckedContinuation { continuation in
+            let gate = DefaultOutputRouteProbeGate(continuation: continuation)
+            queryQueue.async { [self] in
+                defer { endQuery() }
+                gate.resume(with: readDefaultAudioDeviceUID(for: .output))
+            }
+            timeoutQueue.asyncAfter(deadline: .now() + timeout) {
+                gate.resume(with: .failed)
+            }
+        }
+    }
+
+    private func beginQuery() -> Bool {
+        stateLock.lock()
+        defer { stateLock.unlock() }
+
+        guard !isQueryInFlight else {
+            return false
+        }
+
+        isQueryInFlight = true
+        return true
+    }
+
+    private func endQuery() {
+        stateLock.lock()
+        isQueryInFlight = false
+        stateLock.unlock()
+    }
+}
+
+nonisolated final class DefaultOutputDeviceWriter: @unchecked Sendable {
+    private struct Request {
+        let generation: UInt64
+        let deviceID: AudioObjectID
+    }
+
+    private struct PendingCompletion {
+        let generation: UInt64
+        let handler: @Sendable (Bool) -> Void
+    }
+
+    private let queue = DispatchQueue(
+        label: "MacMix.DefaultOutputDeviceWriter",
+        qos: .userInitiated
+    )
+    private let stateLock = NSLock()
+    private var nextGeneration: UInt64 = 0
+    private var latestRequest: Request?
+    private var pendingCompletions: [PendingCompletion] = []
+    private var isWorkerRunning = false
+
+    func select(
+        _ deviceID: AudioObjectID,
+        completion: @escaping @Sendable (Bool) -> Void
+    ) {
+        let shouldStartWorker: Bool
+
+        stateLock.lock()
+        nextGeneration &+= 1
+        let generation = nextGeneration
+        latestRequest = Request(
+            generation: generation,
+            deviceID: deviceID
+        )
+        pendingCompletions.append(
+            PendingCompletion(generation: generation, handler: completion)
+        )
+        shouldStartWorker = startWorkerIfNeededLocked()
+        stateLock.unlock()
+
+        if shouldStartWorker {
+            queue.async { [self] in
+                applyLatestIntent()
+            }
+        }
+    }
+
+    private func applyLatestIntent() {
+        while true {
+            let request: Request
+
+            stateLock.lock()
+            guard let latestRequest else {
+                let completions = finishWorkerLocked()
+                stateLock.unlock()
+                complete(completions, finalGeneration: nil, succeeded: false)
+                return
+            }
+            request = latestRequest
+            stateLock.unlock()
+
+            let didApply = setDefaultOutputDevice(request.deviceID)
+
+            stateLock.lock()
+            guard self.latestRequest?.generation == request.generation else {
+                stateLock.unlock()
+                continue
+            }
+
+            let completions = finishWorkerLocked()
+            stateLock.unlock()
+            complete(
+                completions,
+                finalGeneration: request.generation,
+                succeeded: didApply
+            )
+            return
+        }
+    }
+
+    private func startWorkerIfNeededLocked() -> Bool {
+        guard !isWorkerRunning else {
+            return false
+        }
+
+        isWorkerRunning = true
+        return true
+    }
+
+    private func finishWorkerLocked() -> [PendingCompletion] {
+        isWorkerRunning = false
+        let completions = pendingCompletions
+        pendingCompletions.removeAll(keepingCapacity: true)
+        return completions
+    }
+
+    private func complete(
+        _ completions: [PendingCompletion],
+        finalGeneration: UInt64?,
+        succeeded: Bool
+    ) {
+        for completion in completions {
+            completion.handler(
+                succeeded && completion.generation == finalGeneration
+            )
+        }
+    }
+}
+
+nonisolated private final class DefaultOutputRouteProbeGate: @unchecked Sendable {
+    private let lock = NSLock()
+    private var didResume = false
+    private let continuation: CheckedContinuation<DefaultAudioDeviceUIDRead, Never>
+
+    init(continuation: CheckedContinuation<DefaultAudioDeviceUIDRead, Never>) {
+        self.continuation = continuation
+    }
+
+    func resume(with result: DefaultAudioDeviceUIDRead) {
+        lock.lock()
+        guard !didResume else {
+            lock.unlock()
+            return
+        }
+        didResume = true
+        lock.unlock()
+        continuation.resume(returning: result)
+    }
+}
+
+nonisolated private func readDefaultAudioDeviceUID(
+    for direction: AudioDeviceDirection
+) -> DefaultAudioDeviceUIDRead {
+    var address = AudioObjectPropertyAddress(
+        mSelector: direction.defaultDeviceSelector,
+        mScope: kAudioObjectPropertyScopeGlobal,
+        mElement: kAudioObjectPropertyElementMain
+    )
+    var deviceID = AudioObjectID(kAudioObjectUnknown)
+    var dataSize = UInt32(MemoryLayout<AudioObjectID>.size)
+    let status = AudioObjectGetPropertyData(
+        AudioObjectID(kAudioObjectSystemObject),
+        &address,
+        0,
+        nil,
+        &dataSize,
+        &deviceID
+    )
+
+    guard status == noErr else {
+        return .failed
+    }
+
+    guard deviceID != kAudioObjectUnknown else {
+        return .noDevice
+    }
+
+    address = AudioObjectPropertyAddress(
+        mSelector: kAudioDevicePropertyDeviceUID,
+        mScope: kAudioObjectPropertyScopeGlobal,
+        mElement: kAudioObjectPropertyElementMain
+    )
+    var uid: CFString?
+    dataSize = UInt32(MemoryLayout<CFString?>.size)
+    let uidStatus = withUnsafeMutablePointer(to: &uid) { pointer in
+        AudioObjectGetPropertyData(deviceID, &address, 0, nil, &dataSize, pointer)
+    }
+
+    guard uidStatus == noErr, let uid else {
+        return .failed
+    }
+
+    return .device(uid as String)
+}
+
+nonisolated private func setDefaultOutputDevice(_ deviceID: AudioObjectID) -> Bool {
+    do {
+        let device = AudioHardwareDevice(id: deviceID)
+        guard try device.canBeDefaultOutputDevice else {
+            return false
+        }
+
+        try AudioHardwareSystem.shared.setDefaultOutputDevice(device)
+        return true
+    } catch {
+        return false
+    }
+}
+
+nonisolated private func audioVolumeChannelElements(
+    deviceID: AudioObjectID,
+    direction: AudioDeviceDirection
+) -> [AudioObjectPropertyElement] {
+    var address = AudioObjectPropertyAddress(
+        mSelector: kAudioDevicePropertyStreamConfiguration,
+        mScope: direction.scope,
+        mElement: kAudioObjectPropertyElementMain
+    )
+    var dataSize: UInt32 = 0
+
+    guard AudioObjectGetPropertyDataSize(deviceID, &address, 0, nil, &dataSize) == noErr,
+          dataSize >= UInt32(MemoryLayout<AudioBufferList>.size) else {
+        return [1, 2]
+    }
+
+    let storage = UnsafeMutableRawPointer.allocate(
+        byteCount: Int(dataSize),
+        alignment: MemoryLayout<AudioBufferList>.alignment
+    )
+    defer { storage.deallocate() }
+
+    let bufferList = storage.bindMemory(to: AudioBufferList.self, capacity: 1)
+    guard AudioObjectGetPropertyData(deviceID, &address, 0, nil, &dataSize, bufferList) == noErr else {
+        return [1, 2]
+    }
+
+    let channelCount = UnsafeMutableAudioBufferListPointer(bufferList).reduce(0) { count, buffer in
+        count + Int(buffer.mNumberChannels)
+    }
+
+    guard channelCount > 0 else {
+        return [1, 2]
+    }
+
+    return (1...channelCount).map(AudioObjectPropertyElement.init)
+}
+
 nonisolated final class CoreAudioDeviceObserver {
     private let queue = DispatchQueue(label: "MacMix.CoreAudioDeviceObserver")
     private var outputDeviceID: AudioObjectID?
@@ -678,6 +981,7 @@ nonisolated final class CoreAudioDeviceObserver {
             defaultInputDeviceListener = nil
             isObservingSystem = false
         }
+
     }
 
     private func rebindDevice(for direction: AudioDeviceDirection) {
@@ -795,11 +1099,8 @@ nonisolated final class CoreAudioDeviceObserver {
     }
 
     private func volumeAddresses(for deviceID: AudioObjectID, direction: AudioDeviceDirection) -> [AudioObjectPropertyAddress] {
-        let elements = [
-            kAudioObjectPropertyElementMain,
-            AudioObjectPropertyElement(1),
-            AudioObjectPropertyElement(2),
-        ]
+        let elements = [kAudioObjectPropertyElementMain]
+            + audioVolumeChannelElements(deviceID: deviceID, direction: direction)
 
         let selectors: [AudioObjectPropertySelector] = [
             kAudioDevicePropertyVolumeScalar,
