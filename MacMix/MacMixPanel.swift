@@ -519,7 +519,8 @@ private struct SystemVolumeSection: View {
 
             SystemVolumeControl(
                 state: audioModel.outputState,
-                onVolumeChange: audioModel.setSystemOutputVolume
+                onVolumeChange: audioModel.setSystemOutputVolume,
+                onToggleMute: audioModel.toggleSystemOutputMute
             )
         }
     }
@@ -577,17 +578,22 @@ private struct InputSection: View {
 private struct SystemVolumeControl: View {
     @ObservedObject var state: OutputAudioState
     let onVolumeChange: (Double) -> Void
+    let onToggleMute: () -> Void
 
     var body: some View {
         VolumeSliderRow(
-            leadingIcon: (state.systemVolume ?? 1) <= 0.001 ? "speaker.slash.fill" : "speaker.fill",
+            leadingIcon: state.isSystemMuted || (state.systemVolume ?? 1) <= 0.001
+                ? "speaker.slash.fill"
+                : "speaker.fill",
             trailingIcon: "speaker.wave.3.fill",
             percentage: state.systemVolume,
             value: Binding(
                 get: { state.systemVolume ?? 0 },
                 set: onVolumeChange
             ),
-            isEnabled: state.systemVolume != nil
+            isEnabled: state.systemVolume != nil,
+            isMuted: state.isSystemMuted,
+            onLeadingIconTap: onToggleMute
         )
     }
 }
@@ -850,13 +856,25 @@ private struct VolumeSliderRow: View {
     var percentage: Double? = nil
     @Binding var value: Double
     var isEnabled = true
+    var isMuted = false
+    var onLeadingIconTap: (() -> Void)?
 
     var body: some View {
         HStack(spacing: 10) {
-            SliderSymbol(name: leadingIcon)
+            if let onLeadingIconTap {
+                Button(action: onLeadingIconTap) {
+                    SliderSymbol(name: leadingIcon, isMuted: isMuted)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .help(isMuted ? String(localized: "Unmute") : String(localized: "Mute"))
+                .accessibilityLabel(isMuted ? Text("Unmute") : Text("Mute"))
+            } else {
+                SliderSymbol(name: leadingIcon)
+            }
 
             Slider(value: $value, in: 0...1)
-                .tint(.blue)
+                .tint(isMuted ? .gray : .blue)
                 .disabled(!isEnabled)
 
             SliderSymbol(name: trailingIcon)
@@ -882,12 +900,13 @@ private struct PercentageText: View {
 
 private struct SliderSymbol: View {
     let name: String
+    var isMuted = false
 
     var body: some View {
         Image(systemName: name)
             .font(.system(size: 15, weight: .semibold))
             .imageScale(.medium)
-            .foregroundStyle(.secondary)
+            .foregroundStyle(isMuted ? .red : .secondary)
             .frame(width: 24, height: 24, alignment: .center)
     }
 }

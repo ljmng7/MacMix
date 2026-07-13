@@ -73,6 +73,7 @@ nonisolated final class AppAudioMixer: @unchecked Sendable {
     // The following mutable state is confined to lifecycleQueue.
     private var engines: [String: any AppGainEngine] = [:]
     private var pendingRetirements: [AppGainEngineRetirement] = []
+    private var outputSwitchMuteGuard: ProcessTapMuteGuard?
     private let latestCommandRevision = Atomic<UInt64>(0)
 
     private init() {}
@@ -111,11 +112,32 @@ nonisolated final class AppAudioMixer: @unchecked Sendable {
         }
     }
 
+    func submitTransitionCompletingOutputSwitch(
+        _ command: AppMixerCommand,
+        completion: @escaping @Sendable (AppMixerResult) -> Void
+    ) {
+        lifecycleQueue.async { [self] in
+            let result = transition(command)
+            releaseOutputSwitchMuteGuard()
+            completion(result)
+        }
+    }
+
+    func cancelOutputSwitch(revision: UInt64) {
+        lifecycleQueue.async { [self] in
+            guard isCurrent(revision: revision) else {
+                return
+            }
+            releaseOutputSwitchMuteGuard()
+        }
+    }
+
     /// Releases every process tap, aggregate device, and IOProc before the system
     /// default output is changed. Keeping the old Bluetooth-backed aggregate alive
     /// during the write lets Bluetooth Smart Routing claim the route again.
     func submitQuiesceForOutputSwitch(
         revision: UInt64,
+        targets: [AppMixTarget],
         completion: @escaping @Sendable (AppMixerResult) -> Void
     ) {
         lifecycleQueue.async { [self] in
@@ -124,8 +146,23 @@ nonisolated final class AppAudioMixer: @unchecked Sendable {
                 return
             }
 
+            releaseOutputSwitchMuteGuard()
             let enginesToRetire = Array(engines.values)
-            prepareForUnityHandoff(enginesToRetire)
+            let guardedAudioObjectIDs = Set(
+                enginesToRetire.flatMap(\.tappedObjects)
+                    + targets
+                        .filter { !isUnity($0.volume) }
+                        .flatMap(\.audioObjectIDs)
+            )
+            if !guardedAudioObjectIDs.isEmpty, #available(macOS 14.4, *) {
+                outputSwitchMuteGuard = ProcessTapMuteGuard(
+                    audioObjectIDs: guardedAudioObjectIDs.sorted()
+                )
+            }
+
+            if outputSwitchMuteGuard == nil {
+                prepareForUnityHandoff(enginesToRetire)
+            }
 
             guard isCurrent(revision: revision) else {
                 completion(.superseded)
@@ -183,7 +220,11 @@ nonisolated final class AppAudioMixer: @unchecked Sendable {
         return true
     }
 
-    private func apply(_ target: AppMixTarget, command: AppMixerCommand) -> Bool {
+    private func apply(
+        _ target: AppMixTarget,
+        command: AppMixerCommand,
+        startsAtTargetGain: Bool = false
+    ) -> Bool {
         guard isCurrent(command) else {
             return false
         }
@@ -230,6 +271,7 @@ nonisolated final class AppAudioMixer: @unchecked Sendable {
         guard #available(macOS 14.4, *),
               let engine = ProcessTapGainEngine(
                 audioObjectIDs: target.audioObjectIDs,
+                initialGain: startsAtTargetGain ? clampedVolume : 1,
                 gain: clampedVolume,
                 outputDeviceUID: outputDeviceUID
               ) else {
@@ -290,10 +332,13 @@ nonisolated final class AppAudioMixer: @unchecked Sendable {
             return .failed
         }
 
-        return reconcileCurrentRoute(command) ? .applied : .failed
+        return reconcileCurrentRoute(command, startsAtTargetGain: true) ? .applied : .failed
     }
 
-    private func reconcileCurrentRoute(_ command: AppMixerCommand) -> Bool {
+    private func reconcileCurrentRoute(
+        _ command: AppMixerCommand,
+        startsAtTargetGain: Bool = false
+    ) -> Bool {
         let currentIDs = Set(command.targets.map(\.id))
         var success = true
 
@@ -315,7 +360,11 @@ nonisolated final class AppAudioMixer: @unchecked Sendable {
                 return false
             }
 
-            if !apply(target, command: command) {
+            if !apply(
+                target,
+                command: command,
+                startsAtTargetGain: startsAtTargetGain
+            ) {
                 success = false
             }
         }
@@ -324,12 +373,31 @@ nonisolated final class AppAudioMixer: @unchecked Sendable {
     }
 
     private func stopAllNow() {
+        releaseOutputSwitchMuteGuard()
         for engine in engines.values {
             enqueueRetirement(engine)
         }
 
         engines.removeAll()
         _ = waitForPendingAggregateRemoval()
+    }
+
+    private func releaseOutputSwitchMuteGuard() {
+        guard let outputSwitchMuteGuard else {
+            return
+        }
+
+        let deadline = Date().addingTimeInterval(0.8)
+        while !outputSwitchMuteGuard.isStopped, Date() < deadline {
+            outputSwitchMuteGuard.stop()
+            if !outputSwitchMuteGuard.isStopped {
+                Thread.sleep(forTimeInterval: 0.02)
+            }
+        }
+
+        if outputSwitchMuteGuard.isStopped {
+            self.outputSwitchMuteGuard = nil
+        }
     }
 
     private func isUnity(_ volume: Double) -> Bool {
@@ -602,6 +670,145 @@ nonisolated private struct GainRamp: Sendable {
 }
 
 @available(macOS 14.4, *)
+nonisolated private final class ProcessTapMuteGuard {
+    nonisolated var isStopped: Bool {
+        ioProc == nil
+            && aggregateID == kAudioObjectUnknown
+            && tapID == kAudioObjectUnknown
+    }
+
+    private var tapID = AudioObjectID(kAudioObjectUnknown)
+    private var aggregateID = AudioObjectID(kAudioObjectUnknown)
+    private var ioProc: AudioDeviceIOProcID?
+    private var isRunning = false
+
+    init?(audioObjectIDs: [AudioObjectID]) {
+        guard !audioObjectIDs.isEmpty else {
+            return nil
+        }
+
+        let tapDescription = CATapDescription(
+            stereoMixdownOfProcesses: audioObjectIDs
+        )
+        tapDescription.name = "MacMix Route Switch Guard"
+        tapDescription.muteBehavior = .mutedWhenTapped
+        tapDescription.isPrivate = true
+
+        guard AudioHardwareCreateProcessTap(tapDescription, &tapID) == noErr,
+              tapID != kAudioObjectUnknown else {
+            return nil
+        }
+
+        // This aggregate intentionally has no physical subdevice. It only keeps the
+        // process tap running while the old output aggregate is removed and HAL changes
+        // routes, so it cannot keep a Bluetooth output session alive or claim dOut.
+        let aggregateDescription: [String: Any] = [
+            kAudioAggregateDeviceNameKey: "MacMix Route Switch Guard",
+            kAudioAggregateDeviceUIDKey: "MacMix.RouteGuard.\(UUID().uuidString)",
+            kAudioAggregateDeviceIsPrivateKey: true,
+            kAudioAggregateDeviceTapListKey: [
+                [
+                    kAudioSubTapUIDKey: tapDescription.uuid.uuidString,
+                    kAudioSubTapDriftCompensationKey: false,
+                ],
+            ],
+            kAudioAggregateDeviceTapAutoStartKey: true,
+        ]
+
+        guard AudioHardwareCreateAggregateDevice(
+            aggregateDescription as CFDictionary,
+            &aggregateID
+        ) == noErr,
+              aggregateID != kAudioObjectUnknown else {
+            AudioHardwareDestroyProcessTap(tapID)
+            tapID = kAudioObjectUnknown
+            return nil
+        }
+
+        let status = AudioDeviceCreateIOProcIDWithBlock(
+            &ioProc,
+            aggregateID,
+            nil
+        ) { _, _, _, _, _ in }
+        guard status == noErr, let ioProc else {
+            stop()
+            return nil
+        }
+
+        guard AudioDeviceStart(aggregateID, ioProc) == noErr else {
+            stop()
+            return nil
+        }
+        isRunning = true
+    }
+
+    nonisolated func stop() {
+        if let ioProc {
+            if isRunning {
+                let status = AudioDeviceStop(aggregateID, ioProc)
+                if Self.didStop(status) {
+                    isRunning = false
+                } else {
+                    return
+                }
+            }
+
+            let status = AudioDeviceDestroyIOProcID(aggregateID, ioProc)
+            if Self.didDestroy(status) || !Self.audioObjectExists(aggregateID) {
+                self.ioProc = nil
+            } else {
+                return
+            }
+        }
+
+        if aggregateID != kAudioObjectUnknown {
+            let status = AudioHardwareDestroyAggregateDevice(aggregateID)
+            if Self.didDestroy(status) || !Self.audioObjectExists(aggregateID) {
+                aggregateID = kAudioObjectUnknown
+            } else {
+                return
+            }
+        }
+
+        if tapID != kAudioObjectUnknown {
+            let status = AudioHardwareDestroyProcessTap(tapID)
+            if Self.didDestroy(status) || !Self.audioObjectExists(tapID) {
+                tapID = kAudioObjectUnknown
+            }
+        }
+    }
+
+    deinit {
+        stop()
+    }
+
+    private static func didStop(_ status: OSStatus) -> Bool {
+        status == noErr
+            || status == kAudioHardwareNotRunningError
+            || didDestroy(status)
+    }
+
+    private static func didDestroy(_ status: OSStatus) -> Bool {
+        status == noErr
+            || status == kAudioHardwareBadObjectError
+            || status == kAudioHardwareBadDeviceError
+    }
+
+    private static func audioObjectExists(_ objectID: AudioObjectID) -> Bool {
+        guard objectID != kAudioObjectUnknown else {
+            return false
+        }
+
+        var address = AudioObjectPropertyAddress(
+            mSelector: kAudioObjectPropertyClass,
+            mScope: kAudioObjectPropertyScopeGlobal,
+            mElement: kAudioObjectPropertyElementMain
+        )
+        return AudioObjectHasProperty(objectID, &address)
+    }
+}
+
+@available(macOS 14.4, *)
 nonisolated private final class ProcessTapGainEngine: AppGainEngine {
     nonisolated let tappedObjects: [AudioObjectID]
     nonisolated let outputDeviceUID: String
@@ -640,6 +847,7 @@ nonisolated private final class ProcessTapGainEngine: AppGainEngine {
 
     init?(
         audioObjectIDs: [AudioObjectID],
+        initialGain: Float,
         gain: Float,
         outputDeviceUID: String
     ) {
@@ -649,7 +857,7 @@ nonisolated private final class ProcessTapGainEngine: AppGainEngine {
 
         self.tappedObjects = audioObjectIDs
         self.outputDeviceUID = outputDeviceUID
-        self.gainState = GainState(initialGain: 1, targetGain: gain)
+        self.gainState = GainState(initialGain: initialGain, targetGain: gain)
 
         guard let tapConfiguration = Self.createProcessTap(
             audioObjectIDs: audioObjectIDs,

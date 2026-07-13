@@ -1470,6 +1470,9 @@
         }
       }
     },
+    "Mute" : {
+
+    },
     "No apps are playing audio" : {
       "comment" : "Empty state shown when there are no output apps to mix.",
       "localizations" : {
@@ -3277,6 +3280,9 @@
           }
         }
       }
+    },
+    "Unmute" : {
+
     },
     "Version %@" : {
       "comment" : "About page version label with only the marketing version.",

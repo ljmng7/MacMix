@@ -115,6 +115,35 @@ struct CoreAudioHardware {
         return Double(total / Float32(channelVolumes.count))
     }
 
+    func isMuted(for deviceID: AudioObjectID, direction: AudioDeviceDirection) -> Bool? {
+        if let masterMute = uint32Property(
+            objectID: deviceID,
+            selector: kAudioDevicePropertyMute,
+            scope: direction.scope,
+            element: kAudioObjectPropertyElementMain
+        ) {
+            return masterMute != 0
+        }
+
+        let channelMutes = audioVolumeChannelElements(
+            deviceID: deviceID,
+            direction: direction
+        ).compactMap { channel in
+            uint32Property(
+                objectID: deviceID,
+                selector: kAudioDevicePropertyMute,
+                scope: direction.scope,
+                element: channel
+            )
+        }
+
+        guard !channelMutes.isEmpty else {
+            return nil
+        }
+
+        return channelMutes.allSatisfy { $0 != 0 }
+    }
+
     @discardableResult
     func setVolume(_ volume: Double, for deviceID: AudioObjectID, direction: AudioDeviceDirection) -> Bool {
         let clampedVolume = Float32(max(0, min(1, volume)))
@@ -145,6 +174,36 @@ struct CoreAudioHardware {
         return didSetVolume
     }
 
+    @discardableResult
+    func setMuted(_ isMuted: Bool, for deviceID: AudioObjectID, direction: AudioDeviceDirection) -> Bool {
+        let muteValue: UInt32 = isMuted ? 1 : 0
+
+        if setUInt32Property(
+            muteValue,
+            objectID: deviceID,
+            selector: kAudioDevicePropertyMute,
+            scope: direction.scope,
+            element: kAudioObjectPropertyElementMain
+        ) {
+            return true
+        }
+
+        var didSetMute = false
+        for channel in audioVolumeChannelElements(deviceID: deviceID, direction: direction) {
+            if setUInt32Property(
+                muteValue,
+                objectID: deviceID,
+                selector: kAudioDevicePropertyMute,
+                scope: direction.scope,
+                element: channel
+            ) {
+                didSetMute = true
+            }
+        }
+
+        return didSetMute
+    }
+
     func runningOutputApps(storedVolume: (String) -> Double) -> [AudioApp] {
         struct RunningAudioApp {
             let ownerPID: pid_t
@@ -160,8 +219,10 @@ struct CoreAudioHardware {
             objectID: AudioObjectID(kAudioObjectSystemObject),
             selector: kAudioHardwarePropertyProcessObjectList
         ) {
-            guard boolProperty(processID, selector: kAudioProcessPropertyIsRunningOutput),
-                  let pid = pidProperty(processID),
+            // Keep audio clients visible as soon as they register with HAL instead of
+            // waiting until their first buffers are already playing. That also lets the
+            // mixer prepare from the process object before a long unity-gain window.
+            guard let pid = pidProperty(processID),
                   pid != ProcessInfo.processInfo.processIdentifier else {
                 continue
             }
@@ -432,6 +493,23 @@ struct CoreAudioHardware {
         return status == noErr ? value : nil
     }
 
+    private func uint32Property(
+        objectID: AudioObjectID,
+        selector: AudioObjectPropertySelector,
+        scope: AudioObjectPropertyScope,
+        element: AudioObjectPropertyElement
+    ) -> UInt32? {
+        var address = propertyAddress(selector: selector, scope: scope, element: element)
+        guard AudioObjectHasProperty(objectID, &address) else {
+            return nil
+        }
+
+        var value = UInt32(0)
+        var dataSize = UInt32(MemoryLayout<UInt32>.size)
+        let status = AudioObjectGetPropertyData(objectID, &address, 0, nil, &dataSize, &value)
+        return status == noErr ? value : nil
+    }
+
     private func scalarProperty(
         objectID: AudioObjectID,
         selector: AudioObjectPropertySelector,
@@ -474,6 +552,36 @@ struct CoreAudioHardware {
             0,
             nil,
             UInt32(MemoryLayout<Float32>.size),
+            &mutableValue
+        )
+        return status == noErr
+    }
+
+    private func setUInt32Property(
+        _ value: UInt32,
+        objectID: AudioObjectID,
+        selector: AudioObjectPropertySelector,
+        scope: AudioObjectPropertyScope,
+        element: AudioObjectPropertyElement
+    ) -> Bool {
+        var address = propertyAddress(selector: selector, scope: scope, element: element)
+        guard AudioObjectHasProperty(objectID, &address) else {
+            return false
+        }
+
+        var isSettable = DarwinBoolean(false)
+        guard AudioObjectIsPropertySettable(objectID, &address, &isSettable) == noErr,
+              isSettable.boolValue else {
+            return false
+        }
+
+        var mutableValue = value
+        let status = AudioObjectSetPropertyData(
+            objectID,
+            &address,
+            0,
+            nil,
+            UInt32(MemoryLayout<UInt32>.size),
             &mutableValue
         )
         return status == noErr
@@ -856,17 +964,65 @@ nonisolated private func readDefaultAudioDeviceUID(
 }
 
 nonisolated private func setDefaultOutputDevice(_ deviceID: AudioObjectID) -> Bool {
+    let device = AudioHardwareDevice(id: deviceID)
     do {
-        let device = AudioHardwareDevice(id: deviceID)
         guard try device.canBeDefaultOutputDevice else {
             return false
         }
-
-        try AudioHardwareSystem.shared.setDefaultOutputDevice(device)
-        return true
     } catch {
         return false
     }
+
+    // A manual selection in macOS updates both regular output and the sound-effects
+    // output. Writing only dOut leaves Bluetooth Smart Routing's transient sOut intent
+    // alive, which can immediately pull dOut back to the in-ear device.
+    for _ in 0..<2 {
+        do {
+            try AudioHardwareSystem.shared.setDefaultOutputDevice(device)
+            try AudioHardwareSystem.shared.setDefaultSoundEffectsDevice(device)
+        } catch {
+            continue
+        }
+
+        var stableReads = 0
+        for _ in 0..<8 {
+            if defaultAudioDeviceID(
+                selector: kAudioHardwarePropertyDefaultOutputDevice
+            ) == deviceID {
+                stableReads += 1
+                if stableReads >= 3 {
+                    return true
+                }
+            } else {
+                stableReads = 0
+            }
+
+            Thread.sleep(forTimeInterval: 0.08)
+        }
+    }
+
+    return false
+}
+
+nonisolated private func defaultAudioDeviceID(
+    selector: AudioObjectPropertySelector
+) -> AudioObjectID? {
+    var address = AudioObjectPropertyAddress(
+        mSelector: selector,
+        mScope: kAudioObjectPropertyScopeGlobal,
+        mElement: kAudioObjectPropertyElementMain
+    )
+    var deviceID = AudioObjectID(kAudioObjectUnknown)
+    var dataSize = UInt32(MemoryLayout<AudioObjectID>.size)
+    let status = AudioObjectGetPropertyData(
+        AudioObjectID(kAudioObjectSystemObject),
+        &address,
+        0,
+        nil,
+        &dataSize,
+        &deviceID
+    )
+    return status == noErr && deviceID != kAudioObjectUnknown ? deviceID : nil
 }
 
 nonisolated private func audioVolumeChannelElements(
@@ -917,17 +1073,22 @@ nonisolated final class CoreAudioDeviceObserver {
     private var deviceListListener: AudioObjectPropertyListenerBlock?
     private var defaultOutputDeviceListener: AudioObjectPropertyListenerBlock?
     private var defaultInputDeviceListener: AudioObjectPropertyListenerBlock?
+    private var processListListener: AudioObjectPropertyListenerBlock?
+    private var processOutputListeners: [AudioObjectID: AudioObjectPropertyListenerBlock] = [:]
     private var outputVolumeListener: AudioObjectPropertyListenerBlock?
     private var inputVolumeListener: AudioObjectPropertyListenerBlock?
     private let onOutputChange: @MainActor () -> Void
     private let onInputChange: @MainActor () -> Void
+    private let onOutputAppsChange: @MainActor () -> Void
 
     init(
         onOutputChange: @escaping @MainActor () -> Void,
-        onInputChange: @escaping @MainActor () -> Void
+        onInputChange: @escaping @MainActor () -> Void,
+        onOutputAppsChange: @escaping @MainActor () -> Void
     ) {
         self.onOutputChange = onOutputChange
         self.onInputChange = onInputChange
+        self.onOutputAppsChange = onOutputAppsChange
     }
 
     deinit {
@@ -964,21 +1125,38 @@ nonisolated final class CoreAudioDeviceObserver {
         self.defaultInputDeviceListener = defaultInputDeviceListener
         addSystemListener(selector: kAudioHardwarePropertyDefaultInputDevice, listener: defaultInputDeviceListener)
 
+        let processListListener: AudioObjectPropertyListenerBlock = { [weak self] _, _ in
+            self?.rebindProcessOutputListeners()
+            self?.notifyOutputAppsChange()
+        }
+        self.processListListener = processListListener
+        addSystemListener(
+            selector: kAudioHardwarePropertyProcessObjectList,
+            listener: processListListener
+        )
+
         rebindDevice(for: .output)
         rebindDevice(for: .input)
+        rebindProcessOutputListeners()
     }
 
     func stop() {
         removeDeviceListeners(for: .output)
         removeDeviceListeners(for: .input)
+        removeProcessOutputListeners()
 
         if isObservingSystem {
             removeSystemListener(selector: kAudioHardwarePropertyDevices, listener: deviceListListener)
             removeSystemListener(selector: kAudioHardwarePropertyDefaultOutputDevice, listener: defaultOutputDeviceListener)
             removeSystemListener(selector: kAudioHardwarePropertyDefaultInputDevice, listener: defaultInputDeviceListener)
+            removeSystemListener(
+                selector: kAudioHardwarePropertyProcessObjectList,
+                listener: processListListener
+            )
             deviceListListener = nil
             defaultOutputDeviceListener = nil
             defaultInputDeviceListener = nil
+            processListListener = nil
             isObservingSystem = false
         }
 
@@ -1098,6 +1276,88 @@ nonisolated final class CoreAudioDeviceObserver {
         setDeviceID(nil, for: direction)
     }
 
+    private func rebindProcessOutputListeners() {
+        removeProcessOutputListeners()
+
+        for processID in systemAudioObjectIDs(
+            selector: kAudioHardwarePropertyProcessObjectList
+        ) {
+            var address = systemAddress(
+                selector: kAudioProcessPropertyIsRunningOutput
+            )
+            guard AudioObjectHasProperty(processID, &address) else {
+                continue
+            }
+
+            let listener: AudioObjectPropertyListenerBlock = { [weak self] _, _ in
+                self?.notifyOutputAppsChange()
+            }
+            let status = AudioObjectAddPropertyListenerBlock(
+                processID,
+                &address,
+                queue,
+                listener
+            )
+            if status == noErr {
+                processOutputListeners[processID] = listener
+            }
+        }
+    }
+
+    private func removeProcessOutputListeners() {
+        for (processID, listener) in processOutputListeners {
+            var address = systemAddress(
+                selector: kAudioProcessPropertyIsRunningOutput
+            )
+            AudioObjectRemovePropertyListenerBlock(
+                processID,
+                &address,
+                queue,
+                listener
+            )
+        }
+        processOutputListeners.removeAll()
+    }
+
+    private func systemAudioObjectIDs(
+        selector: AudioObjectPropertySelector
+    ) -> [AudioObjectID] {
+        let systemObject = AudioObjectID(kAudioObjectSystemObject)
+        var address = systemAddress(selector: selector)
+        var dataSize: UInt32 = 0
+        guard AudioObjectGetPropertyDataSize(
+            systemObject,
+            &address,
+            0,
+            nil,
+            &dataSize
+        ) == noErr else {
+            return []
+        }
+
+        let count = Int(dataSize) / MemoryLayout<AudioObjectID>.size
+        guard count > 0 else {
+            return []
+        }
+
+        var objectIDs = Array(
+            repeating: AudioObjectID(kAudioObjectUnknown),
+            count: count
+        )
+        guard AudioObjectGetPropertyData(
+            systemObject,
+            &address,
+            0,
+            nil,
+            &dataSize,
+            &objectIDs
+        ) == noErr else {
+            return []
+        }
+
+        return objectIDs.filter { $0 != kAudioObjectUnknown }
+    }
+
     private func volumeAddresses(for deviceID: AudioObjectID, direction: AudioDeviceDirection) -> [AudioObjectPropertyAddress] {
         let elements = [kAudioObjectPropertyElementMain]
             + audioVolumeChannelElements(deviceID: deviceID, direction: direction)
@@ -1105,6 +1365,7 @@ nonisolated final class CoreAudioDeviceObserver {
         let selectors: [AudioObjectPropertySelector] = [
             kAudioDevicePropertyVolumeScalar,
             kAudioHardwareServiceDeviceProperty_VirtualMainVolume,
+            kAudioDevicePropertyMute,
         ]
 
         return selectors.flatMap { selector in
@@ -1182,6 +1443,12 @@ nonisolated final class CoreAudioDeviceObserver {
             case .output:
                 onOutputChange()
             }
+        }
+    }
+
+    private func notifyOutputAppsChange() {
+        Task { @MainActor in
+            onOutputAppsChange()
         }
     }
 
