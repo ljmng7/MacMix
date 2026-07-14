@@ -174,6 +174,7 @@ private struct ControlPanelSettingsPage: View {
                         state: audioModel.outputAppsState,
                         boostPreference: $enables200PercentVolume,
                         onRequestPermission: audioModel.requestSystemAudioPermission,
+                        onToggleMute: audioModel.toggleAppMute,
                         onVolumeChange: { volume, app in
                             audioModel.setAppVolume(volume, for: app)
                         }
@@ -543,6 +544,7 @@ private struct OutputSection: View {
                 MixSection(
                     state: audioModel.outputAppsState,
                     onRequestPermission: audioModel.requestSystemAudioPermission,
+                    onToggleMute: audioModel.toggleAppMute,
                     onVolumeChange: { volume, app in
                         audioModel.setAppVolume(volume, for: app)
                     }
@@ -615,6 +617,7 @@ private struct MixSection: View {
     @ObservedObject var state: OutputAppsState
     var boostPreference: Binding<Bool>? = nil
     let onRequestPermission: () -> Void
+    let onToggleMute: (AudioApp) -> Void
     let onVolumeChange: (Double, AudioApp) -> Void
     @AppStorage(MixVolumePreference.enables200PercentVolume) private var enables200PercentVolume = false
 
@@ -650,6 +653,7 @@ private struct MixSection: View {
                     AppVolumeRow(
                         app: app,
                         maximumVolume: maximumVolume,
+                        onToggleMute: onToggleMute,
                         onVolumeChange: onVolumeChange
                     )
                 }
@@ -758,16 +762,29 @@ private struct DeviceGroup: View {
 private struct AppVolumeRow: View {
     let app: AudioApp
     let maximumVolume: Double
+    let onToggleMute: (AudioApp) -> Void
     let onVolumeChange: (Double, AudioApp) -> Void
     @State private var isAtUnity = false
 
     private var sliderTint: Color {
-        app.volume > 1 ? .yellow : .blue
+        if app.isMuted {
+            return .gray
+        }
+
+        return app.volume > 1 ? .yellow : .blue
     }
 
     var body: some View {
         HStack(spacing: 10) {
-            AppIcon(image: app.icon)
+            Button {
+                onToggleMute(app)
+            } label: {
+                AppIcon(image: app.icon, isMuted: app.isMuted)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .help(app.isMuted ? String(localized: "Unmute") : String(localized: "Mute"))
+            .accessibilityLabel(app.isMuted ? Text("Unmute") : Text("Mute"))
 
             Text(app.name)
                 .font(.system(size: 13, weight: .medium))
@@ -931,21 +948,33 @@ private struct DeviceIcon: View {
 
 private struct AppIcon: View {
     let image: NSImage?
+    let isMuted: Bool
 
     var body: some View {
-        Group {
-            if let image {
-                Image(nsImage: image)
-                    .resizable()
-            } else {
-                Image(systemName: "app.fill")
-                    .resizable()
-                    .foregroundStyle(.secondary)
+        ZStack {
+            Group {
+                if let image {
+                    Image(nsImage: image)
+                        .resizable()
+                } else {
+                    Image(systemName: "app.fill")
+                        .resizable()
+                        .foregroundStyle(.secondary)
+                }
             }
+            .scaledToFit()
+            .frame(width: 24, height: 24)
+            .clipShape(RoundedRectangle(cornerRadius: 5, style: .continuous))
+            .saturation(isMuted ? 0 : 1)
+            .opacity(isMuted ? 0.3 : 1)
+
+            Image(systemName: "speaker.slash.fill")
+                .font(.system(size: 12, weight: .bold))
+                .imageScale(.medium)
+                .foregroundStyle(.red)
+                .opacity(isMuted ? 1 : 0)
         }
-        .scaledToFit()
         .frame(width: 24, height: 24)
-        .clipShape(RoundedRectangle(cornerRadius: 5, style: .continuous))
     }
 }
 

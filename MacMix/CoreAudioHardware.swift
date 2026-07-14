@@ -49,6 +49,7 @@ struct CoreAudioHardware {
                 uid: identity.deviceUID ?? "\(deviceID)",
                 name: name,
                 iconName: iconName(for: identity, direction: direction),
+                transportType: identity.transportType,
                 isCurrent: deviceID == defaultID,
                 volume: volume(for: deviceID, direction: direction)
             )
@@ -204,7 +205,10 @@ struct CoreAudioHardware {
         return didSetMute
     }
 
-    func runningOutputApps(storedVolume: (String) -> Double) -> [AudioApp] {
+    func runningOutputApps(
+        storedVolume: (String) -> Double,
+        storedMute: (String) -> Bool
+    ) -> [AudioApp] {
         struct RunningAudioApp {
             let ownerPID: pid_t
             let bundleID: String
@@ -264,7 +268,8 @@ struct CoreAudioHardware {
                 name: app.name,
                 audioObjectIDs: app.audioObjectIDs.sorted(),
                 icon: app.icon,
-                volume: storedVolume(app.bundleID)
+                volume: storedVolume(app.bundleID),
+                isMuted: storedMute(app.bundleID)
             )
         }
         .sorted { lhs, rhs in

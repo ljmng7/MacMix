@@ -70,6 +70,7 @@ final class AudioModel: NSObject, ObservableObject {
 
     private let hardware = CoreAudioHardware()
     private let appAudioMixer = AppAudioMixer.shared
+    private let displayVolumeController = DisplayVolumeController()
     private let outputRouteProbe = DefaultOutputRouteProbe()
     private let outputDeviceWriter = DefaultOutputDeviceWriter()
     private let defaults = UserDefaults.standard
@@ -80,6 +81,11 @@ final class AudioModel: NSObject, ObservableObject {
     private var outputAppRouteRecoveryDeadline: Date?
     private var outputRouteRefreshTask: Task<Void, Never>?
     private var outputDeviceWriteTimeoutTask: Task<Void, Never>?
+    private var displayVolumeActivationTask: Task<Void, Never>?
+    private var displayVolumeActivationUID: String?
+    private var displayVolumeRouteUID: String?
+    private var displayVolumeValue: Double?
+    private var displayVolumeLastAudibleValue = 0.15
     private var outputRouteGeneration: UInt64 = 0
     private var outputDeviceSelectionGeneration: UInt64 = 0
     private var mixerCommandRevision: UInt64 = 0
@@ -132,6 +138,8 @@ final class AudioModel: NSObject, ObservableObject {
         refreshTimer?.invalidate()
         outputRouteRefreshTask?.cancel()
         outputDeviceWriteTimeoutTask?.cancel()
+        displayVolumeActivationTask?.cancel()
+        displayVolumeController.deactivate()
         appAudioMixer.stopAll()
     }
 
@@ -154,13 +162,25 @@ final class AudioModel: NSObject, ObservableObject {
         let devices = hardware.devices(for: .output)
         setOutputDevicesIfChanged(devices)
 
-        setSystemOutputVolumeIfChanged(devices.first(where: \.isCurrent)?.volume)
-        if let currentDeviceID = devices.first(where: \.isCurrent)?.id {
+        if let currentDevice = devices.first(where: \.isCurrent),
+           let nativeVolume = currentDevice.volume {
+            deactivateDisplayVolumeRoute()
+            setSystemOutputVolumeIfChanged(nativeVolume)
             setSystemOutputMutedIfChanged(
-                hardware.isMuted(for: currentDeviceID, direction: .output) ?? false
+                hardware.isMuted(for: currentDevice.id, direction: .output) ?? false
             )
+        } else if let currentDevice = devices.first(where: \.isCurrent),
+                  displayVolumeRouteUID == currentDevice.uid,
+                  let displayVolumeValue {
+            setSystemOutputVolumeIfChanged(displayVolumeValue)
         } else {
+            setSystemOutputVolumeIfChanged(nil)
             setSystemOutputMutedIfChanged(false)
+            if let currentDevice = devices.first(where: \.isCurrent) {
+                activateDisplayVolumeRoute(for: currentDevice)
+            } else {
+                deactivateDisplayVolumeRoute()
+            }
         }
 
         let currentOutputUID = devices.first(where: \.isCurrent)?.uid
@@ -168,6 +188,79 @@ final class AudioModel: NSObject, ObservableObject {
         if previousOutputUID != currentOutputUID {
             handleOutputRouteChange(to: currentOutputUID)
         }
+    }
+
+    private func activateDisplayVolumeRoute(for device: AudioDevice) {
+        guard displayVolumeActivationUID != device.uid else {
+            return
+        }
+
+        displayVolumeActivationTask?.cancel()
+        displayVolumeActivationUID = device.uid
+        displayVolumeRouteUID = nil
+        displayVolumeValue = nil
+
+        let candidate = DisplayAudioRouteCandidate(
+            uid: device.uid,
+            name: device.name,
+            transportType: device.transportType
+        )
+        let displays = NSScreen.screens.compactMap { screen -> ExternalDisplayDescriptor? in
+            let screenNumberKey = NSDeviceDescriptionKey("NSScreenNumber")
+            guard let screenNumber = screen.deviceDescription[screenNumberKey] as? NSNumber else {
+                return nil
+            }
+
+            let displayID = CGDirectDisplayID(screenNumber.uint32Value)
+            guard CGDisplayIsBuiltin(displayID) == 0 else {
+                return nil
+            }
+
+            return ExternalDisplayDescriptor(
+                id: displayID,
+                name: screen.localizedName,
+                vendorID: CGDisplayVendorNumber(displayID),
+                productID: CGDisplayModelNumber(displayID),
+                serialNumber: CGDisplaySerialNumber(displayID)
+            )
+        }
+        let controller = displayVolumeController
+
+        displayVolumeActivationTask = Task { @MainActor [weak self] in
+            let snapshot = await controller.activate(candidate: candidate, displays: displays)
+            guard !Task.isCancelled,
+                  let self,
+                  self.currentOutputDevice?.uid == candidate.uid,
+                  self.displayVolumeActivationUID == candidate.uid else {
+                return
+            }
+
+            self.displayVolumeActivationTask = nil
+            guard let snapshot else {
+                return
+            }
+
+            self.displayVolumeRouteUID = snapshot.routeUID
+            self.displayVolumeValue = snapshot.volume
+            if snapshot.volume > 0.001 {
+                self.displayVolumeLastAudibleValue = snapshot.volume
+            }
+            self.setSystemOutputVolumeIfChanged(snapshot.volume)
+            self.setSystemOutputMutedIfChanged(false)
+        }
+    }
+
+    private func deactivateDisplayVolumeRoute() {
+        guard displayVolumeActivationUID != nil || displayVolumeRouteUID != nil else {
+            return
+        }
+
+        displayVolumeActivationTask?.cancel()
+        displayVolumeActivationTask = nil
+        displayVolumeActivationUID = nil
+        displayVolumeRouteUID = nil
+        displayVolumeValue = nil
+        displayVolumeController.deactivate()
     }
 
     func refreshInputState() {
@@ -182,9 +275,14 @@ final class AudioModel: NSObject, ObservableObject {
             return
         }
 
-        let detectedApps = hardware.runningOutputApps { [weak self] bundleID in
-            self?.storedAppVolume(for: bundleID) ?? 1
-        }
+        let detectedApps = hardware.runningOutputApps(
+            storedVolume: { [weak self] bundleID in
+                self?.storedAppVolume(for: bundleID) ?? 1
+            },
+            storedMute: { [weak self] bundleID in
+                self?.storedAppMute(for: bundleID) ?? false
+            }
+        )
         let apps = outputAppsPreservingRouteSnapshot(detectedApps)
 
         guard !audioAppsMatch(outputAppsState.apps, apps) else {
@@ -247,39 +345,81 @@ final class AudioModel: NSObject, ObservableObject {
     }
 
     func setSystemOutputVolume(_ volume: Double) {
-        guard let deviceID = currentOutputDevice?.id else {
+        guard let currentOutputDevice else {
             return
         }
 
-        guard hardware.setVolume(volume, for: deviceID, direction: .output) else {
+        if displayVolumeRouteUID == currentOutputDevice.uid {
+            let clampedVolume = max(0, min(1, volume))
+            displayVolumeController.setVolume(
+                clampedVolume,
+                routeUID: currentOutputDevice.uid
+            )
+            displayVolumeValue = clampedVolume
+            if clampedVolume > 0.001 {
+                displayVolumeLastAudibleValue = clampedVolume
+                if outputState.isSystemMuted {
+                    displayVolumeController.setMuted(
+                        false,
+                        audibleVolume: clampedVolume,
+                        routeUID: currentOutputDevice.uid
+                    )
+                    setSystemOutputMutedIfChanged(false)
+                }
+            }
+            setSystemOutputVolumeIfChanged(clampedVolume)
+            return
+        }
+
+        guard hardware.setVolume(volume, for: currentOutputDevice.id, direction: .output) else {
             refreshOutputState()
             return
         }
 
         if outputState.isSystemMuted {
-            hardware.setMuted(false, for: deviceID, direction: .output)
+            hardware.setMuted(false, for: currentOutputDevice.id, direction: .output)
         }
 
-        let appliedVolume = hardware.volume(for: deviceID, direction: .output) ?? volume
+        let appliedVolume = hardware.volume(for: currentOutputDevice.id, direction: .output) ?? volume
         setSystemOutputVolumeIfChanged(appliedVolume)
         setSystemOutputMutedIfChanged(
-            hardware.isMuted(for: deviceID, direction: .output) ?? false
+            hardware.isMuted(for: currentOutputDevice.id, direction: .output) ?? false
         )
         setCurrentOutputDeviceVolume(appliedVolume)
     }
 
     func toggleSystemOutputMute() {
-        guard let deviceID = currentOutputDevice?.id else {
+        guard let currentOutputDevice else {
             return
         }
 
         let shouldMute = !outputState.isSystemMuted
-        guard hardware.setMuted(shouldMute, for: deviceID, direction: .output) else {
+        if displayVolumeRouteUID == currentOutputDevice.uid {
+            if !shouldMute,
+               (displayVolumeValue ?? 0) <= 0.001 {
+                displayVolumeValue = displayVolumeLastAudibleValue
+                setSystemOutputVolumeIfChanged(displayVolumeLastAudibleValue)
+            } else if shouldMute,
+                      let displayVolumeValue,
+                      displayVolumeValue > 0.001 {
+                displayVolumeLastAudibleValue = displayVolumeValue
+            }
+
+            displayVolumeController.setMuted(
+                shouldMute,
+                audibleVolume: displayVolumeLastAudibleValue,
+                routeUID: currentOutputDevice.uid
+            )
+            setSystemOutputMutedIfChanged(shouldMute)
+            return
+        }
+
+        guard hardware.setMuted(shouldMute, for: currentOutputDevice.id, direction: .output) else {
             refreshOutputState()
             return
         }
 
-        let appliedMute = hardware.isMuted(for: deviceID, direction: .output) ?? shouldMute
+        let appliedMute = hardware.isMuted(for: currentOutputDevice.id, direction: .output) ?? shouldMute
         setSystemOutputMutedIfChanged(appliedMute)
     }
 
@@ -451,16 +591,42 @@ final class AudioModel: NSObject, ObservableObject {
 
         if let index = outputAppsState.apps.firstIndex(where: { $0.id == app.id }) {
             var apps = outputAppsState.apps
-            guard !nearlyEqual(apps[index].volume, clampedVolume) else {
+            let shouldUnmute = apps[index].isMuted
+            guard !nearlyEqual(apps[index].volume, clampedVolume) || shouldUnmute else {
                 return
             }
 
             apps[index].volume = clampedVolume
+            apps[index].isMuted = false
+            if shouldUnmute {
+                defaults.set(false, forKey: muteDefaultsKey(for: app.bundleID))
+            }
             outputAppsState.apps = apps
             scheduleMixerReconcile(requestAuthorizationIfDenied: true)
         } else {
             var updatedApp = app
             updatedApp.volume = clampedVolume
+            updatedApp.isMuted = false
+            defaults.set(false, forKey: muteDefaultsKey(for: app.bundleID))
+            scheduleMixerReconcile(
+                additionalTarget: updatedApp,
+                requestAuthorizationIfDenied: true
+            )
+        }
+    }
+
+    func toggleAppMute(_ app: AudioApp) {
+        let isMuted = !app.isMuted
+        defaults.set(isMuted, forKey: muteDefaultsKey(for: app.bundleID))
+
+        if let index = outputAppsState.apps.firstIndex(where: { $0.id == app.id }) {
+            var apps = outputAppsState.apps
+            apps[index].isMuted = isMuted
+            outputAppsState.apps = apps
+            scheduleMixerReconcile(requestAuthorizationIfDenied: true)
+        } else {
+            var updatedApp = app
+            updatedApp.isMuted = isMuted
             scheduleMixerReconcile(
                 additionalTarget: updatedApp,
                 requestAuthorizationIfDenied: true
@@ -469,8 +635,18 @@ final class AudioModel: NSObject, ObservableObject {
     }
 
     func clampAppVolumesToUnity() {
-        for app in outputAppsState.apps where app.volume > 1 {
-            setAppVolume(1, for: app)
+        var apps = outputAppsState.apps
+        var didChangeVolume = false
+
+        for index in apps.indices where apps[index].volume > 1 {
+            apps[index].volume = 1
+            defaults.set(1, forKey: defaultsKey(for: apps[index].bundleID))
+            didChangeVolume = true
+        }
+
+        if didChangeVolume {
+            outputAppsState.apps = apps
+            scheduleMixerReconcile(requestAuthorizationIfDenied: true)
         }
     }
 
@@ -549,7 +725,7 @@ final class AudioModel: NSObject, ObservableObject {
         AppMixTarget(
             id: app.id,
             audioObjectIDs: app.audioObjectIDs,
-            volume: app.volume
+            volume: app.isMuted ? 0 : app.volume
         )
     }
 
@@ -672,22 +848,27 @@ final class AudioModel: NSObject, ObservableObject {
 
             var detectedApps: [AudioApp] = []
             if stableOutputDeviceUID != nil {
-                detectedApps = hardware.runningOutputApps { [weak self] bundleID in
-                    self?.storedAppVolume(for: bundleID) ?? 1
-                }
+                detectedApps = hardware.runningOutputApps(
+                    storedVolume: { [weak self] bundleID in
+                        self?.storedAppVolume(for: bundleID) ?? 1
+                    },
+                    storedMute: { [weak self] bundleID in
+                        self?.storedAppMute(for: bundleID) ?? false
+                    }
+                )
             }
             let apps = outputAppsPreservingRouteSnapshot(detectedApps)
 
             pendingOutputApps = nil
-            let requiresPermission = apps.contains {
-                self.appVolumeRequiresSystemAudioPermission($0.volume)
-            }
             let command = AppMixerCommand(
                 revision: commandRevision,
                 routeGeneration: routeGeneration,
                 outputDeviceUID: stableOutputDeviceUID,
                 targets: apps.map(mixTarget).sorted { $0.id < $1.id }
             )
+            let requiresPermission = command.targets.contains {
+                self.appVolumeRequiresSystemAudioPermission($0.volume)
+            }
             lastSubmittedMixerSnapshot = command.snapshot
             isOutputRouteTransitioning = false
             beginMixerLifecycle(revision: commandRevision)
@@ -852,6 +1033,7 @@ final class AudioModel: NSObject, ObservableObject {
             uid: device.uid,
             name: device.name,
             iconName: device.iconName,
+            transportType: device.transportType,
             isCurrent: device.isCurrent,
             volume: volume
         )
@@ -921,7 +1103,9 @@ final class AudioModel: NSObject, ObservableObject {
     }
 
     private var activeOutputMixRequiresSystemAudioPermission: Bool {
-        outputAppsState.apps.contains { appVolumeRequiresSystemAudioPermission($0.volume) }
+        outputAppsState.apps.contains {
+            appVolumeRequiresSystemAudioPermission($0.isMuted ? 0 : $0.volume)
+        }
     }
 
     private func beginOutputAppRouteRecovery() {
@@ -983,6 +1167,7 @@ final class AudioModel: NSObject, ObservableObject {
                 && lhsApp.name == rhsApp.name
                 && lhsApp.audioObjectIDs == rhsApp.audioObjectIDs
                 && nearlyEqual(lhsApp.volume, rhsApp.volume)
+                && lhsApp.isMuted == rhsApp.isMuted
         }
     }
 
@@ -1011,8 +1196,16 @@ final class AudioModel: NSObject, ObservableObject {
         return max(0, min(maximumAppVolume, defaults.double(forKey: key)))
     }
 
+    private func storedAppMute(for bundleID: String) -> Bool {
+        defaults.bool(forKey: muteDefaultsKey(for: bundleID))
+    }
+
     private func defaultsKey(for bundleID: String) -> String {
         "AppVolume.\(bundleID)"
+    }
+
+    private func muteDefaultsKey(for bundleID: String) -> String {
+        "AppMuted.\(bundleID)"
     }
 
     private var maximumAppVolume: Double {

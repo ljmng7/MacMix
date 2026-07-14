@@ -41,6 +41,7 @@ struct AudioDevice: Identifiable, Hashable {
     let uid: String
     let name: String
     let iconName: String
+    let transportType: UInt32?
     let isCurrent: Bool
     let volume: Double?
 }
@@ -53,6 +54,7 @@ struct AudioApp: Identifiable {
     let audioObjectIDs: [AudioObjectID]
     let icon: NSImage?
     var volume: Double
+    var isMuted: Bool
 }
 
 struct NowPlayingItem {
