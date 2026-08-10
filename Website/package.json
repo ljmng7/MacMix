@@ -6,8 +6,10 @@
   "scripts": {
     "dev": "vite",
     "typecheck": "tsc --noEmit",
+    "releases:snapshot": "node scripts/fetch-github-releases.mjs",
     "build": "npm run typecheck && vite build && node scripts/prepare-sites-build.mjs",
     "preview": "vite preview",
+    "test:releases": "node --test tests/github-releases-snapshot.test.mjs",
     "test:sites": "node --test tests/sites-worker.test.mjs"
   },
   "dependencies": {

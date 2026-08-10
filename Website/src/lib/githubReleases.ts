@@ -1,3 +1,5 @@
+import releasesSnapshot from "../generated/github-releases.json";
+
 export type GitHubRelease = {
   id: number;
   tag_name: string;
@@ -8,16 +10,6 @@ export type GitHubRelease = {
   created_at: string;
   prerelease: boolean;
   draft: boolean;
-};
-
-const RELEASES_API_URL =
-  "https://api.github.com/repos/ljmng7/MacMix/releases?per_page=30";
-const RELEASES_CACHE_KEY = "macmix.github-releases.v1";
-const RELEASES_CACHE_TTL = 30 * 60 * 1000;
-
-type ReleasesCache = {
-  cachedAt: number;
-  releases: GitHubRelease[];
 };
 
 function isGitHubRelease(value: unknown): value is GitHubRelease {
@@ -63,52 +55,4 @@ export function formatDisplayVersion(tagName: string): string {
   return `v${match[1]}${match[2] ? `.${match[2]}` : ""}`;
 }
 
-export function readCachedReleases(): GitHubRelease[] | null {
-  try {
-    const rawCache = window.localStorage.getItem(RELEASES_CACHE_KEY);
-    if (!rawCache) {
-      return null;
-    }
-
-    const cache = JSON.parse(rawCache) as Partial<ReleasesCache>;
-    if (
-      typeof cache.cachedAt !== "number" ||
-      Date.now() - cache.cachedAt > RELEASES_CACHE_TTL
-    ) {
-      return null;
-    }
-
-    return parseReleases(cache.releases);
-  } catch {
-    return null;
-  }
-}
-
-export async function fetchGitHubReleases(
-  signal?: AbortSignal,
-): Promise<GitHubRelease[]> {
-  const response = await fetch(RELEASES_API_URL, {
-    headers: {
-      Accept: "application/vnd.github+json",
-      "X-GitHub-Api-Version": "2022-11-28",
-    },
-    signal,
-  });
-
-  if (!response.ok) {
-    throw new Error(`GitHub releases request failed with ${response.status}.`);
-  }
-
-  const releases = parseReleases(await response.json());
-
-  try {
-    window.localStorage.setItem(
-      RELEASES_CACHE_KEY,
-      JSON.stringify({ cachedAt: Date.now(), releases } satisfies ReleasesCache),
-    );
-  } catch {
-    // Releases still render when storage is disabled or unavailable.
-  }
-
-  return releases;
-}
+export const bundledGitHubReleases = parseReleases(releasesSnapshot);
