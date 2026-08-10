@@ -13,7 +13,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/ljmng7/MacMix/releases/latest">
+  <a href="https://github.com/ljmng7/MacMix/releases/latest/download/MacMix.dmg">
     <img src="Docs/images/download-macos.png" alt="Download app for macOS" width="120">
   </a>
 </p>

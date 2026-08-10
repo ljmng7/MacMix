@@ -39,3 +39,11 @@ playground.xcworkspace
 *.swp
 *.tmp
 *.bak
+
+# Website dependencies and generated output
+Website/node_modules/
+Website/dist/
+
+# Local high-resolution wallpaper sources; the web build uses WebP derivatives
+Website/public/assets/MacMix/GoldenGate_6k.png
+Website/public/assets/MacMix/Golden_Dark_6k.png
