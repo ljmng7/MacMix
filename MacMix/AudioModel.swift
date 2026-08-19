@@ -6,15 +6,16 @@
 //
 
 import AppKit
-import Combine
 import CoreAudio
 import Foundation
+import Observation
 
 @MainActor
-final class OutputAudioState: ObservableObject {
-    @Published var devices: [AudioDevice] = []
-    @Published var systemVolume: Double?
-    @Published var isSystemMuted = false
+@Observable
+final class OutputAudioState {
+    var devices: [AudioDevice] = []
+    var systemVolume: Double?
+    var isSystemMuted = false
 
     var currentDevice: AudioDevice? {
         devices.first(where: \.isCurrent)
@@ -46,9 +47,10 @@ final class OutputAudioState: ObservableObject {
 }
 
 @MainActor
-final class InputAudioState: ObservableObject {
-    @Published var devices: [AudioDevice] = []
-    @Published var inputVolume: Double?
+@Observable
+final class InputAudioState {
+    var devices: [AudioDevice] = []
+    var inputVolume: Double?
 
     var currentDevice: AudioDevice? {
         devices.first(where: \.isCurrent)
@@ -56,14 +58,38 @@ final class InputAudioState: ObservableObject {
 }
 
 @MainActor
-final class OutputAppsState: ObservableObject {
-    @Published var apps: [AudioApp] = []
-    @Published var needsSystemAudioPermission = false
-    @Published var isSystemAudioPermissionAuthorized = false
+@Observable
+final class OutputAppsState {
+    private(set) var apps: [AudioAppState] = []
+    var needsSystemAudioPermission = false
+    var isSystemAudioPermissionAuthorized = false
+
+    var snapshots: [AudioApp] {
+        apps.map(\.snapshot)
+    }
+
+    func replaceApps(with newApps: [AudioApp]) {
+        let existingApps = Dictionary(uniqueKeysWithValues: apps.map { ($0.id, $0) })
+        let updatedApps = newApps.map { app in
+            if let existingApp = existingApps[app.id],
+               existingApp.hasSameStructure(as: app) {
+                existingApp.updateControls(volume: app.volume, isMuted: app.isMuted)
+                return existingApp
+            }
+
+            return AudioAppState(app: app)
+        }
+
+        let hasSameInstances = apps.count == updatedApps.count
+            && zip(apps, updatedApps).allSatisfy { $0 === $1 }
+        if !hasSameInstances {
+            apps = updatedApps
+        }
+    }
 }
 
 @MainActor
-final class AudioModel: NSObject, ObservableObject {
+final class AudioModel: NSObject {
     let outputState = OutputAudioState()
     let inputState = InputAudioState()
     let outputAppsState = OutputAppsState()
@@ -285,7 +311,7 @@ final class AudioModel: NSObject, ObservableObject {
         )
         let apps = outputAppsPreservingRouteSnapshot(detectedApps)
 
-        guard !audioAppsMatch(outputAppsState.apps, apps) else {
+        guard !audioAppsMatch(outputAppsState.snapshots, apps) else {
             pendingOutputApps = nil
             reconcileOutputApps()
             return
@@ -300,7 +326,7 @@ final class AudioModel: NSObject, ObservableObject {
         }
 
         pendingOutputApps = nil
-        outputAppsState.apps = apps
+        outputAppsState.replaceApps(with: apps)
         reconcileOutputApps()
     }
 
@@ -461,7 +487,7 @@ final class AudioModel: NSObject, ObservableObject {
         appAudioMixer.noteLatestCommand(revision: commandRevision)
         beginMixerLifecycle(revision: commandRevision)
         beginOutputAppRouteRecovery()
-        let switchTargets = outputAppsPreservingRouteSnapshot(outputAppsState.apps)
+        let switchTargets = outputAppsPreservingRouteSnapshot(outputAppsState.snapshots)
             .map(mixTarget)
             .sorted { $0.id < $1.id }
 
@@ -585,26 +611,23 @@ final class AudioModel: NSObject, ObservableObject {
         refreshInputState()
     }
 
-    func setAppVolume(_ volume: Double, for app: AudioApp) {
+    func setAppVolume(_ volume: Double, for app: AudioAppState) {
         let clampedVolume = max(0, min(maximumAppVolume, volume))
         defaults.set(clampedVolume, forKey: defaultsKey(for: app.bundleID))
 
-        if let index = outputAppsState.apps.firstIndex(where: { $0.id == app.id }) {
-            var apps = outputAppsState.apps
-            let shouldUnmute = apps[index].isMuted
-            guard !nearlyEqual(apps[index].volume, clampedVolume) || shouldUnmute else {
+        if let currentApp = outputAppsState.apps.first(where: { $0.id == app.id }) {
+            let shouldUnmute = currentApp.isMuted
+            guard !nearlyEqual(currentApp.volume, clampedVolume) || shouldUnmute else {
                 return
             }
 
-            apps[index].volume = clampedVolume
-            apps[index].isMuted = false
+            currentApp.updateControls(volume: clampedVolume, isMuted: false)
             if shouldUnmute {
                 defaults.set(false, forKey: muteDefaultsKey(for: app.bundleID))
             }
-            outputAppsState.apps = apps
             scheduleMixerReconcile(requestAuthorizationIfDenied: true)
         } else {
-            var updatedApp = app
+            var updatedApp = app.snapshot
             updatedApp.volume = clampedVolume
             updatedApp.isMuted = false
             defaults.set(false, forKey: muteDefaultsKey(for: app.bundleID))
@@ -615,17 +638,15 @@ final class AudioModel: NSObject, ObservableObject {
         }
     }
 
-    func toggleAppMute(_ app: AudioApp) {
+    func toggleAppMute(_ app: AudioAppState) {
         let isMuted = !app.isMuted
         defaults.set(isMuted, forKey: muteDefaultsKey(for: app.bundleID))
 
-        if let index = outputAppsState.apps.firstIndex(where: { $0.id == app.id }) {
-            var apps = outputAppsState.apps
-            apps[index].isMuted = isMuted
-            outputAppsState.apps = apps
+        if let currentApp = outputAppsState.apps.first(where: { $0.id == app.id }) {
+            currentApp.updateControls(volume: currentApp.volume, isMuted: isMuted)
             scheduleMixerReconcile(requestAuthorizationIfDenied: true)
         } else {
-            var updatedApp = app
+            var updatedApp = app.snapshot
             updatedApp.isMuted = isMuted
             scheduleMixerReconcile(
                 additionalTarget: updatedApp,
@@ -635,17 +656,15 @@ final class AudioModel: NSObject, ObservableObject {
     }
 
     func clampAppVolumesToUnity() {
-        var apps = outputAppsState.apps
         var didChangeVolume = false
 
-        for index in apps.indices where apps[index].volume > 1 {
-            apps[index].volume = 1
-            defaults.set(1, forKey: defaultsKey(for: apps[index].bundleID))
+        for app in outputAppsState.apps where app.volume > 1 {
+            app.updateControls(volume: 1, isMuted: app.isMuted)
+            defaults.set(1, forKey: defaultsKey(for: app.bundleID))
             didChangeVolume = true
         }
 
         if didChangeVolume {
-            outputAppsState.apps = apps
             scheduleMixerReconcile(requestAuthorizationIfDenied: true)
         }
     }
@@ -662,7 +681,7 @@ final class AudioModel: NSObject, ObservableObject {
             return
         }
 
-        var apps = outputAppsState.apps
+        var apps = outputAppsState.snapshots
         if let additionalTarget,
            !apps.contains(where: { $0.id == additionalTarget.id }) {
             apps.append(additionalTarget)
@@ -1111,7 +1130,7 @@ final class AudioModel: NSObject, ObservableObject {
     private func beginOutputAppRouteRecovery() {
         retainedOutputAppsDuringRoute = mergeOutputApps(
             retaining: retainedOutputAppsDuringRoute,
-            updatingWith: outputAppsState.apps
+            updatingWith: outputAppsState.snapshots
         )
         outputAppRouteRecoveryDeadline = Date().addingTimeInterval(
             outputAppRouteRecoveryDuration

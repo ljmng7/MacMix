@@ -46,7 +46,7 @@ struct MacMixPanel: View {
                 dismiss()
             } label: {
                 Label("Open Main Window", systemImage: "macwindow")
-                    .font(.system(size: 13, weight: .medium))
+                    .font(.body.weight(.medium))
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
             .buttonStyle(.plain)
@@ -57,7 +57,7 @@ struct MacMixPanel: View {
                 NSApplication.shared.terminate(nil)
             } label: {
                 Label("Quit MacMix", systemImage: "power")
-                    .font(.system(size: 13, weight: .medium))
+                    .font(.body.weight(.medium))
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
             .buttonStyle(.plain)
@@ -245,50 +245,18 @@ private struct PanelVisibilityHeader: View {
 private struct ControlPanelAboutPage: View {
     let audioModel: AudioModel
     let updater: SPUUpdater
-    @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 28) {
-                VStack(spacing: 10) {
-                    Image(colorScheme == .dark ? "AboutAppIconDark" : "AboutAppIconDefault")
-                        .resizable()
-                        .interpolation(.high)
-                        .antialiased(true)
-                        .scaledToFit()
-                        .frame(width: 112, height: 112)
-                        .compositingGroup()
-                        .shadow(color: .black.opacity(colorScheme == .dark ? 0.34 : 0.22), radius: 18, x: 0, y: 10)
-                        .accessibilityHidden(true)
-
-                    Text(verbatim: "MacMix")
-                        .font(.system(size: 28, weight: .semibold))
-
-                    Text(Self.versionText)
-                        .font(.system(size: 13, weight: .medium))
-
-                    Text(verbatim: "Ⓒ2026 Jazmín")
-                        .font(.system(size: 12))
-                }
-                .frame(maxWidth: .infinity)
+                AboutBrandHeader()
 
                 AboutCheckForUpdatesButton(updater: updater)
 
-                VStack(alignment: .leading, spacing: 12) {
-                    Text("Privacy Information")
-                        .font(.headline.weight(.semibold))
-
-                    PermissionAccessRow(
-                        state: audioModel.outputAppsState,
-                        action: audioModel.openSystemAudioRecordingSettingsForAuthorization
-                    )
-
-                    Text("Mixing needs System Audio Recording permission because macOS requires this permission before an app can process another app's audio. MacMix uses it only for local real-time mixing when you adjust per-app volume, and does not record, save, or upload audio.")
-                        .font(.system(size: 13))
-                        .foregroundStyle(.secondary)
-                        .lineSpacing(3)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
+                AboutPrivacySection(
+                    state: audioModel.outputAppsState,
+                    action: audioModel.openSystemAudioRecordingSettingsForAuthorization
+                )
 
                 StarOnGitHubLink()
             }
@@ -299,6 +267,34 @@ private struct ControlPanelAboutPage: View {
         .frame(minWidth: ControlPanelLayout.detailMinWidth, maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .navigationTitle("About")
     }
+}
+
+private struct AboutBrandHeader: View {
+    @Environment(\.colorScheme) private var colorScheme
+
+    var body: some View {
+        VStack(spacing: 10) {
+            Image(colorScheme == .dark ? "AboutAppIconDark" : "AboutAppIconDefault")
+                .resizable()
+                .interpolation(.high)
+                .antialiased(true)
+                .scaledToFit()
+                .frame(width: 112, height: 112)
+                .compositingGroup()
+                .shadow(color: .black.opacity(colorScheme == .dark ? 0.34 : 0.22), radius: 18, x: 0, y: 10)
+                .accessibilityHidden(true)
+
+            Text(verbatim: "MacMix")
+                .font(.title.weight(.semibold))
+
+            Text(Self.versionText)
+                .font(.body.weight(.medium))
+
+            Text(verbatim: "Ⓒ2026 Jazmín")
+                .font(.caption)
+        }
+        .frame(maxWidth: .infinity)
+    }
 
     private static var versionText: String {
         let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String
@@ -307,34 +303,44 @@ private struct ControlPanelAboutPage: View {
         switch (version?.isEmpty == false ? version : nil, build?.isEmpty == false ? build : nil) {
         case let (.some(version), .some(build)):
             return String(
-                format: String(
-                    localized: "Version %1$@(%2$@)",
-                    comment: "About page version label with marketing version and build number."
-                ),
-                version,
-                build
+                localized: "Version \(version)(\(build))",
+                comment: "About page version label with marketing version followed by the build number."
             )
         case let (.some(version), .none):
             return String(
-                format: String(
-                    localized: "Version %@",
-                    comment: "About page version label with only the marketing version."
-                ),
-                version
+                localized: "Version \(version)",
+                comment: "About page version label with only the marketing version."
             )
         case let (.none, .some(build)):
             return String(
-                format: String(
-                    localized: "Build %@",
-                    comment: "About page build label shown when the marketing version is unavailable."
-                ),
-                build
+                localized: "Build \(build)",
+                comment: "About page build label shown when the marketing version is unavailable."
             )
         case (.none, .none):
             return String(
                 localized: "Version Unknown",
                 comment: "About page fallback when app version metadata is unavailable."
             )
+        }
+    }
+}
+
+private struct AboutPrivacySection: View {
+    let state: OutputAppsState
+    let action: () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Privacy Information")
+                .font(.headline.weight(.semibold))
+
+            PermissionAccessRow(state: state, action: action)
+
+            Text("Mixing needs System Audio Recording permission because macOS requires this permission before an app can process another app's audio. MacMix uses it only for local real-time mixing when you adjust per-app volume, and does not record, save, or upload audio.")
+                .font(.body)
+                .foregroundStyle(.secondary)
+                .lineSpacing(3)
+                .fixedSize(horizontal: false, vertical: true)
         }
     }
 }
@@ -383,7 +389,7 @@ private struct StarOnGitHubLink: View {
         Link(destination: repositoryURL) {
             HStack(spacing: 8) {
                 Text("Star me on GitHub🤗")
-                    .font(.system(size: 14, weight: .semibold))
+                    .font(.body.weight(.semibold))
 
                 Image("GitHub")
                     .resizable()
@@ -410,7 +416,7 @@ private struct StarOnGitHubLink: View {
 }
 
 private struct PermissionAccessRow: View {
-    @ObservedObject var state: OutputAppsState
+    let state: OutputAppsState
     let action: () -> Void
 
     private var isAuthorized: Bool {
@@ -420,18 +426,18 @@ private struct PermissionAccessRow: View {
     var body: some View {
         HStack(alignment: .firstTextBaseline, spacing: 12) {
             Text("System Audio Recording")
-                .font(.system(size: 13, weight: .medium))
+                .font(.body.weight(.medium))
 
             Spacer(minLength: 16)
 
             if isAuthorized {
                 Text("Authorized")
-                    .font(.system(size: 13, weight: .medium))
+                    .font(.body.weight(.medium))
                     .foregroundStyle(.green)
             } else {
                 Button(action: action) {
                     Text("Go to Authorize")
-                        .font(.system(size: 13, weight: .semibold))
+                        .font(.body.weight(.semibold))
                         .foregroundStyle(.red)
                 }
                 .buttonStyle(.plain)
@@ -458,7 +464,7 @@ private struct OpenAtLoginToggle: View {
             )
         )
         .toggleStyle(.switch)
-        .font(.system(size: 13, weight: .medium))
+        .font(.body.weight(.medium))
         .disabled(isUpdating)
         .onAppear {
             enableByDefaultIfNeeded()
@@ -578,7 +584,7 @@ private struct InputSection: View {
 }
 
 private struct SystemVolumeControl: View {
-    @ObservedObject var state: OutputAudioState
+    let state: OutputAudioState
     let onVolumeChange: (Double) -> Void
     let onToggleMute: () -> Void
 
@@ -601,7 +607,7 @@ private struct SystemVolumeControl: View {
 }
 
 private struct OutputDeviceGroup: View {
-    @ObservedObject var state: OutputAudioState
+    let state: OutputAudioState
     let onSelect: (AudioDevice) -> Void
 
     var body: some View {
@@ -614,11 +620,11 @@ private struct OutputDeviceGroup: View {
 }
 
 private struct MixSection: View {
-    @ObservedObject var state: OutputAppsState
+    let state: OutputAppsState
     var boostPreference: Binding<Bool>? = nil
     let onRequestPermission: () -> Void
-    let onToggleMute: (AudioApp) -> Void
-    let onVolumeChange: (Double, AudioApp) -> Void
+    let onToggleMute: (AudioAppState) -> Void
+    let onVolumeChange: (Double, AudioAppState) -> Void
     @AppStorage(MixVolumePreference.enables200PercentVolume) private var enables200PercentVolume = false
 
     private var maximumVolume: Double {
@@ -663,7 +669,7 @@ private struct MixSection: View {
 }
 
 private struct InputDeviceGroup: View {
-    @ObservedObject var state: InputAudioState
+    let state: InputAudioState
     let onSelect: (AudioDevice) -> Void
 
     var body: some View {
@@ -676,7 +682,7 @@ private struct InputDeviceGroup: View {
 }
 
 private struct InputVolumeControl: View {
-    @ObservedObject var state: InputAudioState
+    let state: InputAudioState
     let onVolumeChange: (Double) -> Void
 
     var body: some View {
@@ -707,7 +713,7 @@ private struct CollapsibleHeader: View {
                 Spacer()
 
                 Image(systemName: isExpanded ? "chevron.down" : "chevron.right")
-                    .font(.system(size: 11, weight: .semibold))
+                    .font(.caption2.weight(.semibold))
                     .foregroundStyle(.secondary)
                     .frame(width: 16, height: 16)
             }
@@ -740,7 +746,7 @@ private struct DeviceGroup: View {
                             DeviceIcon(device: device)
 
                             Text(device.name)
-                                .font(.system(size: 13, weight: .medium))
+                                .font(.body.weight(.medium))
                                 .lineLimit(1)
                                 .frame(maxWidth: .infinity, alignment: .leading)
 
@@ -760,10 +766,10 @@ private struct DeviceGroup: View {
 }
 
 private struct AppVolumeRow: View {
-    let app: AudioApp
+    let app: AudioAppState
     let maximumVolume: Double
-    let onToggleMute: (AudioApp) -> Void
-    let onVolumeChange: (Double, AudioApp) -> Void
+    let onToggleMute: (AudioAppState) -> Void
+    let onVolumeChange: (Double, AudioAppState) -> Void
     @State private var isAtUnity = false
 
     private var sliderTint: Color {
@@ -787,7 +793,7 @@ private struct AppVolumeRow: View {
             .accessibilityLabel(app.isMuted ? Text("Unmute") : Text("Mute"))
 
             Text(app.name)
-                .font(.system(size: 13, weight: .medium))
+                .font(.body.weight(.medium))
                 .lineLimit(1)
                 .frame(width: 60, alignment: .leading)
 
@@ -921,7 +927,7 @@ private struct SliderSymbol: View {
 
     var body: some View {
         Image(systemName: name)
-            .font(.system(size: 15, weight: .semibold))
+            .font(.body.weight(.semibold))
             .imageScale(.medium)
             .foregroundStyle(isMuted ? .red : .secondary)
             .frame(width: 24, height: 24, alignment: .center)
@@ -937,7 +943,7 @@ private struct DeviceIcon: View {
                 .fill(device.isCurrent ? Color.blue : Color.secondary.opacity(0.16))
 
             Image(systemName: device.iconName)
-                .font(.system(size: 13, weight: .semibold))
+                .font(.body.weight(.semibold))
                 .imageScale(.medium)
                 .foregroundStyle(device.isCurrent ? .white : .secondary)
                 .frame(width: 24, height: 24)
@@ -969,7 +975,7 @@ private struct AppIcon: View {
             .opacity(isMuted ? 0.3 : 1)
 
             Image(systemName: "speaker.slash.fill")
-                .font(.system(size: 12, weight: .bold))
+                .font(.caption.weight(.bold))
                 .imageScale(.medium)
                 .foregroundStyle(.red)
                 .opacity(isMuted ? 1 : 0)
@@ -985,13 +991,13 @@ private struct EmptyRow: View {
     var body: some View {
         HStack(spacing: 10) {
             Image(systemName: iconName)
-                .font(.system(size: 14, weight: .medium))
+                .font(.body.weight(.medium))
                 .foregroundStyle(.secondary)
                 .frame(width: 28, height: 28)
                 .background(Color.secondary.opacity(0.12), in: Circle())
 
             Text(title)
-                .font(.system(size: 13, weight: .medium))
+                .font(.body.weight(.medium))
                 .foregroundStyle(.secondary)
 
             Spacer()
@@ -1006,13 +1012,13 @@ private struct PermissionRequestRow: View {
         Button(action: action) {
             HStack(spacing: 10) {
                 Image(systemName: "waveform.badge.mic")
-                    .font(.system(size: 14, weight: .semibold))
+                    .font(.body.weight(.semibold))
                     .foregroundStyle(.red)
                     .frame(width: 28, height: 28)
                     .background(Color.red.opacity(0.12), in: Circle())
 
                 Text("System audio recording permission required")
-                    .font(.system(size: 13, weight: .semibold))
+                    .font(.body.weight(.semibold))
                     .foregroundStyle(.red)
 
                 Spacer()

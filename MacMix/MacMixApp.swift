@@ -11,7 +11,7 @@ import SwiftUI
 
 @main
 struct MacMixApp: App {
-    @StateObject private var audioModel = AudioModel()
+    @State private var audioModel = AudioModel()
     @State private var controlPanelSelection: ControlPanelPage = .settings
     @State private var isRunningFirstLaunchFlow = false
     @AppStorage("MacMix.HasRunFirstLaunchPermissionFlow") private var hasOpenedFirstLaunchAboutPage = false
@@ -89,7 +89,7 @@ struct MacMixApp: App {
 }
 
 private struct MenuBarVolumeIcon: View {
-    @ObservedObject var state: OutputAudioState
+    let state: OutputAudioState
 
     var body: some View {
         Image(systemName: state.menuBarSymbolName)

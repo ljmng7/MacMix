@@ -6,16 +6,17 @@
 //
 
 import Combine
+import Observation
 import Sparkle
 import SwiftUI
 
 struct CheckForUpdatesView: View {
-    @StateObject private var viewModel: CheckForUpdatesViewModel
+    @State private var viewModel: CheckForUpdatesViewModel
     private let showsIcon: Bool
     private let showsEllipsis: Bool
 
     init(updater: SPUUpdater, showsIcon: Bool = false, showsEllipsis: Bool = true) {
-        _viewModel = StateObject(wrappedValue: CheckForUpdatesViewModel(updater: updater))
+        _viewModel = State(initialValue: CheckForUpdatesViewModel(updater: updater))
         self.showsIcon = showsIcon
         self.showsEllipsis = showsEllipsis
     }
@@ -39,37 +40,40 @@ struct CheckForUpdatesView: View {
 }
 
 struct AutomaticUpdatesToggle: View {
-    @StateObject private var viewModel: AutomaticUpdatesViewModel
+    @State private var viewModel: AutomaticUpdatesViewModel
 
     init(updater: SPUUpdater) {
-        _viewModel = StateObject(wrappedValue: AutomaticUpdatesViewModel(updater: updater))
+        _viewModel = State(initialValue: AutomaticUpdatesViewModel(updater: updater))
     }
 
     var body: some View {
+        @Bindable var viewModel = viewModel
+
         Toggle(
             "Automatic Updates",
-            isOn: Binding(
-                get: { viewModel.isEnabled },
-                set: viewModel.setAutomaticUpdatesEnabled
-            )
+            isOn: $viewModel.automaticUpdatesEnabled
         )
         .toggleStyle(.switch)
-        .font(.system(size: 13, weight: .medium))
+        .font(.body.weight(.medium))
     }
 }
 
 @MainActor
-private final class CheckForUpdatesViewModel: ObservableObject {
-    @Published var canCheckForUpdates = false
+@Observable
+private final class CheckForUpdatesViewModel {
+    private(set) var canCheckForUpdates = false
 
     private let updater: SPUUpdater
+    @ObservationIgnored private var cancellable: AnyCancellable?
 
     init(updater: SPUUpdater) {
         self.updater = updater
 
-        updater.publisher(for: \.canCheckForUpdates)
+        cancellable = updater.publisher(for: \.canCheckForUpdates)
             .receive(on: RunLoop.main)
-            .assign(to: &$canCheckForUpdates)
+            .sink { [weak self] canCheckForUpdates in
+                self?.canCheckForUpdates = canCheckForUpdates
+            }
     }
 
     func checkForUpdates() {
@@ -78,8 +82,14 @@ private final class CheckForUpdatesViewModel: ObservableObject {
 }
 
 @MainActor
-private final class AutomaticUpdatesViewModel: ObservableObject {
-    @Published var isEnabled = true
+@Observable
+private final class AutomaticUpdatesViewModel {
+    private var isEnabled = true
+
+    var automaticUpdatesEnabled: Bool {
+        get { isEnabled }
+        set { setAutomaticUpdatesEnabled(newValue) }
+    }
 
     private let updater: SPUUpdater
 
@@ -109,7 +119,7 @@ private final class AutomaticUpdatesViewModel: ObservableObject {
         refresh()
     }
 
-    private var cancellables = Set<AnyCancellable>()
+    @ObservationIgnored private var cancellables = Set<AnyCancellable>()
 
     private func refresh() {
         isEnabled = updater.automaticallyChecksForUpdates && updater.automaticallyDownloadsUpdates
