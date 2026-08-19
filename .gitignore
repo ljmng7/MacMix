@@ -40,4 +40,7 @@ playground.xcworkspace
 *.tmp
 *.bak
 
+# Local release launcher (contains the machine-specific release workflow)
+/release_dmg.command
+
 .codex
