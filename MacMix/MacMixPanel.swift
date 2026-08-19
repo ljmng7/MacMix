@@ -74,6 +74,12 @@ private enum PanelVisibilityPreference {
     static let showsInput = "MacMix.ShowsInputInPanel"
 }
 
+private enum MacMixTint {
+    static let blue = Color(nsColor: .systemBlue)
+    static let yellow = Color(nsColor: .systemYellow)
+    static let gray = Color(nsColor: .systemGray)
+}
+
 struct MacMixControlPanel: View {
     let audioModel: AudioModel
     @Binding var selection: ControlPanelPage
@@ -774,10 +780,10 @@ private struct AppVolumeRow: View {
 
     private var sliderTint: Color {
         if app.isMuted {
-            return .gray
+            return MacMixTint.gray
         }
 
-        return app.volume > 1 ? .yellow : .blue
+        return app.volume > 1 ? MacMixTint.yellow : MacMixTint.blue
     }
 
     var body: some View {
@@ -897,7 +903,7 @@ private struct VolumeSliderRow: View {
             }
 
             Slider(value: $value, in: 0...1)
-                .tint(isMuted ? .gray : .blue)
+                .tint(isMuted ? MacMixTint.gray : MacMixTint.blue)
                 .disabled(!isEnabled)
 
             SliderSymbol(name: trailingIcon)
@@ -940,7 +946,7 @@ private struct DeviceIcon: View {
     var body: some View {
         ZStack {
             Circle()
-                .fill(device.isCurrent ? Color.blue : Color.secondary.opacity(0.16))
+                .fill(device.isCurrent ? MacMixTint.blue : Color.secondary.opacity(0.16))
 
             Image(systemName: device.iconName)
                 .font(.body.weight(.semibold))
