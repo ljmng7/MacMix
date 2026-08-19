@@ -3,38 +3,6 @@
 .AppleDouble
 .LSOverride
 
-# Xcode user state
-xcuserdata/
-*.xcuserstate
-*.xcscmblueprint
-
-# Xcode build products
-build/
-DerivedData/
-*.xcarchive
-*.xcresult
-
-# Swift Package Manager
-.build/
-.swiftpm/
-
-# App distribution artifacts
-*.app
-*.zip
-*.dmg
-*.pkg
-*.ipa
-*.dSYM
-
-# Sparkle signing key exports
-SparklePrivateKey*
-sparkle_private_key*
-*.ed25519
-
-# Playgrounds
-timeline.xctimeline
-playground.xcworkspace
-
 # Temporary files
 *.swp
 *.tmp
