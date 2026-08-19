@@ -1,8 +1,6 @@
 name: Deploy Website to GitHub Pages
 
 on:
-  push:
-    branches: [main]
   release:
     types: [published, edited]
   workflow_dispatch:
@@ -12,59 +10,10 @@ permissions:
   pages: write
   id-token: write
 
-concurrency:
-  group: github-pages
-  cancel-in-progress: true
-
 jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-        with:
-          ref: main
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: 22
-          cache: npm
-          cache-dependency-path: Website/package-lock.json
-
-      - name: Install dependencies
-        run: npm ci
-        working-directory: Website
-
-      - name: Generate GitHub Releases snapshot
-        run: npm run releases:snapshot
-        working-directory: Website
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITHUB_REPOSITORY: ${{ github.repository }}
-          GITHUB_API_URL: ${{ github.api_url }}
-
-      - name: Build GitHub Pages site
-        run: npm run build
-        working-directory: Website
-        env:
-          SITE_BASE: /MacMix/
-
-      - name: Configure GitHub Pages
-        uses: actions/configure-pages@v5
-
-      - name: Upload GitHub Pages artifact
-        uses: actions/upload-pages-artifact@v4
-        with:
-          path: Website/dist/client
-
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - name: Deploy GitHub Pages artifact
-        id: deployment
-        uses: actions/deploy-pages@v4
+  deploy-website:
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    uses: ljmng7/MacMix/.github/workflows/pages.yml@website
