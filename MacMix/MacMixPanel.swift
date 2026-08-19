@@ -84,13 +84,19 @@ struct MacMixControlPanel: View {
     let audioModel: AudioModel
     @Binding var selection: ControlPanelPage
     let updater: SPUUpdater
+    let menuBarVisibility: MenuBarVisibilityModel
     @State private var columnVisibility: NavigationSplitViewVisibility = .all
 
     var body: some View {
         NavigationSplitView(columnVisibility: $columnVisibility) {
             ControlPanelSidebar(selection: $selection)
         } detail: {
-            ControlPanelDetail(selection: selection, audioModel: audioModel, updater: updater)
+            ControlPanelDetail(
+                selection: selection,
+                audioModel: audioModel,
+                updater: updater,
+                menuBarVisibility: menuBarVisibility
+            )
         }
     }
 }
@@ -128,12 +134,17 @@ private struct ControlPanelDetail: View {
     let selection: ControlPanelPage
     let audioModel: AudioModel
     let updater: SPUUpdater
+    let menuBarVisibility: MenuBarVisibilityModel
 
     var body: some View {
         Group {
             switch selection {
             case .settings:
-                ControlPanelSettingsPage(audioModel: audioModel, updater: updater)
+                ControlPanelSettingsPage(
+                    audioModel: audioModel,
+                    updater: updater,
+                    menuBarVisibility: menuBarVisibility
+                )
             case .about:
                 ControlPanelAboutPage(audioModel: audioModel, updater: updater)
             }
@@ -153,6 +164,7 @@ enum ControlPanelPage: Hashable {
 private struct ControlPanelSettingsPage: View {
     let audioModel: AudioModel
     let updater: SPUUpdater
+    let menuBarVisibility: MenuBarVisibilityModel
     @AppStorage(PanelVisibilityPreference.showsOutput) private var showsOutputInPanel = true
     @AppStorage(PanelVisibilityPreference.showsInput) private var showsInputInPanel = true
     @AppStorage(MixVolumePreference.enables200PercentVolume) private var enables200PercentVolume = false
@@ -209,11 +221,10 @@ private struct ControlPanelSettingsPage: View {
 
                 Divider()
 
-                HStack(spacing: 28) {
-                    OpenAtLoginToggle()
-
-                    AutomaticUpdatesToggle(updater: updater)
-                }
+                SettingsBehaviorToggles(
+                    updater: updater,
+                    menuBarVisibility: menuBarVisibility
+                )
             }
             .padding(24)
             .frame(maxWidth: 620, alignment: .topLeading)
@@ -226,6 +237,53 @@ private struct ControlPanelSettingsPage: View {
                 audioModel.clampAppVolumesToUnity()
             }
         }
+    }
+}
+
+private struct SettingsBehaviorToggles: View {
+    let updater: SPUUpdater
+    let menuBarVisibility: MenuBarVisibilityModel
+
+    var body: some View {
+        ViewThatFits(in: .horizontal) {
+            HStack(spacing: 28) {
+                OpenAtLoginToggle()
+                AutomaticUpdatesToggle(updater: updater)
+                ShowInMenuBarToggle(menuBarVisibility: menuBarVisibility)
+            }
+            .fixedSize(horizontal: true, vertical: false)
+
+            VStack(alignment: .leading, spacing: 12) {
+                HStack(spacing: 28) {
+                    OpenAtLoginToggle()
+                    AutomaticUpdatesToggle(updater: updater)
+                }
+                .fixedSize(horizontal: true, vertical: false)
+
+                ShowInMenuBarToggle(menuBarVisibility: menuBarVisibility)
+            }
+
+            VStack(alignment: .leading, spacing: 12) {
+                OpenAtLoginToggle()
+                AutomaticUpdatesToggle(updater: updater)
+                ShowInMenuBarToggle(menuBarVisibility: menuBarVisibility)
+            }
+        }
+    }
+}
+
+private struct ShowInMenuBarToggle: View {
+    let menuBarVisibility: MenuBarVisibilityModel
+
+    var body: some View {
+        @Bindable var menuBarVisibility = menuBarVisibility
+
+        Toggle(
+            "Show in Menu Bar",
+            isOn: $menuBarVisibility.isVisible
+        )
+        .toggleStyle(.switch)
+        .font(.body.weight(.medium))
     }
 }
 
