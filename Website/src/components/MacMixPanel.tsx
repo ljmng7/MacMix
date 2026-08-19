@@ -24,9 +24,13 @@ type MacMixPanelProps = {
   systemVolume: number;
   musicVolume: number;
   safariVolume: number;
+  musicMuted: boolean;
+  safariMuted: boolean;
   onSystemVolumeChange: (value: number) => void;
   onMusicVolumeChange: (value: number) => void;
   onSafariVolumeChange: (value: number) => void;
+  onMusicMuteToggle: () => void;
+  onSafariMuteToggle: () => void;
 };
 
 type VolumeSliderProps = {
@@ -150,24 +154,50 @@ type MixRowProps = {
   darkIcon: string;
   name: string;
   value: number;
+  muted: boolean;
   onChange: (value: number) => void;
+  onMuteToggle: () => void;
 };
 
-function MixRow({ icon, darkIcon, name, value, onChange }: MixRowProps) {
+function MixRow({
+  icon,
+  darkIcon,
+  name,
+  value,
+  muted,
+  onChange,
+  onMuteToggle,
+}: MixRowProps) {
   return (
     <div className="macmix-panel__mix-row">
-      <ThemeImage
-        lightSrc={icon}
-        darkSrc={darkIcon}
-        alt=""
-        aria-hidden="true"
-      />
+      <button
+        className={`macmix-panel__app-icon ${
+          muted ? "macmix-panel__app-icon--muted" : ""
+        }`.trim()}
+        type="button"
+        onClick={onMuteToggle}
+        aria-label={muted ? `Unmute ${name}` : `Mute ${name}`}
+      >
+        <ThemeImage
+          lightSrc={icon}
+          darkSrc={darkIcon}
+          alt=""
+          aria-hidden="true"
+        />
+        <img
+          className="macmix-panel__app-mute-badge"
+          src={publicUrl("/assets/MacMix/svgs/speaker.slash.fill.svg")}
+          alt=""
+          aria-hidden="true"
+        />
+      </button>
       <span className="macmix-panel__mix-name">{name}</span>
       <VolumeSlider
         label={`${name} volume`}
         value={value}
         max={200}
         onChange={onChange}
+        muted={muted}
         showUnityTick
       />
       <button
@@ -187,9 +217,13 @@ export function MacMixPanel({
   systemVolume,
   musicVolume,
   safariVolume,
+  musicMuted,
+  safariMuted,
   onSystemVolumeChange,
   onMusicVolumeChange,
   onSafariVolumeChange,
+  onMusicMuteToggle,
+  onSafariMuteToggle,
 }: MacMixPanelProps) {
   const [outputOpen, setOutputOpen] = useState(true);
   const [inputOpen, setInputOpen] = useState(true);
@@ -330,14 +364,18 @@ export function MacMixPanel({
               darkIcon="/assets/MacMix/Music-iOS-Dark-32@2x.png"
               name="Music"
               value={musicVolume}
+              muted={musicMuted}
               onChange={onMusicVolumeChange}
+              onMuteToggle={onMusicMuteToggle}
             />
             <MixRow
               icon="/assets/MacMix/Safari-iOS-Default-32@2x.png"
               darkIcon="/assets/MacMix/Safari-iOS-Dark-32@2x.png"
               name="Safari"
               value={safariVolume}
+              muted={safariMuted}
               onChange={onSafariVolumeChange}
+              onMuteToggle={onSafariMuteToggle}
             />
           </div>
         </div>

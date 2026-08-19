@@ -36,6 +36,8 @@ export function MacDesktopPreview() {
   const [systemVolume, setSystemVolume] = useState(72);
   const [musicVolume, setMusicVolume] = useState(160);
   const [safariVolume, setSafariVolume] = useState(70);
+  const [musicMuted, setMusicMuted] = useState(false);
+  const [safariMuted, setSafariMuted] = useState(false);
   const desktopTimeParts = getDesktopTimeParts(desktopTime);
 
   const menuVolumeIcon =
@@ -219,22 +221,40 @@ export function MacDesktopPreview() {
           activeApp === "safari" ? "mac-preview-app--active" : ""
         }`}
         aria-hidden={activeApp !== "safari"}
-        volume={(systemVolume / 100) * (safariVolume / 100)}
+        volume={
+          systemVolume === 0 || safariMuted
+            ? 0
+            : (systemVolume / 100) * (safariVolume / 100)
+        }
       />
       <MusicPlayerWindow
         className={`mac-preview-app mac-preview-music ${
           activeApp === "music" ? "mac-preview-app--active" : ""
         }`}
         aria-hidden={activeApp !== "music"}
-        volume={(systemVolume / 100) * (musicVolume / 100)}
+        volume={
+          systemVolume === 0 || musicMuted
+            ? 0
+            : (systemVolume / 100) * (musicVolume / 100)
+        }
       />
       <MacMixPanel
         systemVolume={systemVolume}
         musicVolume={musicVolume}
         safariVolume={safariVolume}
+        musicMuted={musicMuted}
+        safariMuted={safariMuted}
         onSystemVolumeChange={setSystemVolume}
-        onMusicVolumeChange={setMusicVolume}
-        onSafariVolumeChange={setSafariVolume}
+        onMusicVolumeChange={(value) => {
+          setMusicVolume(value);
+          setMusicMuted(false);
+        }}
+        onSafariVolumeChange={(value) => {
+          setSafariVolume(value);
+          setSafariMuted(false);
+        }}
+        onMusicMuteToggle={() => setMusicMuted((current) => !current)}
+        onSafariMuteToggle={() => setSafariMuted((current) => !current)}
       />
       <SmoothCorner
         className="mac-preview-dock"

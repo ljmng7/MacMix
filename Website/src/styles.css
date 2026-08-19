@@ -1913,6 +1913,64 @@ img.header-link__icon {
   box-shadow: none;
 }
 
+.macmix-panel__app-icon {
+  position: relative;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 0;
+  display: block;
+  background: transparent;
+  cursor: pointer;
+}
+
+.macmix-panel__app-icon:focus-visible {
+  border-radius: 6px;
+  outline: 2px solid rgb(10 132 255 / 56%);
+  outline-offset: 2px;
+}
+
+.macmix-panel__app-icon .theme-picture,
+.macmix-panel__app-icon .theme-picture > img {
+  width: 24px;
+  height: 24px;
+}
+
+.macmix-panel__app-icon .theme-picture > img {
+  display: block;
+  border-radius: 5px;
+  object-fit: contain;
+  transition:
+    filter 180ms var(--ease),
+    opacity 180ms var(--ease);
+}
+
+.macmix-panel__app-icon--muted .theme-picture > img {
+  filter: grayscale(1);
+  opacity: 0.3;
+}
+
+.macmix-panel__app-mute-badge {
+  position: absolute;
+  inset: 0;
+  width: 13px;
+  height: 13px;
+  margin: auto;
+  opacity: 0;
+  pointer-events: none;
+  filter: invert(19%) sepia(98%) saturate(5236%) hue-rotate(351deg)
+    brightness(95%) contrast(95%);
+  transform: scale(0.82);
+  transition:
+    opacity 180ms var(--ease),
+    transform 180ms var(--ease);
+}
+
+.macmix-panel__app-icon--muted .macmix-panel__app-mute-badge {
+  opacity: 1;
+  transform: scale(1);
+}
+
 .macmix-panel__slider-shell {
   position: relative;
   min-width: 0;
