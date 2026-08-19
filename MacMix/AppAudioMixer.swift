@@ -9,12 +9,92 @@ import Accelerate
 import AudioToolbox
 import CoreAudio
 import Foundation
+import OSLog
 import Synchronization
 
 nonisolated struct AppMixTarget: Sendable, Equatable {
     let id: String
     let audioObjectIDs: [AudioObjectID]
     let volume: Double
+}
+
+nonisolated private final class FirstCallbackDiagnostics: @unchecked Sendable {
+    private let didRecord = Atomic<Bool>(false)
+    private let inputCount = Atomic<UInt32>(0)
+    private let outputCount = Atomic<UInt32>(0)
+    private let input0 = Atomic<UInt64>(0)
+    private let input1 = Atomic<UInt64>(0)
+    private let input2 = Atomic<UInt64>(0)
+    private let input3 = Atomic<UInt64>(0)
+    private let output0 = Atomic<UInt64>(0)
+    private let output1 = Atomic<UInt64>(0)
+    private let output2 = Atomic<UInt64>(0)
+    private let output3 = Atomic<UInt64>(0)
+
+    var summary: String {
+        let recordedInputCount = inputCount.load(ordering: .relaxed)
+        let recordedOutputCount = outputCount.load(ordering: .relaxed)
+        let inputs = [
+            Self.describe(input0.load(ordering: .relaxed)),
+            Self.describe(input1.load(ordering: .relaxed)),
+            Self.describe(input2.load(ordering: .relaxed)),
+            Self.describe(input3.load(ordering: .relaxed)),
+        ].prefix(Int(recordedInputCount)).joined(separator: ",")
+        let outputs = [
+            Self.describe(output0.load(ordering: .relaxed)),
+            Self.describe(output1.load(ordering: .relaxed)),
+            Self.describe(output2.load(ordering: .relaxed)),
+            Self.describe(output3.load(ordering: .relaxed)),
+        ].prefix(Int(recordedOutputCount)).joined(separator: ",")
+        return "inputs=\(recordedInputCount)[\(inputs)] "
+            + "outputs=\(recordedOutputCount)[\(outputs)]"
+    }
+
+    func record(
+        inputBuffers: UnsafeMutableAudioBufferListPointer,
+        outputBuffers: UnsafeMutableAudioBufferListPointer
+    ) {
+        guard !didRecord.exchange(true, ordering: .relaxed) else {
+            return
+        }
+
+        inputCount.store(UInt32(inputBuffers.count), ordering: .relaxed)
+        outputCount.store(UInt32(outputBuffers.count), ordering: .relaxed)
+        for (index, buffer) in inputBuffers.prefix(4).enumerated() {
+            store(Self.pack(buffer), inputIndex: index)
+        }
+        for (index, buffer) in outputBuffers.prefix(4).enumerated() {
+            store(Self.pack(buffer), outputIndex: index)
+        }
+    }
+
+    private func store(_ value: UInt64, inputIndex: Int) {
+        switch inputIndex {
+        case 0: input0.store(value, ordering: .relaxed)
+        case 1: input1.store(value, ordering: .relaxed)
+        case 2: input2.store(value, ordering: .relaxed)
+        case 3: input3.store(value, ordering: .relaxed)
+        default: break
+        }
+    }
+
+    private func store(_ value: UInt64, outputIndex: Int) {
+        switch outputIndex {
+        case 0: output0.store(value, ordering: .relaxed)
+        case 1: output1.store(value, ordering: .relaxed)
+        case 2: output2.store(value, ordering: .relaxed)
+        case 3: output3.store(value, ordering: .relaxed)
+        default: break
+        }
+    }
+
+    private static func pack(_ buffer: AudioBuffer) -> UInt64 {
+        UInt64(buffer.mNumberChannels) << 32 | UInt64(buffer.mDataByteSize)
+    }
+
+    private static func describe(_ packed: UInt64) -> String {
+        "ch\(packed >> 32)/\(packed & 0xffff_ffff)B"
+    }
 }
 
 nonisolated struct AppMixerSnapshot: Sendable, Equatable {
@@ -71,7 +151,7 @@ nonisolated final class AppAudioMixer: @unchecked Sendable {
         attributes: .concurrent
     )
     // The following mutable state is confined to lifecycleQueue.
-    private var engines: [String: any AppGainEngine] = [:]
+    private var engine: (any AppGainEngine)?
     private var pendingRetirements: [AppGainEngineRetirement] = []
     private var outputSwitchMuteGuard: ProcessTapMuteGuard?
     private let latestCommandRevision = Atomic<UInt64>(0)
@@ -147,9 +227,9 @@ nonisolated final class AppAudioMixer: @unchecked Sendable {
             }
 
             releaseOutputSwitchMuteGuard()
-            let enginesToRetire = Array(engines.values)
+            let engineToRetire = engine
             let guardedAudioObjectIDs = Set(
-                enginesToRetire.flatMap(\.tappedObjects)
+                (engineToRetire?.tappedObjects ?? [])
                     + targets
                         .filter { !isUnity($0.volume) }
                         .flatMap(\.audioObjectIDs)
@@ -161,7 +241,7 @@ nonisolated final class AppAudioMixer: @unchecked Sendable {
             }
 
             if outputSwitchMuteGuard == nil {
-                prepareForUnityHandoff(enginesToRetire)
+                prepareForUnityHandoff(engineToRetire)
             }
 
             guard isCurrent(revision: revision) else {
@@ -169,9 +249,9 @@ nonisolated final class AppAudioMixer: @unchecked Sendable {
                 return
             }
 
-            engines.removeAll()
-            for engine in enginesToRetire {
-                enqueueRetirement(engine)
+            engine = nil
+            if let engineToRetire {
+                enqueueRetirement(engineToRetire)
             }
 
             let deadline = DispatchTime.now().uptimeNanoseconds
@@ -220,74 +300,6 @@ nonisolated final class AppAudioMixer: @unchecked Sendable {
         return true
     }
 
-    private func apply(
-        _ target: AppMixTarget,
-        command: AppMixerCommand,
-        startsAtTargetGain: Bool = false
-    ) -> Bool {
-        guard isCurrent(command) else {
-            return false
-        }
-
-        let clampedVolume = Float(max(0, min(Double(Self.maximumGain), target.volume)))
-
-        guard !isUnity(Double(clampedVolume)), let outputDeviceUID = command.outputDeviceUID else {
-            guard let engine = engines.removeValue(forKey: target.id) else {
-                return true
-            }
-
-            prepareForUnityHandoff([engine])
-            enqueueRetirement(engine)
-            return waitForPendingAggregateRemoval(command: command)
-        }
-
-        guard Self.isSupported else {
-            return false
-        }
-
-        if let engine = engines[target.id] {
-            if engine.tappedObjects == target.audioObjectIDs,
-               engine.outputDeviceUID == outputDeviceUID {
-                guard isCurrent(command) else {
-                    return false
-                }
-
-                engine.gain = clampedVolume
-                return true
-            }
-
-            engines.removeValue(forKey: target.id)
-            prepareForUnityHandoff([engine])
-            enqueueRetirement(engine)
-            guard waitForPendingAggregateRemoval(command: command), isCurrent(command) else {
-                return false
-            }
-        }
-
-        guard waitForPendingAggregateRemoval(command: command) else {
-            return false
-        }
-
-        guard #available(macOS 14.4, *),
-              let engine = ProcessTapGainEngine(
-                audioObjectIDs: target.audioObjectIDs,
-                initialGain: startsAtTargetGain ? clampedVolume : 1,
-                gain: clampedVolume,
-                outputDeviceUID: outputDeviceUID
-              ) else {
-            return false
-        }
-
-        guard isCurrent(command) else {
-            enqueueRetirement(engine)
-            _ = waitForPendingAggregateRemoval(command: command)
-            return false
-        }
-
-        engines[target.id] = engine
-        return true
-    }
-
     private func reconcile(_ command: AppMixerCommand) -> AppMixerResult {
         guard isCurrent(command) else {
             return .superseded
@@ -297,39 +309,8 @@ nonisolated final class AppAudioMixer: @unchecked Sendable {
     }
 
     private func transition(_ command: AppMixerCommand) -> AppMixerResult {
-        guard isCurrent(command),
-              let outputDeviceUID = command.outputDeviceUID else {
-            return .superseded
-        }
-
-        let targetByID = Dictionary(uniqueKeysWithValues: command.targets.map { ($0.id, $0) })
-        let enginesToReplace = engines.filter { appID, engine in
-            guard let target = targetByID[appID] else {
-                return true
-            }
-
-            return isUnity(target.volume)
-                || engine.tappedObjects != target.audioObjectIDs
-                || engine.outputDeviceUID != outputDeviceUID
-        }
-
-        prepareForUnityHandoff(Array(enginesToReplace.values))
-
-        for (appID, engine) in enginesToReplace {
-            guard isCurrent(command) else {
-                return .superseded
-            }
-
-            engines.removeValue(forKey: appID)
-            enqueueRetirement(engine)
-        }
-
         guard isCurrent(command) else {
             return .superseded
-        }
-
-        guard waitForPendingAggregateRemoval(command: command) else {
-            return .failed
         }
 
         return reconcileCurrentRoute(command, startsAtTargetGain: true) ? .applied : .failed
@@ -339,46 +320,88 @@ nonisolated final class AppAudioMixer: @unchecked Sendable {
         _ command: AppMixerCommand,
         startsAtTargetGain: Bool = false
     ) -> Bool {
-        let currentIDs = Set(command.targets.map(\.id))
-        var success = true
-
-        for (appID, engine) in Array(engines) where !currentIDs.contains(appID) {
-            guard isCurrent(command) else {
-                return false
-            }
-
-            engines.removeValue(forKey: appID)
-            enqueueRetirement(engine)
-        }
-
-        guard waitForPendingAggregateRemoval(command: command) else {
+        guard isCurrent(command) else {
             return false
         }
 
-        for target in command.targets {
-            guard isCurrent(command) else {
-                return false
-            }
-
-            if !apply(
-                target,
-                command: command,
-                startsAtTargetGain: startsAtTargetGain
-            ) {
-                success = false
-            }
+        let routableTargets = command.targets.filter {
+            !$0.audioObjectIDs.isEmpty
+        }
+        let activeTargets = routableTargets.filter {
+            !isUnity($0.volume)
         }
 
-        return success
+        guard !activeTargets.isEmpty else {
+            guard let oldEngine = engine else {
+                return true
+            }
+
+            engine = nil
+            prepareForUnityHandoff(oldEngine)
+            enqueueRetirement(oldEngine)
+            return waitForPendingAggregateRemoval(command: command)
+        }
+
+        guard Self.isSupported, let outputDeviceUID = command.outputDeviceUID else {
+            return false
+        }
+
+        let graphTargets: [AppMixTarget]
+        if let engine, engine.outputDeviceUID == outputDeviceUID {
+            // Once an app joins the shared graph, keep its tap at unity so crossing
+            // 100% never tears down the graph and interrupts the other mixed apps.
+            graphTargets = routableTargets.filter {
+                !isUnity($0.volume) || engine.containsTarget($0.id)
+            }
+        } else {
+            graphTargets = activeTargets
+        }
+
+        if let engine,
+           engine.outputDeviceUID == outputDeviceUID,
+           engine.matchesGraph(graphTargets) {
+            for target in graphTargets {
+                engine.setGain(clampedGain(target.volume), for: target.id)
+            }
+            return isCurrent(command)
+        }
+
+        if let oldEngine = engine {
+            engine = nil
+            prepareForUnityHandoff(oldEngine)
+            enqueueRetirement(oldEngine)
+        }
+
+        guard waitForPendingAggregateRemoval(command: command), isCurrent(command) else {
+            return false
+        }
+
+        guard #available(macOS 14.4, *),
+              let newEngine = SharedProcessTapGainEngine(
+                targets: graphTargets,
+                startsAtTargetGain: startsAtTargetGain,
+                outputDeviceUID: outputDeviceUID
+              ) else {
+            return false
+        }
+
+        guard isCurrent(command) else {
+            enqueueRetirement(newEngine)
+            _ = waitForPendingAggregateRemoval(command: command)
+            return false
+        }
+
+        engine = newEngine
+        return true
     }
 
     private func stopAllNow() {
         releaseOutputSwitchMuteGuard()
-        for engine in engines.values {
+        if let engine {
             enqueueRetirement(engine)
         }
 
-        engines.removeAll()
+        engine = nil
         _ = waitForPendingAggregateRemoval()
     }
 
@@ -404,6 +427,10 @@ nonisolated final class AppAudioMixer: @unchecked Sendable {
         abs(volume - 1) < 0.005
     }
 
+    private func clampedGain(_ volume: Double) -> Float {
+        Float(max(0, min(Double(Self.maximumGain), volume)))
+    }
+
     private func isCurrent(_ command: AppMixerCommand) -> Bool {
         isCurrent(revision: command.revision)
     }
@@ -418,18 +445,16 @@ nonisolated final class AppAudioMixer: @unchecked Sendable {
         retirement.start(on: retirementQueue)
     }
 
-    private func prepareForUnityHandoff(_ engines: [any AppGainEngine]) {
-        guard !engines.isEmpty else {
+    private func prepareForUnityHandoff(_ engine: (any AppGainEngine)?) {
+        guard let engine else {
             return
         }
 
-        for engine in engines {
-            engine.gain = 1
-        }
+        engine.setAllGains(1)
 
         let deadline = Date().addingTimeInterval(Self.maximumGainHandoffDuration)
         while Date() < deadline {
-            if engines.allSatisfy({ $0.hasRenderedGain(1) }) {
+            if engine.hasRenderedAllGains(1) {
                 return
             }
 
@@ -495,11 +520,14 @@ nonisolated final class AppAudioMixer: @unchecked Sendable {
 }
 
 private protocol AppGainEngine: AnyObject {
-    nonisolated var gain: Float { get set }
     nonisolated var tappedObjects: [AudioObjectID] { get }
     nonisolated var outputDeviceUID: String { get }
     nonisolated var isStopped: Bool { get }
-    nonisolated func hasRenderedGain(_ gain: Float) -> Bool
+    nonisolated func containsTarget(_ targetID: String) -> Bool
+    nonisolated func matchesGraph(_ targets: [AppMixTarget]) -> Bool
+    nonisolated func setGain(_ gain: Float, for targetID: String)
+    nonisolated func setAllGains(_ gain: Float)
+    nonisolated func hasRenderedAllGains(_ gain: Float) -> Bool
 
     @discardableResult
     nonisolated func stop() -> AudioObjectID?
@@ -809,27 +837,46 @@ nonisolated private final class ProcessTapMuteGuard {
 }
 
 @available(macOS 14.4, *)
-nonisolated private final class ProcessTapGainEngine: AppGainEngine {
+nonisolated private final class SharedProcessTapGainEngine: AppGainEngine {
+    private static let diagnosticsLogger = Logger(
+        subsystem: "jazmin.MacMix",
+        category: "AudioMixerDiagnostics"
+    )
+
     nonisolated let tappedObjects: [AudioObjectID]
     nonisolated let outputDeviceUID: String
 
-    nonisolated var gain: Float {
-        get { gainState.target }
-        set { gainState.target = newValue }
+    nonisolated func containsTarget(_ targetID: String) -> Bool {
+        graph[targetID] != nil
     }
 
-    nonisolated func hasRenderedGain(_ gain: Float) -> Bool {
-        gainState.hasRendered(gain)
+    nonisolated func matchesGraph(_ targets: [AppMixTarget]) -> Bool {
+        graph == Self.graph(for: targets)
+    }
+
+    nonisolated func setGain(_ gain: Float, for targetID: String) {
+        gainStates[targetID]?.target = gain
+    }
+
+    nonisolated func setAllGains(_ gain: Float) {
+        for gainState in gainStates.values {
+            gainState.target = gain
+        }
+    }
+
+    nonisolated func hasRenderedAllGains(_ gain: Float) -> Bool {
+        gainStates.values.allSatisfy { $0.hasRendered(gain) }
     }
 
     nonisolated var isStopped: Bool {
         ioProc == nil
             && aggregateID == kAudioObjectUnknown
-            && tapID == kAudioObjectUnknown
+            && tapIDs.allSatisfy { $0 == kAudioObjectUnknown }
     }
 
-    private let gainState: GainState
-    private var tapID = AudioObjectID(kAudioObjectUnknown)
+    private let graph: [String: [AudioObjectID]]
+    private let gainStates: [String: GainState]
+    private var tapIDs: [AudioObjectID] = []
     private var aggregateID = AudioObjectID(kAudioObjectUnknown)
     private var ioProc: AudioDeviceIOProcID?
     private var isRunning = false
@@ -843,33 +890,74 @@ nonisolated private final class ProcessTapGainEngine: AppGainEngine {
     private struct ProcessTapConfiguration {
         let description: CATapDescription
         let outputBufferOffset: Int
+        let requiresDriftCompensation: Bool
+    }
+
+    private struct TapRuntime: @unchecked Sendable {
+        let description: CATapDescription
+        let format: AudioStreamBasicDescription
+        let inputBufferOffset: Int
+        let inputBufferCount: Int
+        let outputBufferOffset: Int
+        let requiresDriftCompensation: Bool
+        let gainState: GainState
     }
 
     init?(
-        audioObjectIDs: [AudioObjectID],
-        initialGain: Float,
-        gain: Float,
+        targets: [AppMixTarget],
+        startsAtTargetGain: Bool,
         outputDeviceUID: String
     ) {
-        guard !audioObjectIDs.isEmpty else {
+        let targets = targets.filter { !$0.audioObjectIDs.isEmpty }
+        guard !targets.isEmpty else {
             return nil
         }
 
-        self.tappedObjects = audioObjectIDs
+        self.graph = Self.graph(for: targets)
+        self.tappedObjects = targets.flatMap(\.audioObjectIDs)
         self.outputDeviceUID = outputDeviceUID
-        self.gainState = GainState(initialGain: initialGain, targetGain: gain)
+        self.gainStates = Dictionary(uniqueKeysWithValues: targets.map { target in
+            let gain = Self.clampedGain(target.volume)
+            return (
+                target.id,
+                GainState(
+                    initialGain: startsAtTargetGain ? gain : 1,
+                    targetGain: gain
+                )
+            )
+        })
 
-        guard let tapConfiguration = Self.createProcessTap(
-            audioObjectIDs: audioObjectIDs,
-            outputDeviceUID: outputDeviceUID,
-            tapID: &tapID
-        ) else {
-            return nil
-        }
+        var tapRuntimes: [TapRuntime] = []
+        var nextInputBufferOffset = 0
+        for target in targets {
+            var tapID = AudioObjectID(kAudioObjectUnknown)
+            guard let configuration = Self.createProcessTap(
+                audioObjectIDs: target.audioObjectIDs,
+                outputDeviceUID: outputDeviceUID,
+                tapID: &tapID
+            ), let format = Self.tapFormat(for: tapID),
+               let gainState = gainStates[target.id] else {
+                if tapID != kAudioObjectUnknown {
+                    AudioHardwareDestroyProcessTap(tapID)
+                }
+                stopAfterInitializationFailure()
+                return nil
+            }
 
-        guard let tapFormat = Self.tapFormat(for: tapID) else {
-            AudioHardwareDestroyProcessTap(tapID)
-            return nil
+            tapIDs.append(tapID)
+            let inputBufferCount = Self.bufferCount(for: format)
+            tapRuntimes.append(
+                TapRuntime(
+                    description: configuration.description,
+                    format: format,
+                    inputBufferOffset: nextInputBufferOffset,
+                    inputBufferCount: inputBufferCount,
+                    outputBufferOffset: configuration.outputBufferOffset,
+                    requiresDriftCompensation: configuration.requiresDriftCompensation,
+                    gainState: gainState
+                )
+            )
+            nextInputBufferOffset += inputBufferCount
         }
 
         let aggregateDescription: [String: Any] = [
@@ -880,72 +968,112 @@ nonisolated private final class ProcessTapGainEngine: AppGainEngine {
             kAudioAggregateDeviceSubDeviceListKey: [
                 [kAudioSubDeviceUIDKey: outputDeviceUID],
             ],
-            kAudioAggregateDeviceTapListKey: [
-                [
-                    kAudioSubTapUIDKey: tapConfiguration.description.uuid.uuidString,
-                    kAudioSubTapDriftCompensationKey: true,
-                ],
-            ],
+            kAudioAggregateDeviceTapListKey: tapRuntimes.map { runtime in
+                var description: [String: Any] = [
+                    kAudioSubTapUIDKey: runtime.description.uuid.uuidString,
+                    kAudioSubTapDriftCompensationKey: runtime.requiresDriftCompensation,
+                ]
+                if runtime.requiresDriftCompensation {
+                    description[kAudioSubTapDriftCompensationQualityKey] =
+                        kAudioAggregateDriftCompensationMaxQuality
+                }
+                return description
+            },
             kAudioAggregateDeviceTapAutoStartKey: true,
         ]
 
         guard AudioHardwareCreateAggregateDevice(aggregateDescription as CFDictionary, &aggregateID) == noErr,
               aggregateID != kAudioObjectUnknown else {
-            AudioHardwareDestroyProcessTap(tapID)
+            stopAfterInitializationFailure()
             return nil
         }
 
-        let gainState = gainState
-        let outputBufferOffset = tapConfiguration.outputBufferOffset
+        let callbackDiagnostics = FirstCallbackDiagnostics()
+        Self.logGraphDiagnostics(
+            aggregateID: aggregateID,
+            outputDeviceUID: outputDeviceUID,
+            tapRuntimes: tapRuntimes
+        )
+
+        let outputBufferIndices = Array(
+            Set(tapRuntimes.flatMap { runtime in
+                (0..<runtime.inputBufferCount).map { runtime.outputBufferOffset + $0 }
+            })
+        )
         let status = AudioDeviceCreateIOProcIDWithBlock(&ioProc, aggregateID, nil) { _, inputData, _, outputData, _ in
             let inputBuffers = UnsafeMutableAudioBufferListPointer(UnsafeMutablePointer(mutating: inputData))
             let outputBuffers = UnsafeMutableAudioBufferListPointer(outputData)
-            let bytesPerFrame = max(tapFormat.mBytesPerFrame, 1)
-            var frameCount: UInt32?
-            for (index, inputBuffer) in inputBuffers.enumerated() {
-                let outputIndex = outputBufferOffset + index
-                guard outputIndex < outputBuffers.count,
-                      inputBuffer.mData != nil,
-                      outputBuffers[outputIndex].mData != nil,
-                      inputBuffer.mNumberChannels == outputBuffers[outputIndex].mNumberChannels,
-                      outputBuffers[outputIndex].mDataByteSize >= inputBuffer.mDataByteSize,
-                      inputBuffer.mDataByteSize > 0 else {
+            callbackDiagnostics.record(
+                inputBuffers: inputBuffers,
+                outputBuffers: outputBuffers
+            )
+
+            // Every tap targets the same physical stream. Clear it once, then accumulate
+            // all per-app signals in this single realtime callback.
+            for outputIndex in outputBufferIndices where outputIndex < outputBuffers.count {
+                let outputBuffer = outputBuffers[outputIndex]
+                if let data = outputBuffer.mData, outputBuffer.mDataByteSize > 0 {
+                    memset(data, 0, Int(outputBuffer.mDataByteSize))
+                }
+            }
+
+            // Aggregate input streams follow the tap-list order used at creation time.
+            for runtime in tapRuntimes {
+                let bytesPerFrame = max(runtime.format.mBytesPerFrame, 1)
+                var frameCount: UInt32?
+                for localIndex in 0..<runtime.inputBufferCount {
+                    let inputIndex = runtime.inputBufferOffset + localIndex
+                    let outputIndex = runtime.outputBufferOffset + localIndex
+                    guard inputIndex < inputBuffers.count,
+                          outputIndex < outputBuffers.count else {
+                        continue
+                    }
+
+                    let inputBuffer = inputBuffers[inputIndex]
+                    let outputBuffer = outputBuffers[outputIndex]
+                    guard inputBuffer.mData != nil,
+                          outputBuffer.mData != nil,
+                          inputBuffer.mNumberChannels == outputBuffer.mNumberChannels,
+                          outputBuffer.mDataByteSize >= inputBuffer.mDataByteSize,
+                          inputBuffer.mDataByteSize > 0 else {
+                        continue
+                    }
+
+                    frameCount = inputBuffer.mDataByteSize / bytesPerFrame
+                    break
+                }
+
+                guard let frameCount, frameCount > 0 else {
                     continue
                 }
 
-                frameCount = inputBuffer.mDataByteSize / bytesPerFrame
-                break
-            }
+                let gainRamp = runtime.gainState.nextRamp(
+                    frameCount: frameCount,
+                    sampleRate: runtime.format.mSampleRate
+                )
+                var didMixAudio = false
 
-            guard let frameCount, frameCount > 0 else {
-                return
-            }
+                for localIndex in 0..<runtime.inputBufferCount {
+                    let inputIndex = runtime.inputBufferOffset + localIndex
+                    let outputIndex = runtime.outputBufferOffset + localIndex
+                    guard inputIndex < inputBuffers.count,
+                          outputIndex < outputBuffers.count else {
+                        continue
+                    }
 
-            let gainRamp = gainState.nextRamp(frameCount: frameCount, sampleRate: tapFormat.mSampleRate)
-            var didWriteAudio = false
-
-            for (index, inputBuffer) in inputBuffers.enumerated() {
-                let outputIndex = outputBufferOffset + index
-                guard outputIndex < outputBuffers.count,
-                      inputBuffer.mData != nil,
-                      outputBuffers[outputIndex].mData != nil,
-                      inputBuffer.mNumberChannels == outputBuffers[outputIndex].mNumberChannels,
-                      outputBuffers[outputIndex].mDataByteSize >= inputBuffer.mDataByteSize else {
-                    continue
+                    if Self.mixScaledAudio(
+                        from: inputBuffers[inputIndex],
+                        into: outputBuffers[outputIndex],
+                        gainRamp: gainRamp,
+                        format: runtime.format
+                    ) {
+                        didMixAudio = true
+                    }
                 }
 
-                if Self.writeScaledAudio(
-                    from: inputBuffer,
-                    to: outputBuffers[outputIndex],
-                    gainRamp: gainRamp,
-                    format: tapFormat
-                ) {
-                    didWriteAudio = true
+                if didMixAudio {
+                    runtime.gainState.markRendered(gainRamp)
                 }
-            }
-
-            if didWriteAudio {
-                gainState.markRendered(gainRamp)
             }
         }
 
@@ -960,6 +1088,10 @@ nonisolated private final class ProcessTapGainEngine: AppGainEngine {
         }
 
         isRunning = true
+        DispatchQueue.global(qos: .utility).asyncAfter(deadline: .now() + 1.5) {
+            let summary = callbackDiagnostics.summary
+            Self.diagnosticsLogger.notice("First IOProc callback: \(summary, privacy: .public)")
+        }
     }
 
     @discardableResult
@@ -973,9 +1105,10 @@ nonisolated private final class ProcessTapGainEngine: AppGainEngine {
             aggregateID = kAudioObjectUnknown
         }
 
-        if tapID != kAudioObjectUnknown,
-           !Self.audioObjectExists(tapID) {
-            tapID = kAudioObjectUnknown
+        for index in tapIDs.indices where tapIDs[index] != kAudioObjectUnknown {
+            if !Self.audioObjectExists(tapIDs[index]) {
+                tapIDs[index] = kAudioObjectUnknown
+            }
         }
 
         if let ioProc {
@@ -1005,10 +1138,11 @@ nonisolated private final class ProcessTapGainEngine: AppGainEngine {
             }
         }
 
-        if tapID != kAudioObjectUnknown {
+        for index in tapIDs.indices where tapIDs[index] != kAudioObjectUnknown {
+            let tapID = tapIDs[index]
             let status = AudioHardwareDestroyProcessTap(tapID)
             if Self.didDestroy(status) || !Self.audioObjectExists(tapID) {
-                tapID = kAudioObjectUnknown
+                tapIDs[index] = kAudioObjectUnknown
             }
         }
 
@@ -1077,6 +1211,19 @@ nonisolated private final class ProcessTapGainEngine: AppGainEngine {
         return Set(deviceIDs.filter { $0 != kAudioObjectUnknown })
     }
 
+    private static func graph(for targets: [AppMixTarget]) -> [String: [AudioObjectID]] {
+        Dictionary(uniqueKeysWithValues: targets.map { ($0.id, $0.audioObjectIDs) })
+    }
+
+    private static func clampedGain(_ volume: Double) -> Float {
+        Float(max(0, min(Double(AppAudioMixer.maximumGain), volume)))
+    }
+
+    private static func bufferCount(for format: AudioStreamBasicDescription) -> Int {
+        let isNonInterleaved = format.mFormatFlags & kAudioFormatFlagIsNonInterleaved != 0
+        return isNonInterleaved ? max(Int(format.mChannelsPerFrame), 1) : 1
+    }
+
     private static func createProcessTap(
         audioObjectIDs: [AudioObjectID],
         outputDeviceUID: String,
@@ -1089,7 +1236,7 @@ nonisolated private final class ProcessTapGainEngine: AppGainEngine {
             name: "MacMix Stereo Mixdown"
         )
         let candidates: [ProcessTapConfiguration]
-        if let outputStreamIndex = preferredMultichannelOutputStreamIndex(outputDeviceUID: outputDeviceUID) {
+        if let outputStreamIndex = preferredOutputStreamIndex(outputDeviceUID: outputDeviceUID) {
             let outputStreamTap = Self.configure(
                 CATapDescription(processes: audioObjectIDs, deviceUID: outputDeviceUID, stream: outputStreamIndex),
                 name: "MacMix Output Stream \(outputStreamIndex)"
@@ -1100,14 +1247,16 @@ nonisolated private final class ProcessTapGainEngine: AppGainEngine {
                     outputBufferOffset: outputBufferOffset(
                         outputDeviceUID: outputDeviceUID,
                         streamIndex: outputStreamIndex
-                    )
+                    ),
+                    requiresDriftCompensation: false
                 ),
             ]
         } else {
             candidates = [
                 ProcessTapConfiguration(
                     description: stereoMixdownTap,
-                    outputBufferOffset: 0
+                    outputBufferOffset: 0,
+                    requiresDriftCompensation: true
                 ),
             ]
         }
@@ -1133,13 +1282,12 @@ nonisolated private final class ProcessTapGainEngine: AppGainEngine {
         return tapDescription
     }
 
-    private static func preferredMultichannelOutputStreamIndex(outputDeviceUID: String) -> UInt? {
+    private static func preferredOutputStreamIndex(outputDeviceUID: String) -> UInt? {
         guard let deviceID = deviceID(forUID: outputDeviceUID) else {
             return nil
         }
 
         return outputStreamCandidates(deviceID: deviceID)
-            .filter { $0.format.mChannelsPerFrame > 2 }
             .sorted { lhs, rhs in
                 if lhs.isActive != rhs.isActive {
                     return lhs.isActive
@@ -1253,6 +1401,63 @@ nonisolated private final class ProcessTapGainEngine: AppGainEngine {
         return status == noErr ? format : nil
     }
 
+    private static func logGraphDiagnostics(
+        aggregateID: AudioObjectID,
+        outputDeviceUID: String,
+        tapRuntimes: [TapRuntime]
+    ) {
+        let taps = tapRuntimes.enumerated().map { index, runtime in
+            "tap[\(index)]=\(formatDescription(runtime.format)) "
+                + "inOffset=\(runtime.inputBufferOffset) "
+                + "buffers=\(runtime.inputBufferCount) "
+                + "outOffset=\(runtime.outputBufferOffset)"
+        }.joined(separator: "; ")
+        let inputStreams = streamDescriptions(
+            deviceID: aggregateID,
+            scope: kAudioDevicePropertyScopeInput
+        )
+        let outputStreams = streamDescriptions(
+            deviceID: aggregateID,
+            scope: kAudioDevicePropertyScopeOutput
+        )
+        let description = "Graph outputUID=\(outputDeviceUID); \(taps); "
+            + "aggregate inputs=\(inputStreams); outputs=\(outputStreams)"
+        diagnosticsLogger.notice("\(description, privacy: .public)")
+    }
+
+    private static func streamDescriptions(
+        deviceID: AudioObjectID,
+        scope: AudioObjectPropertyScope
+    ) -> String {
+        audioObjectIDs(
+            objectID: deviceID,
+            selector: kAudioDevicePropertyStreams,
+            scope: scope
+        )
+        .enumerated()
+        .map { index, streamID in
+            guard let format = streamFormat(streamID: streamID) else {
+                return "[\(index)]=?"
+            }
+            return "[\(index)]=\(formatDescription(format))"
+        }
+        .joined(separator: ", ")
+    }
+
+    private static func formatDescription(
+        _ format: AudioStreamBasicDescription
+    ) -> String {
+        String(
+            format: "%.0fHz id=%08x flags=%08x bpf=%u ch=%u bits=%u",
+            format.mSampleRate,
+            format.mFormatID,
+            format.mFormatFlags,
+            format.mBytesPerFrame,
+            format.mChannelsPerFrame,
+            format.mBitsPerChannel
+        )
+    }
+
     private static func propertyAddress(
         selector: AudioObjectPropertySelector,
         scope: AudioObjectPropertyScope = kAudioObjectPropertyScopeGlobal,
@@ -1278,28 +1483,25 @@ nonisolated private final class ProcessTapGainEngine: AppGainEngine {
         return status == noErr ? format : nil
     }
 
-    private static func writeScaledAudio(
+    private static func mixScaledAudio(
         from inputBuffer: AudioBuffer,
-        to outputBuffer: AudioBuffer,
+        into outputBuffer: AudioBuffer,
         gainRamp: GainRamp,
         format: AudioStreamBasicDescription
     ) -> Bool {
         guard let source = inputBuffer.mData,
-              let destination = outputBuffer.mData else {
+              let destination = outputBuffer.mData,
+              inputBuffer.mNumberChannels == outputBuffer.mNumberChannels else {
             return false
         }
 
-        let inputByteCount = Int(inputBuffer.mDataByteSize)
-        let outputByteCount = Int(outputBuffer.mDataByteSize)
-        let byteCount = min(inputByteCount, outputByteCount)
-
-        guard byteCount > 0 else {
+        let byteCount = min(
+            Int(inputBuffer.mDataByteSize),
+            Int(outputBuffer.mDataByteSize)
+        )
+        guard byteCount > 0,
+              format.mFormatID == kAudioFormatLinearPCM else {
             return false
-        }
-
-        guard format.mFormatID == kAudioFormatLinearPCM else {
-            copyAudio(from: source, to: destination, byteCount: byteCount, outputByteCount: outputByteCount)
-            return true
         }
 
         let flags = format.mFormatFlags
@@ -1310,67 +1512,64 @@ nonisolated private final class ProcessTapGainEngine: AppGainEngine {
         if isFloat {
             switch format.mBitsPerChannel {
             case 32:
-                writeScaledFloat32(
+                mixScaledFloat32(
                     from: source,
-                    to: destination,
+                    into: destination,
                     gainRamp: gainRamp,
                     channelCount: channelCount,
                     byteCount: byteCount
                 )
             case 64:
-                writeScaledFloat64(
+                mixScaledFloat64(
                     from: source,
-                    to: destination,
+                    into: destination,
                     gainRamp: gainRamp,
                     channelCount: channelCount,
                     byteCount: byteCount
                 )
             default:
-                copyAudio(from: source, to: destination, byteCount: byteCount, outputByteCount: outputByteCount)
+                return false
             }
         } else if isSignedInteger {
             switch format.mBitsPerChannel {
             case 16:
-                writeScaledInt16(
+                mixScaledInt16(
                     from: source,
-                    to: destination,
+                    into: destination,
                     gainRamp: gainRamp,
                     channelCount: channelCount,
                     byteCount: byteCount
                 )
             case 24:
-                if !writeScaledInt24(
+                return mixScaledInt24(
                     from: source,
-                    to: destination,
+                    into: destination,
                     gainRamp: gainRamp,
                     channelCount: channelCount,
                     byteCount: byteCount,
                     format: format
-                ) {
-                    copyAudio(from: source, to: destination, byteCount: byteCount, outputByteCount: outputByteCount)
-                }
+                )
             case 32:
-                writeScaledInt32(
+                mixScaledInt32(
                     from: source,
-                    to: destination,
+                    into: destination,
                     gainRamp: gainRamp,
                     channelCount: channelCount,
                     byteCount: byteCount
                 )
             default:
-                copyAudio(from: source, to: destination, byteCount: byteCount, outputByteCount: outputByteCount)
+                return false
             }
         } else {
-            copyAudio(from: source, to: destination, byteCount: byteCount, outputByteCount: outputByteCount)
+            return false
         }
 
-        zeroRemainingAudio(in: destination, byteCount: byteCount, outputByteCount: outputByteCount)
         return true
     }
 
-    private static func writeScaledFloat32(
+    private static func mixScaledFloat32(
         from source: UnsafeMutableRawPointer,
-        to destination: UnsafeMutableRawPointer,
+        into destination: UnsafeMutableRawPointer,
         gainRamp: GainRamp,
         channelCount: Int,
         byteCount: Int
@@ -1380,44 +1579,33 @@ nonisolated private final class ProcessTapGainEngine: AppGainEngine {
             return
         }
 
-        let channelCount = max(1, min(channelCount, sampleCount))
-        let frameCount = sampleCount / channelCount
-        guard frameCount > 0 else {
-            return
-        }
-
         let source = source.assumingMemoryBound(to: Float.self)
         let destination = destination.assumingMemoryBound(to: Float.self)
+        let channelCount = max(1, min(channelCount, sampleCount))
+        let frameCount = sampleCount / channelCount
         let rampFrameCount = min(Int(gainRamp.frameCount), frameCount)
+        let rampSampleCount = rampFrameCount * channelCount
+        let gainStep = rampFrameCount > 0
+            ? (gainRamp.end - gainRamp.start) / Float(rampFrameCount)
+            : 0
 
-        if rampFrameCount > 0 {
-            var step = (gainRamp.end - gainRamp.start) / Float(rampFrameCount)
-            for channel in 0..<channelCount {
-                var start = gainRamp.start
-                vDSP_vrampmul(
-                    source.advanced(by: channel),
-                    vDSP_Stride(channelCount),
-                    &start,
-                    &step,
-                    destination.advanced(by: channel),
-                    vDSP_Stride(channelCount),
-                    vDSP_Length(rampFrameCount)
-                )
-            }
+        for index in 0..<rampSampleCount {
+            let gain = gainRamp.start + Float(index / channelCount) * gainStep
+            destination[index] += source[index] * gain
         }
 
-        scaleRemainingSamples(
+        mixRemainingSamples(
             from: source,
-            to: destination,
-            startIndex: rampFrameCount * channelCount,
+            into: destination,
+            startIndex: rampSampleCount,
             sampleCount: sampleCount,
             gain: gainRamp.end
         )
     }
 
-    private static func writeScaledFloat64(
+    private static func mixScaledFloat64(
         from source: UnsafeMutableRawPointer,
-        to destination: UnsafeMutableRawPointer,
+        into destination: UnsafeMutableRawPointer,
         gainRamp: GainRamp,
         channelCount: Int,
         byteCount: Int
@@ -1427,77 +1615,78 @@ nonisolated private final class ProcessTapGainEngine: AppGainEngine {
             return
         }
 
-        let channelCount = max(1, min(channelCount, sampleCount))
-        let frameCount = sampleCount / channelCount
-        guard frameCount > 0 else {
-            return
-        }
-
         let source = source.assumingMemoryBound(to: Double.self)
         let destination = destination.assumingMemoryBound(to: Double.self)
+        let channelCount = max(1, min(channelCount, sampleCount))
+        let frameCount = sampleCount / channelCount
         let rampFrameCount = min(Int(gainRamp.frameCount), frameCount)
+        let rampSampleCount = rampFrameCount * channelCount
+        let startGain = Double(gainRamp.start)
+        let gainStep = rampFrameCount > 0
+            ? (Double(gainRamp.end) - startGain) / Double(rampFrameCount)
+            : 0
 
-        if rampFrameCount > 0 {
-            let startGain = Double(gainRamp.start)
-            var step = (Double(gainRamp.end) - startGain) / Double(rampFrameCount)
-            for channel in 0..<channelCount {
-                var start = startGain
-                vDSP_vrampmulD(
-                    source.advanced(by: channel),
-                    vDSP_Stride(channelCount),
-                    &start,
-                    &step,
-                    destination.advanced(by: channel),
-                    vDSP_Stride(channelCount),
-                    vDSP_Length(rampFrameCount)
-                )
-            }
+        for index in 0..<rampSampleCount {
+            let gain = startGain + Double(index / channelCount) * gainStep
+            destination[index] += source[index] * gain
         }
 
-        scaleRemainingSamples(
+        mixRemainingSamples(
             from: source,
-            to: destination,
-            startIndex: rampFrameCount * channelCount,
+            into: destination,
+            startIndex: rampSampleCount,
             sampleCount: sampleCount,
             gain: Double(gainRamp.end)
         )
     }
 
-    private static func scaleRemainingSamples(
+    private static func mixRemainingSamples(
         from source: UnsafePointer<Float>,
-        to destination: UnsafeMutablePointer<Float>,
+        into destination: UnsafeMutablePointer<Float>,
         startIndex: Int,
         sampleCount: Int,
         gain: Float
     ) {
-        guard startIndex < sampleCount else {
+        guard startIndex < sampleCount, gain != 0 else {
             return
         }
 
-        for index in startIndex..<sampleCount {
-            destination[index] = source[index] * gain
+        let count = vDSP_Length(sampleCount - startIndex)
+        let source = source.advanced(by: startIndex)
+        let destination = destination.advanced(by: startIndex)
+        if gain == 1 {
+            vDSP_vadd(source, 1, destination, 1, destination, 1, count)
+        } else {
+            var gain = gain
+            vDSP_vsma(source, 1, &gain, destination, 1, destination, 1, count)
         }
     }
 
-    private static func scaleRemainingSamples(
+    private static func mixRemainingSamples(
         from source: UnsafePointer<Double>,
-        to destination: UnsafeMutablePointer<Double>,
+        into destination: UnsafeMutablePointer<Double>,
         startIndex: Int,
         sampleCount: Int,
         gain: Double
     ) {
-        guard startIndex < sampleCount else {
+        guard startIndex < sampleCount, gain != 0 else {
             return
         }
 
-        for index in startIndex..<sampleCount {
-            destination[index] = source[index] * gain
+        let count = vDSP_Length(sampleCount - startIndex)
+        let source = source.advanced(by: startIndex)
+        let destination = destination.advanced(by: startIndex)
+        if gain == 1 {
+            vDSP_vaddD(source, 1, destination, 1, destination, 1, count)
+        } else {
+            var gain = gain
+            vDSP_vsmaD(source, 1, &gain, destination, 1, destination, 1, count)
         }
     }
 
-    private static func writeScaledInt16(
+    private static func mixScaledInt16(
         from source: UnsafeMutableRawPointer,
-        to destination: UnsafeMutableRawPointer,
+        into destination: UnsafeMutableRawPointer,
         gainRamp: GainRamp,
         channelCount: Int,
         byteCount: Int
@@ -1505,26 +1694,19 @@ nonisolated private final class ProcessTapGainEngine: AppGainEngine {
         let sampleCount = byteCount / MemoryLayout<Int16>.size
         let source = source.assumingMemoryBound(to: Int16.self)
         let destination = destination.assumingMemoryBound(to: Int16.self)
-        let channelCount = max(1, min(channelCount, max(sampleCount, 1)))
-        let frameCount = sampleCount / channelCount
-        let rampFrameCount = min(Int(gainRamp.frameCount), frameCount)
-        let gainStep = rampFrameCount > 0
-            ? (gainRamp.end - gainRamp.start) / Float(rampFrameCount)
-            : 0
-
-        for index in 0..<sampleCount {
-            let frame = min(index / channelCount, max(frameCount - 1, 0))
-            let gain = frame < rampFrameCount
-                ? gainRamp.start + Float(frame) * gainStep
-                : gainRamp.end
-            let scaledSample = (Double(source[index]) * Double(gain)).rounded()
-            destination[index] = Int16(clamping: Int(scaledSample))
+        mixIntegerSamples(
+            sampleCount: sampleCount,
+            channelCount: channelCount,
+            gainRamp: gainRamp
+        ) { index, gain in
+            let mixed = Double(destination[index]) + Double(source[index]) * Double(gain)
+            destination[index] = Int16(clamping: Int(mixed.rounded()))
         }
     }
 
-    private static func writeScaledInt32(
+    private static func mixScaledInt32(
         from source: UnsafeMutableRawPointer,
-        to destination: UnsafeMutableRawPointer,
+        into destination: UnsafeMutableRawPointer,
         gainRamp: GainRamp,
         channelCount: Int,
         byteCount: Int
@@ -1532,7 +1714,27 @@ nonisolated private final class ProcessTapGainEngine: AppGainEngine {
         let sampleCount = byteCount / MemoryLayout<Int32>.size
         let source = source.assumingMemoryBound(to: Int32.self)
         let destination = destination.assumingMemoryBound(to: Int32.self)
-        let channelCount = max(1, min(channelCount, max(sampleCount, 1)))
+        mixIntegerSamples(
+            sampleCount: sampleCount,
+            channelCount: channelCount,
+            gainRamp: gainRamp
+        ) { index, gain in
+            let mixed = Double(destination[index]) + Double(source[index]) * Double(gain)
+            destination[index] = Int32(clamping: Int64(mixed.rounded()))
+        }
+    }
+
+    private static func mixIntegerSamples(
+        sampleCount: Int,
+        channelCount: Int,
+        gainRamp: GainRamp,
+        body: (Int, Float) -> Void
+    ) {
+        guard sampleCount > 0 else {
+            return
+        }
+
+        let channelCount = max(1, min(channelCount, sampleCount))
         let frameCount = sampleCount / channelCount
         let rampFrameCount = min(Int(gainRamp.frameCount), frameCount)
         let gainStep = rampFrameCount > 0
@@ -1544,14 +1746,13 @@ nonisolated private final class ProcessTapGainEngine: AppGainEngine {
             let gain = frame < rampFrameCount
                 ? gainRamp.start + Float(frame) * gainStep
                 : gainRamp.end
-            let scaledSample = (Double(source[index]) * Double(gain)).rounded()
-            destination[index] = Int32(clamping: Int64(scaledSample))
+            body(index, gain)
         }
     }
 
-    private static func writeScaledInt24(
+    private static func mixScaledInt24(
         from source: UnsafeMutableRawPointer,
-        to destination: UnsafeMutableRawPointer,
+        into destination: UnsafeMutableRawPointer,
         gainRamp: GainRamp,
         channelCount: Int,
         byteCount: Int,
@@ -1572,42 +1773,35 @@ nonisolated private final class ProcessTapGainEngine: AppGainEngine {
         }
 
         let sampleCount = byteCount / bytesPerSample
-        guard sampleCount > 0 else {
-            return true
-        }
-
         let source = source.assumingMemoryBound(to: UInt8.self)
         let destination = destination.assumingMemoryBound(to: UInt8.self)
-        let channelCount = max(1, min(channelCount, sampleCount))
-        let frameCount = sampleCount / channelCount
-        let rampFrameCount = min(Int(gainRamp.frameCount), frameCount)
-        let gainStep = rampFrameCount > 0
-            ? (gainRamp.end - gainRamp.start) / Float(rampFrameCount)
-            : 0
-
-        for index in 0..<sampleCount {
+        mixIntegerSamples(
+            sampleCount: sampleCount,
+            channelCount: channelCount,
+            gainRamp: gainRamp
+        ) { index, gain in
             let offset = index * bytesPerSample
-            let frame = min(index / channelCount, max(frameCount - 1, 0))
-            let gain = frame < rampFrameCount
-                ? gainRamp.start + Float(frame) * gainStep
-                : gainRamp.end
-            let sample = readSignedInt24(
+            let sourceSample = readSignedInt24(
                 from: source.advanced(by: offset),
                 bytesPerSample: bytesPerSample,
                 isBigEndian: isBigEndian,
                 isAlignedHigh: isAlignedHigh
             )
-            let scaledSample = clampInt24((Double(sample) * Double(gain)).rounded())
-
+            let destinationSample = readSignedInt24(
+                from: destination.advanced(by: offset),
+                bytesPerSample: bytesPerSample,
+                isBigEndian: isBigEndian,
+                isAlignedHigh: isAlignedHigh
+            )
+            let mixed = Double(destinationSample) + Double(sourceSample) * Double(gain)
             writeSignedInt24(
-                scaledSample,
+                clampInt24(mixed.rounded()),
                 to: destination.advanced(by: offset),
                 bytesPerSample: bytesPerSample,
                 isBigEndian: isBigEndian,
                 isAlignedHigh: isAlignedHigh
             )
         }
-
         return true
     }
 
@@ -1705,25 +1899,4 @@ nonisolated private final class ProcessTapGainEngine: AppGainEngine {
         Int32(max(-8_388_608, min(8_388_607, value)))
     }
 
-    private static func copyAudio(
-        from source: UnsafeMutableRawPointer,
-        to destination: UnsafeMutableRawPointer,
-        byteCount: Int,
-        outputByteCount: Int
-    ) {
-        memcpy(destination, source, byteCount)
-        zeroRemainingAudio(in: destination, byteCount: byteCount, outputByteCount: outputByteCount)
-    }
-
-    private static func zeroRemainingAudio(
-        in destination: UnsafeMutableRawPointer,
-        byteCount: Int,
-        outputByteCount: Int
-    ) {
-        guard outputByteCount > byteCount else {
-            return
-        }
-
-        memset(destination.advanced(by: byteCount), 0, outputByteCount - byteCount)
-    }
 }
