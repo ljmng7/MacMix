@@ -6,95 +6,16 @@
 //
 
 import Accelerate
+import Atomics
 import AudioToolbox
 import CoreAudio
 import Foundation
 import OSLog
-import Synchronization
 
 nonisolated struct AppMixTarget: Sendable, Equatable {
     let id: String
     let audioObjectIDs: [AudioObjectID]
     let volume: Double
-}
-
-nonisolated private final class FirstCallbackDiagnostics: @unchecked Sendable {
-    private let didRecord = Atomic<Bool>(false)
-    private let inputCount = Atomic<UInt32>(0)
-    private let outputCount = Atomic<UInt32>(0)
-    private let input0 = Atomic<UInt64>(0)
-    private let input1 = Atomic<UInt64>(0)
-    private let input2 = Atomic<UInt64>(0)
-    private let input3 = Atomic<UInt64>(0)
-    private let output0 = Atomic<UInt64>(0)
-    private let output1 = Atomic<UInt64>(0)
-    private let output2 = Atomic<UInt64>(0)
-    private let output3 = Atomic<UInt64>(0)
-
-    var summary: String {
-        let recordedInputCount = inputCount.load(ordering: .relaxed)
-        let recordedOutputCount = outputCount.load(ordering: .relaxed)
-        let inputs = [
-            Self.describe(input0.load(ordering: .relaxed)),
-            Self.describe(input1.load(ordering: .relaxed)),
-            Self.describe(input2.load(ordering: .relaxed)),
-            Self.describe(input3.load(ordering: .relaxed)),
-        ].prefix(Int(recordedInputCount)).joined(separator: ",")
-        let outputs = [
-            Self.describe(output0.load(ordering: .relaxed)),
-            Self.describe(output1.load(ordering: .relaxed)),
-            Self.describe(output2.load(ordering: .relaxed)),
-            Self.describe(output3.load(ordering: .relaxed)),
-        ].prefix(Int(recordedOutputCount)).joined(separator: ",")
-        return "inputs=\(recordedInputCount)[\(inputs)] "
-            + "outputs=\(recordedOutputCount)[\(outputs)]"
-    }
-
-    func record(
-        inputBuffers: UnsafeMutableAudioBufferListPointer,
-        outputBuffers: UnsafeMutableAudioBufferListPointer
-    ) {
-        guard !didRecord.exchange(true, ordering: .relaxed) else {
-            return
-        }
-
-        inputCount.store(UInt32(inputBuffers.count), ordering: .relaxed)
-        outputCount.store(UInt32(outputBuffers.count), ordering: .relaxed)
-        for (index, buffer) in inputBuffers.prefix(4).enumerated() {
-            store(Self.pack(buffer), inputIndex: index)
-        }
-        for (index, buffer) in outputBuffers.prefix(4).enumerated() {
-            store(Self.pack(buffer), outputIndex: index)
-        }
-    }
-
-    private func store(_ value: UInt64, inputIndex: Int) {
-        switch inputIndex {
-        case 0: input0.store(value, ordering: .relaxed)
-        case 1: input1.store(value, ordering: .relaxed)
-        case 2: input2.store(value, ordering: .relaxed)
-        case 3: input3.store(value, ordering: .relaxed)
-        default: break
-        }
-    }
-
-    private func store(_ value: UInt64, outputIndex: Int) {
-        switch outputIndex {
-        case 0: output0.store(value, ordering: .relaxed)
-        case 1: output1.store(value, ordering: .relaxed)
-        case 2: output2.store(value, ordering: .relaxed)
-        case 3: output3.store(value, ordering: .relaxed)
-        default: break
-        }
-    }
-
-    private static func pack(_ buffer: AudioBuffer) -> UInt64 {
-        UInt64(buffer.mNumberChannels) << 32 | UInt64(buffer.mDataByteSize)
-    }
-
-    private static func describe(_ packed: UInt64) -> String {
-        "ch\(packed >> 32)/\(packed & 0xffff_ffff)B"
-    }
 }
 
 nonisolated struct AppMixerSnapshot: Sendable, Equatable {
@@ -154,7 +75,7 @@ nonisolated final class AppAudioMixer: @unchecked Sendable {
     private var engine: (any AppGainEngine)?
     private var pendingRetirements: [AppGainEngineRetirement] = []
     private var outputSwitchMuteGuard: ProcessTapMuteGuard?
-    private let latestCommandRevision = Atomic<UInt64>(0)
+    private let latestCommandRevision = ManagedAtomic<UInt64>(0)
 
     private init() {}
 
@@ -265,7 +186,7 @@ nonisolated final class AppAudioMixer: @unchecked Sendable {
     }
 
     func stopAll() {
-        latestCommandRevision.wrappingAdd(1, ordering: .releasing)
+        latestCommandRevision.wrappingIncrement(ordering: .releasing)
         lifecycleQueue.async { [self] in
             stopAllNow()
         }
@@ -359,7 +280,7 @@ nonisolated final class AppAudioMixer: @unchecked Sendable {
 
         if let engine,
            engine.outputDeviceUID == outputDeviceUID,
-           engine.matchesGraph(graphTargets) {
+           engine.updateGraphIfPossible(graphTargets) {
             for target in graphTargets {
                 engine.setGain(clampedGain(target.volume), for: target.id)
             }
@@ -524,7 +445,7 @@ private protocol AppGainEngine: AnyObject {
     nonisolated var outputDeviceUID: String { get }
     nonisolated var isStopped: Bool { get }
     nonisolated func containsTarget(_ targetID: String) -> Bool
-    nonisolated func matchesGraph(_ targets: [AppMixTarget]) -> Bool
+    nonisolated func updateGraphIfPossible(_ targets: [AppMixTarget]) -> Bool
     nonisolated func setGain(_ gain: Float, for targetID: String)
     nonisolated func setAllGains(_ gain: Float)
     nonisolated func hasRenderedAllGains(_ gain: Float) -> Bool
@@ -536,8 +457,8 @@ private protocol AppGainEngine: AnyObject {
 nonisolated private final class AppGainEngineRetirement: @unchecked Sendable {
     private static let maximumCoordinationWaitNanoseconds: UInt64 = 750_000_000
     private let engine: any AppGainEngine
-    private let teardownCompletedAt = Atomic<UInt64>(0)
-    private let completed = Atomic<Bool>(false)
+    private let teardownCompletedAt = ManagedAtomic<UInt64>(0)
+    private let completed = ManagedAtomic<Bool>(false)
 
     init(engine: any AppGainEngine) {
         self.engine = engine
@@ -595,95 +516,44 @@ nonisolated private final class AppGainEngineRetirement: @unchecked Sendable {
     }
 
     private static func activeAudioDeviceIDs() -> Set<AudioObjectID>? {
-        var address = AudioObjectPropertyAddress(
-            mSelector: kAudioHardwarePropertyDevices,
-            mScope: kAudioObjectPropertyScopeGlobal,
-            mElement: kAudioObjectPropertyElementMain
-        )
-        var dataSize: UInt32 = 0
-        let systemObject = AudioObjectID(kAudioObjectSystemObject)
-
-        guard AudioObjectGetPropertyDataSize(systemObject, &address, 0, nil, &dataSize) == noErr else {
+        guard let deviceIDs = readHALAudioObjectIDs(
+            objectID: AudioObjectID(kAudioObjectSystemObject),
+            selector: kAudioHardwarePropertyDevices
+        ) else {
             return nil
         }
 
-        let count = Int(dataSize) / MemoryLayout<AudioObjectID>.size
-        guard count > 0 else {
-            return []
-        }
-
-        var deviceIDs = Array(repeating: AudioObjectID(kAudioObjectUnknown), count: count)
-        guard AudioObjectGetPropertyData(systemObject, &address, 0, nil, &dataSize, &deviceIDs) == noErr else {
-            return nil
-        }
-
-        return Set(deviceIDs.filter { $0 != kAudioObjectUnknown })
+        return Set(deviceIDs)
     }
 }
 
 nonisolated private final class GainState: @unchecked Sendable {
-    private static let rampDurationSeconds = 0.04
-    private static let fallbackSampleRate = 48_000.0
-    private let targetGain: Atomic<Float>
-    private let renderedGain: Atomic<Float>
-    // targetGain crosses threads atomically; the remaining fields belong exclusively to
-    // the realtime IO callback after the engine starts.
-    private var currentGain: Float
-    private var lastTargetGain: Float
-    private var remainingRampFrames: UInt32 = 0
+    private let context: MacMixAudioIOContextRef
+    private let configurationIndex: Int
 
-    init(initialGain: Float, targetGain: Float) {
-        let initialGain = Self.clamp(initialGain)
-        let targetGain = Self.clamp(targetGain)
-        self.currentGain = initialGain
-        self.lastTargetGain = initialGain
-        self.targetGain = Atomic(targetGain)
-        self.renderedGain = Atomic(initialGain)
+    init(context: MacMixAudioIOContextRef, configurationIndex: Int) {
+        self.context = context
+        self.configurationIndex = configurationIndex
+        MacMixAudioIOContextRetain(context)
     }
 
-    var target: Float {
-        get { targetGain.load(ordering: .relaxed) }
-        set { targetGain.store(Self.clamp(newValue), ordering: .relaxed) }
+    deinit {
+        MacMixAudioIOContextDestroy(context)
+    }
+
+    func setTarget(_ gain: Float) {
+        MacMixAudioIOContextSetTargetGain(
+            context,
+            configurationIndex,
+            Self.clamp(gain)
+        )
     }
 
     func hasRendered(_ gain: Float) -> Bool {
-        abs(renderedGain.load(ordering: .relaxed) - Self.clamp(gain)) < 0.0001
-    }
-
-    func markRendered(_ ramp: GainRamp) {
-        renderedGain.store(ramp.end, ordering: .relaxed)
-    }
-
-    func nextRamp(frameCount: UInt32, sampleRate: Float64) -> GainRamp {
-        let target = targetGain.load(ordering: .relaxed)
-        if abs(target - lastTargetGain) > 0.0001 {
-            lastTargetGain = target
-            let sampleRate = sampleRate.isFinite && sampleRate > 0
-                ? sampleRate
-                : Self.fallbackSampleRate
-            let rampFrames = min(
-                sampleRate * Self.rampDurationSeconds,
-                Double(UInt32.max)
-            )
-            remainingRampFrames = max(UInt32(rampFrames.rounded(.up)), 1)
-        }
-
-        let start = currentGain
-        guard remainingRampFrames > 0, frameCount > 0 else {
-            currentGain = target
-            return GainRamp(start: target, end: target, frameCount: 0)
-        }
-
-        let framesThisBuffer = min(frameCount, remainingRampFrames)
-        let progress = Float(framesThisBuffer) / Float(remainingRampFrames)
-        currentGain += (target - currentGain) * progress
-        remainingRampFrames -= framesThisBuffer
-
-        if remainingRampFrames == 0 {
-            currentGain = target
-        }
-
-        return GainRamp(start: start, end: currentGain, frameCount: framesThisBuffer)
+        abs(
+            MacMixAudioIOContextRenderedGain(context, configurationIndex)
+                - Self.clamp(gain)
+        ) < 0.0001
     }
 
     private static func clamp(_ gain: Float) -> Float {
@@ -691,6 +561,8 @@ nonisolated private final class GainState: @unchecked Sendable {
     }
 }
 
+// Kept as the reference representation for the format-specific mixing helpers below.
+// The realtime callback uses the equivalent C representation in MacMixAudioIOProc.c.
 nonisolated private struct GainRamp: Sendable {
     let start: Float
     let end: Float
@@ -753,11 +625,12 @@ nonisolated private final class ProcessTapMuteGuard {
             return nil
         }
 
-        let status = AudioDeviceCreateIOProcIDWithBlock(
-            &ioProc,
+        let status = AudioDeviceCreateIOProcID(
             aggregateID,
-            nil
-        ) { _, _, _, _, _ in }
+            MacMixNoopAudioDeviceIOProc,
+            nil,
+            &ioProc
+        )
         guard status == noErr, let ioProc else {
             stop()
             return nil
@@ -838,29 +711,85 @@ nonisolated private final class ProcessTapMuteGuard {
 
 @available(macOS 14.4, *)
 nonisolated private final class SharedProcessTapGainEngine: AppGainEngine {
+    private static let tapDescriptionUpdateTimeout: TimeInterval = 0.25
+    private static let tapPropertyQueue = DispatchQueue(
+        label: "MacMix.ProcessTap.PropertyConfirmation"
+    )
     private static let diagnosticsLogger = Logger(
         subsystem: "jazmin.MacMix",
         category: "AudioMixerDiagnostics"
     )
 
-    nonisolated let tappedObjects: [AudioObjectID]
+    nonisolated private(set) var tappedObjects: [AudioObjectID]
     nonisolated let outputDeviceUID: String
 
     nonisolated func containsTarget(_ targetID: String) -> Bool {
-        graph[targetID] != nil
+        tapBindings[targetID] != nil
     }
 
-    nonisolated func matchesGraph(_ targets: [AppMixTarget]) -> Bool {
-        graph == Self.graph(for: targets)
+    nonisolated func updateGraphIfPossible(_ targets: [AppMixTarget]) -> Bool {
+        let nextGraph = Self.graph(for: targets)
+        guard nextGraph != graph else {
+            return true
+        }
+
+        // Existing tap slots can be retargeted without changing the aggregate device's
+        // stream layout. A completely new target still takes the full rebuild path
+        // because the realtime callback has no gain slot for it.
+        guard nextGraph.keys.allSatisfy({ tapBindings[$0] != nil }) else {
+            return false
+        }
+
+        var updatedGraph = graph
+        for (targetID, nextAudioObjectIDs) in nextGraph {
+            guard let binding = tapBindings[targetID] else {
+                return false
+            }
+            guard nextAudioObjectIDs != binding.audioObjectIDs else {
+                updatedGraph[targetID] = nextAudioObjectIDs
+                continue
+            }
+
+            guard Self.setProcesses(nextAudioObjectIDs, on: binding) else {
+                // Process objects for browsers and media apps can churn while the
+                // owning app remains alive. Keep the current tap and retry on the next
+                // reconciliation instead of tearing down the shared aggregate device,
+                // which would interrupt every other mixed app.
+                Self.diagnosticsLogger.error(
+                    "Deferring tap process update tap=\(binding.tapID) currentCount=\(binding.audioObjectIDs.count) requestedCount=\(nextAudioObjectIDs.count)"
+                )
+                continue
+            }
+
+            updatedGraph[targetID] = nextAudioObjectIDs
+        }
+
+        for targetID in graph.keys where nextGraph[targetID] == nil {
+            gainStates[targetID]?.setTarget(1)
+            updatedGraph.removeValue(forKey: targetID)
+            if let binding = tapBindings[targetID] {
+                // Keep the original process list attached to this tap. Clearing it can
+                // make Core Audio reject the description update and would force the
+                // shared aggregate device and IOProc to be rebuilt, interrupting the
+                // remaining apps. A departed process produces no audio; unity also
+                // preserves passthrough if process discovery is only briefly stale.
+                Self.diagnosticsLogger.notice(
+                    "Keeping inactive tap slot tap=\(binding.tapID) processCount=\(binding.audioObjectIDs.count)"
+                )
+            }
+        }
+        graph = updatedGraph
+        tappedObjects = tapBindings.values.flatMap(\.audioObjectIDs)
+        return true
     }
 
     nonisolated func setGain(_ gain: Float, for targetID: String) {
-        gainStates[targetID]?.target = gain
+        gainStates[targetID]?.setTarget(gain)
     }
 
     nonisolated func setAllGains(_ gain: Float) {
         for gainState in gainStates.values {
-            gainState.target = gain
+            gainState.setTarget(gain)
         }
     }
 
@@ -870,21 +799,30 @@ nonisolated private final class SharedProcessTapGainEngine: AppGainEngine {
 
     nonisolated var isStopped: Bool {
         ioProc == nil
+            && audioIOContext == nil
             && aggregateID == kAudioObjectUnknown
             && tapIDs.allSatisfy { $0 == kAudioObjectUnknown }
     }
 
-    private let graph: [String: [AudioObjectID]]
-    private let gainStates: [String: GainState]
+    private var graph: [String: [AudioObjectID]]
+    private var gainStates: [String: GainState] = [:]
+    private var tapBindings: [String: TapBinding] = [:]
     private var tapIDs: [AudioObjectID] = []
     private var aggregateID = AudioObjectID(kAudioObjectUnknown)
     private var ioProc: AudioDeviceIOProcID?
+    private var audioIOContext: MacMixAudioIOContextRef?
     private var isRunning = false
 
     private struct OutputStreamCandidate {
         let index: UInt
         let format: AudioStreamBasicDescription
         let isActive: Bool
+    }
+
+    private enum OutputStreamSelectionRead {
+        case stream(index: UInt, outputBufferOffset: Int)
+        case noStreams
+        case failed
     }
 
     private struct ProcessTapConfiguration {
@@ -894,13 +832,31 @@ nonisolated private final class SharedProcessTapGainEngine: AppGainEngine {
     }
 
     private struct TapRuntime: @unchecked Sendable {
+        let targetID: String
         let description: CATapDescription
         let format: AudioStreamBasicDescription
         let inputBufferOffset: Int
         let inputBufferCount: Int
         let outputBufferOffset: Int
         let requiresDriftCompensation: Bool
-        let gainState: GainState
+        let initialGain: Float
+        let targetGain: Float
+    }
+
+    private final class TapBinding {
+        let tapID: AudioObjectID
+        let description: CATapDescription
+        var audioObjectIDs: [AudioObjectID]
+
+        init(
+            tapID: AudioObjectID,
+            description: CATapDescription,
+            audioObjectIDs: [AudioObjectID]
+        ) {
+            self.tapID = tapID
+            self.description = description
+            self.audioObjectIDs = audioObjectIDs
+        }
     }
 
     init?(
@@ -916,17 +872,6 @@ nonisolated private final class SharedProcessTapGainEngine: AppGainEngine {
         self.graph = Self.graph(for: targets)
         self.tappedObjects = targets.flatMap(\.audioObjectIDs)
         self.outputDeviceUID = outputDeviceUID
-        self.gainStates = Dictionary(uniqueKeysWithValues: targets.map { target in
-            let gain = Self.clampedGain(target.volume)
-            return (
-                target.id,
-                GainState(
-                    initialGain: startsAtTargetGain ? gain : 1,
-                    targetGain: gain
-                )
-            )
-        })
-
         var tapRuntimes: [TapRuntime] = []
         var nextInputBufferOffset = 0
         for target in targets {
@@ -935,8 +880,7 @@ nonisolated private final class SharedProcessTapGainEngine: AppGainEngine {
                 audioObjectIDs: target.audioObjectIDs,
                 outputDeviceUID: outputDeviceUID,
                 tapID: &tapID
-            ), let format = Self.tapFormat(for: tapID),
-               let gainState = gainStates[target.id] else {
+            ), let format = Self.tapFormat(for: tapID) else {
                 if tapID != kAudioObjectUnknown {
                     AudioHardwareDestroyProcessTap(tapID)
                 }
@@ -945,16 +889,24 @@ nonisolated private final class SharedProcessTapGainEngine: AppGainEngine {
             }
 
             tapIDs.append(tapID)
+            tapBindings[target.id] = TapBinding(
+                tapID: tapID,
+                description: configuration.description,
+                audioObjectIDs: target.audioObjectIDs
+            )
             let inputBufferCount = Self.bufferCount(for: format)
+            let gain = Self.clampedGain(target.volume)
             tapRuntimes.append(
                 TapRuntime(
+                    targetID: target.id,
                     description: configuration.description,
                     format: format,
                     inputBufferOffset: nextInputBufferOffset,
                     inputBufferCount: inputBufferCount,
                     outputBufferOffset: configuration.outputBufferOffset,
                     requiresDriftCompensation: configuration.requiresDriftCompensation,
-                    gainState: gainState
+                    initialGain: startsAtTargetGain ? gain : 1,
+                    targetGain: gain
                 )
             )
             nextInputBufferOffset += inputBufferCount
@@ -979,7 +931,6 @@ nonisolated private final class SharedProcessTapGainEngine: AppGainEngine {
                 }
                 return description
             },
-            kAudioAggregateDeviceTapAutoStartKey: true,
         ]
 
         guard AudioHardwareCreateAggregateDevice(aggregateDescription as CFDictionary, &aggregateID) == noErr,
@@ -988,7 +939,6 @@ nonisolated private final class SharedProcessTapGainEngine: AppGainEngine {
             return nil
         }
 
-        let callbackDiagnostics = FirstCallbackDiagnostics()
         Self.logGraphDiagnostics(
             aggregateID: aggregateID,
             outputDeviceUID: outputDeviceUID,
@@ -999,83 +949,47 @@ nonisolated private final class SharedProcessTapGainEngine: AppGainEngine {
             Set(tapRuntimes.flatMap { runtime in
                 (0..<runtime.inputBufferCount).map { runtime.outputBufferOffset + $0 }
             })
-        )
-        let status = AudioDeviceCreateIOProcIDWithBlock(&ioProc, aggregateID, nil) { _, inputData, _, outputData, _ in
-            let inputBuffers = UnsafeMutableAudioBufferListPointer(UnsafeMutablePointer(mutating: inputData))
-            let outputBuffers = UnsafeMutableAudioBufferListPointer(outputData)
-            callbackDiagnostics.record(
-                inputBuffers: inputBuffers,
-                outputBuffers: outputBuffers
-            )
-
-            // Every tap targets the same physical stream. Clear it once, then accumulate
-            // all per-app signals in this single realtime callback.
-            for outputIndex in outputBufferIndices where outputIndex < outputBuffers.count {
-                let outputBuffer = outputBuffers[outputIndex]
-                if let data = outputBuffer.mData, outputBuffer.mDataByteSize > 0 {
-                    memset(data, 0, Int(outputBuffer.mDataByteSize))
-                }
-            }
-
-            // Aggregate input streams follow the tap-list order used at creation time.
-            for runtime in tapRuntimes {
-                let bytesPerFrame = max(runtime.format.mBytesPerFrame, 1)
-                var frameCount: UInt32?
-                for localIndex in 0..<runtime.inputBufferCount {
-                    let inputIndex = runtime.inputBufferOffset + localIndex
-                    let outputIndex = runtime.outputBufferOffset + localIndex
-                    guard inputIndex < inputBuffers.count,
-                          outputIndex < outputBuffers.count else {
-                        continue
-                    }
-
-                    let inputBuffer = inputBuffers[inputIndex]
-                    let outputBuffer = outputBuffers[outputIndex]
-                    guard inputBuffer.mData != nil,
-                          outputBuffer.mData != nil,
-                          inputBuffer.mNumberChannels == outputBuffer.mNumberChannels,
-                          outputBuffer.mDataByteSize >= inputBuffer.mDataByteSize,
-                          inputBuffer.mDataByteSize > 0 else {
-                        continue
-                    }
-
-                    frameCount = inputBuffer.mDataByteSize / bytesPerFrame
-                    break
-                }
-
-                guard let frameCount, frameCount > 0 else {
-                    continue
-                }
-
-                let gainRamp = runtime.gainState.nextRamp(
-                    frameCount: frameCount,
-                    sampleRate: runtime.format.mSampleRate
+        ).sorted()
+        let audioConfigurations = tapRuntimes.map { runtime in
+            var configuration = MacMixAudioTapConfiguration()
+            configuration.format = runtime.format
+            configuration.inputBufferOffset = UInt32(clamping: runtime.inputBufferOffset)
+            configuration.inputBufferCount = UInt32(clamping: runtime.inputBufferCount)
+            configuration.outputBufferOffset = UInt32(clamping: runtime.outputBufferOffset)
+            configuration.initialGain = runtime.initialGain
+            configuration.targetGain = runtime.targetGain
+            return configuration
+        }
+        let cOutputBufferIndices = outputBufferIndices.map { UInt32(clamping: $0) }
+        audioIOContext = audioConfigurations.withUnsafeBufferPointer { configurations in
+            cOutputBufferIndices.withUnsafeBufferPointer { outputIndices in
+                MacMixAudioIOContextCreate(
+                    configurations.baseAddress!,
+                    configurations.count,
+                    outputIndices.baseAddress!,
+                    outputIndices.count
                 )
-                var didMixAudio = false
-
-                for localIndex in 0..<runtime.inputBufferCount {
-                    let inputIndex = runtime.inputBufferOffset + localIndex
-                    let outputIndex = runtime.outputBufferOffset + localIndex
-                    guard inputIndex < inputBuffers.count,
-                          outputIndex < outputBuffers.count else {
-                        continue
-                    }
-
-                    if Self.mixScaledAudio(
-                        from: inputBuffers[inputIndex],
-                        into: outputBuffers[outputIndex],
-                        gainRamp: gainRamp,
-                        format: runtime.format
-                    ) {
-                        didMixAudio = true
-                    }
-                }
-
-                if didMixAudio {
-                    runtime.gainState.markRendered(gainRamp)
-                }
             }
         }
+
+        guard let audioIOContext else {
+            stopAfterInitializationFailure()
+            return nil
+        }
+
+        gainStates = Dictionary(uniqueKeysWithValues: tapRuntimes.enumerated().map { index, runtime in
+            (
+                runtime.targetID,
+                GainState(context: audioIOContext, configurationIndex: index)
+            )
+        })
+
+        let status = AudioDeviceCreateIOProcID(
+            aggregateID,
+            MacMixAudioDeviceIOProc,
+            audioIOContext,
+            &ioProc
+        )
 
         guard status == noErr, let ioProc else {
             stopAfterInitializationFailure()
@@ -1088,10 +1002,6 @@ nonisolated private final class SharedProcessTapGainEngine: AppGainEngine {
         }
 
         isRunning = true
-        DispatchQueue.global(qos: .utility).asyncAfter(deadline: .now() + 1.5) {
-            let summary = callbackDiagnostics.summary
-            Self.diagnosticsLogger.notice("First IOProc callback: \(summary, privacy: .public)")
-        }
     }
 
     @discardableResult
@@ -1127,6 +1037,11 @@ nonisolated private final class SharedProcessTapGainEngine: AppGainEngine {
             } else {
                 return retiredAggregateID
             }
+        }
+
+        if self.ioProc == nil, let audioIOContext {
+            MacMixAudioIOContextDestroy(audioIOContext)
+            self.audioIOContext = nil
         }
 
         if aggregateID != kAudioObjectUnknown {
@@ -1194,25 +1109,141 @@ nonisolated private final class SharedProcessTapGainEngine: AppGainEngine {
     }
 
     private static func activeAudioDeviceIDs() -> Set<AudioObjectID>? {
-        var address = propertyAddress(selector: kAudioHardwarePropertyDevices)
-        var dataSize: UInt32 = 0
-        let systemObject = AudioObjectID(kAudioObjectSystemObject)
-
-        guard AudioObjectGetPropertyDataSize(systemObject, &address, 0, nil, &dataSize) == noErr else {
+        guard let deviceIDs = readHALAudioObjectIDs(
+            objectID: AudioObjectID(kAudioObjectSystemObject),
+            selector: kAudioHardwarePropertyDevices
+        ) else {
             return nil
         }
 
-        let count = Int(dataSize) / MemoryLayout<AudioObjectID>.size
-        var deviceIDs = Array(repeating: AudioObjectID(kAudioObjectUnknown), count: count)
-        guard AudioObjectGetPropertyData(systemObject, &address, 0, nil, &dataSize, &deviceIDs) == noErr else {
-            return nil
-        }
-
-        return Set(deviceIDs.filter { $0 != kAudioObjectUnknown })
+        return Set(deviceIDs)
     }
 
     private static func graph(for targets: [AppMixTarget]) -> [String: [AudioObjectID]] {
         Dictionary(uniqueKeysWithValues: targets.map { ($0.id, $0.audioObjectIDs) })
+    }
+
+    private static func setProcesses(
+        _ audioObjectIDs: [AudioObjectID],
+        on binding: TapBinding
+    ) -> Bool {
+        let previousAudioObjectIDs = binding.audioObjectIDs
+        var address = propertyAddress(selector: kAudioTapPropertyDescription)
+        var isSettable = DarwinBoolean(false)
+        let settableStatus = AudioObjectIsPropertySettable(
+            binding.tapID,
+            &address,
+            &isSettable
+        )
+        guard settableStatus == noErr, isSettable.boolValue else {
+            diagnosticsLogger.error(
+                "Tap description is not settable tap=\(binding.tapID) status=\(settableStatus)"
+            )
+            return false
+        }
+
+        let notification = DispatchSemaphore(value: 0)
+        let listener: AudioObjectPropertyListenerBlock = { addressCount, addresses in
+            for index in 0..<Int(addressCount) {
+                if addresses[index].mSelector == kAudioTapPropertyDescription {
+                    notification.signal()
+                    return
+                }
+            }
+        }
+        let listenerStatus = AudioObjectAddPropertyListenerBlock(
+            binding.tapID,
+            &address,
+            tapPropertyQueue,
+            listener
+        )
+        guard listenerStatus == noErr else {
+            diagnosticsLogger.error(
+                "Failed to add tap description listener tap=\(binding.tapID) status=\(listenerStatus)"
+            )
+            return false
+        }
+        defer {
+            var removalAddress = propertyAddress(selector: kAudioTapPropertyDescription)
+            let removalStatus = AudioObjectRemovePropertyListenerBlock(
+                binding.tapID,
+                &removalAddress,
+                tapPropertyQueue,
+                listener
+            )
+            if !didDestroy(removalStatus) {
+                diagnosticsLogger.error(
+                    "Failed to remove tap description listener tap=\(binding.tapID) status=\(removalStatus)"
+                )
+            }
+        }
+
+        binding.description.processes = audioObjectIDs
+
+        var description = Unmanaged.passUnretained(binding.description).toOpaque()
+        let status = AudioObjectSetPropertyData(
+            binding.tapID,
+            &address,
+            0,
+            nil,
+            UInt32(MemoryLayout<UnsafeMutableRawPointer>.size),
+            &description
+        )
+
+        guard status == noErr else {
+            binding.description.processes = previousAudioObjectIDs
+            diagnosticsLogger.error(
+                "Failed to set tap processes tap=\(binding.tapID) status=\(status)"
+            )
+            return false
+        }
+
+        let timeout = DispatchTime.now() + tapDescriptionUpdateTimeout
+        let notificationResult = notification.wait(timeout: timeout)
+        guard let appliedDescription = tapDescription(for: binding.tapID) else {
+            binding.description.processes = previousAudioObjectIDs
+            diagnosticsLogger.error(
+                "Failed to read back tap description tap=\(binding.tapID)"
+            )
+            return false
+        }
+        guard appliedDescription.processes == audioObjectIDs else {
+            binding.description.processes = previousAudioObjectIDs
+            diagnosticsLogger.error(
+                "Tap process update was not applied tap=\(binding.tapID) requestedCount=\(audioObjectIDs.count) appliedCount=\(appliedDescription.processes.count)"
+            )
+            return false
+        }
+        if notificationResult != .success {
+            // The listener notification is advisory here. A successful property
+            // readback is the authoritative confirmation that HAL applied the change.
+            diagnosticsLogger.notice(
+                "Tap description listener timed out after successful readback tap=\(binding.tapID)"
+            )
+        }
+
+        binding.audioObjectIDs = audioObjectIDs
+        return true
+    }
+
+    private static func tapDescription(for tapID: AudioObjectID) -> CATapDescription? {
+        var address = propertyAddress(selector: kAudioTapPropertyDescription)
+        var description: Unmanaged<CATapDescription>?
+        var dataSize = UInt32(MemoryLayout<Unmanaged<CATapDescription>?>.size)
+        let status = AudioObjectGetPropertyData(
+            tapID,
+            &address,
+            0,
+            nil,
+            &dataSize,
+            &description
+        )
+
+        guard status == noErr else {
+            return nil
+        }
+
+        return description?.takeUnretainedValue()
     }
 
     private static func clampedGain(_ volume: Double) -> Float {
@@ -1236,7 +1267,8 @@ nonisolated private final class SharedProcessTapGainEngine: AppGainEngine {
             name: "MacMix Stereo Mixdown"
         )
         let candidates: [ProcessTapConfiguration]
-        if let outputStreamIndex = preferredOutputStreamIndex(outputDeviceUID: outputDeviceUID) {
+        switch outputStreamSelection(outputDeviceUID: outputDeviceUID) {
+        case let .stream(outputStreamIndex, outputBufferOffset):
             let outputStreamTap = Self.configure(
                 CATapDescription(processes: audioObjectIDs, deviceUID: outputDeviceUID, stream: outputStreamIndex),
                 name: "MacMix Output Stream \(outputStreamIndex)"
@@ -1244,14 +1276,11 @@ nonisolated private final class SharedProcessTapGainEngine: AppGainEngine {
             candidates = [
                 ProcessTapConfiguration(
                     description: outputStreamTap,
-                    outputBufferOffset: outputBufferOffset(
-                        outputDeviceUID: outputDeviceUID,
-                        streamIndex: outputStreamIndex
-                    ),
+                    outputBufferOffset: outputBufferOffset,
                     requiresDriftCompensation: false
                 ),
             ]
-        } else {
+        case .noStreams:
             candidates = [
                 ProcessTapConfiguration(
                     description: stereoMixdownTap,
@@ -1259,6 +1288,8 @@ nonisolated private final class SharedProcessTapGainEngine: AppGainEngine {
                     requiresDriftCompensation: true
                 ),
             ]
+        case .failed:
+            return nil
         }
 
         for configuration in candidates {
@@ -1279,16 +1310,28 @@ nonisolated private final class SharedProcessTapGainEngine: AppGainEngine {
         tapDescription.name = name
         tapDescription.muteBehavior = .mutedWhenTapped
         tapDescription.isPrivate = true
+        if #available(macOS 26.0, *) {
+            // Let HAL retain the app identity across process-object churn and restore
+            // matching processes without requiring the aggregate device to be rebuilt.
+            tapDescription.isProcessRestoreEnabled = true
+        }
         return tapDescription
     }
 
-    private static func preferredOutputStreamIndex(outputDeviceUID: String) -> UInt? {
-        guard let deviceID = deviceID(forUID: outputDeviceUID) else {
-            return nil
+    private static func outputStreamSelection(
+        outputDeviceUID: String
+    ) -> OutputStreamSelectionRead {
+        guard let deviceIDs = audioObjectIDs(
+            objectID: AudioObjectID(kAudioObjectSystemObject),
+            selector: kAudioHardwarePropertyDevices
+        ), let deviceID = deviceIDs.first(where: { deviceID in
+            stringProperty(deviceID, selector: kAudioDevicePropertyDeviceUID)
+                == outputDeviceUID
+        }), let candidates = outputStreamCandidates(deviceID: deviceID) else {
+            return .failed
         }
 
-        return outputStreamCandidates(deviceID: deviceID)
-            .sorted { lhs, rhs in
+        guard let selected = candidates.sorted(by: { lhs, rhs in
                 if lhs.isActive != rhs.isActive {
                     return lhs.isActive
                 }
@@ -1298,75 +1341,55 @@ nonisolated private final class SharedProcessTapGainEngine: AppGainEngine {
                 }
 
                 return lhs.index < rhs.index
-            }
-            .first?
-            .index
-    }
-
-    private static func outputBufferOffset(outputDeviceUID: String, streamIndex: UInt) -> Int {
-        guard let deviceID = deviceID(forUID: outputDeviceUID) else {
-            return 0
+            }).first else {
+            return .noStreams
         }
 
-        return outputStreamCandidates(deviceID: deviceID)
-            .filter { $0.index < streamIndex }
+        let outputBufferOffset = candidates
+            .filter { $0.index < selected.index }
             .reduce(0) { offset, candidate in
                 let isNonInterleaved = candidate.format.mFormatFlags
                     & kAudioFormatFlagIsNonInterleaved != 0
                 return offset + (isNonInterleaved ? Int(candidate.format.mChannelsPerFrame) : 1)
             }
+        return .stream(index: selected.index, outputBufferOffset: outputBufferOffset)
     }
 
-    private static func outputStreamCandidates(deviceID: AudioObjectID) -> [OutputStreamCandidate] {
-        audioObjectIDs(
+    private static func outputStreamCandidates(deviceID: AudioObjectID) -> [OutputStreamCandidate]? {
+        guard let streamIDs = audioObjectIDs(
             objectID: deviceID,
             selector: kAudioDevicePropertyStreams,
             scope: kAudioDevicePropertyScopeOutput
-        )
-        .enumerated()
-        .compactMap { streamIndex, streamID in
+        ) else {
+            return nil
+        }
+
+        var candidates: [OutputStreamCandidate] = []
+        candidates.reserveCapacity(streamIDs.count)
+        for (streamIndex, streamID) in streamIDs.enumerated() {
             guard let format = streamFormat(streamID: streamID) else {
                 return nil
             }
 
-            return OutputStreamCandidate(
+            candidates.append(OutputStreamCandidate(
                 index: UInt(streamIndex),
                 format: format,
                 isActive: boolProperty(streamID, selector: kAudioStreamPropertyIsActive)
-            )
+            ))
         }
-    }
-
-    private static func deviceID(forUID uid: String) -> AudioObjectID? {
-        audioObjectIDs(
-            objectID: AudioObjectID(kAudioObjectSystemObject),
-            selector: kAudioHardwarePropertyDevices
-        )
-        .first { deviceID in
-            stringProperty(deviceID, selector: kAudioDevicePropertyDeviceUID) == uid
-        }
+        return candidates
     }
 
     private static func audioObjectIDs(
         objectID: AudioObjectID,
         selector: AudioObjectPropertySelector,
         scope: AudioObjectPropertyScope = kAudioObjectPropertyScopeGlobal
-    ) -> [AudioObjectID] {
-        var address = propertyAddress(selector: selector, scope: scope)
-        var dataSize: UInt32 = 0
-
-        guard AudioObjectGetPropertyDataSize(objectID, &address, 0, nil, &dataSize) == noErr else {
-            return []
-        }
-
-        let count = Int(dataSize) / MemoryLayout<AudioObjectID>.size
-        guard count > 0 else {
-            return []
-        }
-
-        var objectIDs = Array(repeating: AudioObjectID(kAudioObjectUnknown), count: count)
-        let status = AudioObjectGetPropertyData(objectID, &address, 0, nil, &dataSize, &objectIDs)
-        return status == noErr ? objectIDs.filter { $0 != kAudioObjectUnknown } : []
+    ) -> [AudioObjectID]? {
+        readHALAudioObjectIDs(
+            objectID: objectID,
+            selector: selector,
+            scope: scope
+        )
     }
 
     private static func stringProperty(_ objectID: AudioObjectID, selector: AudioObjectPropertySelector) -> String? {
@@ -1429,13 +1452,15 @@ nonisolated private final class SharedProcessTapGainEngine: AppGainEngine {
         deviceID: AudioObjectID,
         scope: AudioObjectPropertyScope
     ) -> String {
-        audioObjectIDs(
+        guard let streamIDs = audioObjectIDs(
             objectID: deviceID,
             selector: kAudioDevicePropertyStreams,
             scope: scope
-        )
-        .enumerated()
-        .map { index, streamID in
+        ) else {
+            return "unavailable"
+        }
+
+        return streamIDs.enumerated().map { index, streamID in
             guard let format = streamFormat(streamID: streamID) else {
                 return "[\(index)]=?"
             }

@@ -185,7 +185,9 @@ final class AudioModel: NSObject {
 
     func refreshOutputState() {
         let previousOutputUID = currentOutputDevice?.uid
-        let devices = hardware.devices(for: .output)
+        guard let devices = hardware.devices(for: .output) else {
+            return
+        }
         setOutputDevicesIfChanged(devices)
 
         if let currentDevice = devices.first(where: \.isCurrent),
@@ -290,7 +292,9 @@ final class AudioModel: NSObject {
     }
 
     func refreshInputState() {
-        let devices = hardware.devices(for: .input)
+        guard let devices = hardware.devices(for: .input) else {
+            return
+        }
         setInputDevicesIfChanged(devices)
 
         setInputVolumeIfChanged(devices.first(where: \.isCurrent)?.volume)
@@ -301,14 +305,16 @@ final class AudioModel: NSObject {
             return
         }
 
-        let detectedApps = hardware.runningOutputApps(
+        guard let detectedApps = hardware.runningOutputApps(
             storedVolume: { [weak self] bundleID in
                 self?.storedAppVolume(for: bundleID) ?? 1
             },
             storedMute: { [weak self] bundleID in
                 self?.storedAppMute(for: bundleID) ?? false
             }
-        )
+        ) else {
+            return
+        }
         let apps = outputAppsPreservingRouteSnapshot(detectedApps)
 
         guard !audioAppsMatch(outputAppsState.snapshots, apps) else {
@@ -867,14 +873,20 @@ final class AudioModel: NSObject {
 
             var detectedApps: [AudioApp] = []
             if stableOutputDeviceUID != nil {
-                detectedApps = hardware.runningOutputApps(
+                guard let runningApps = hardware.runningOutputApps(
                     storedVolume: { [weak self] bundleID in
                         self?.storedAppVolume(for: bundleID) ?? 1
                     },
                     storedMute: { [weak self] bundleID in
                         self?.storedAppMute(for: bundleID) ?? false
                     }
-                )
+                ) else {
+                    isOutputRouteTransitioning = false
+                    appAudioMixer.cancelOutputSwitch(revision: commandRevision)
+                    scheduleMixerReconcile(requestAuthorizationIfDenied: false)
+                    return
+                }
+                detectedApps = runningApps
             }
             let apps = outputAppsPreservingRouteSnapshot(detectedApps)
 
