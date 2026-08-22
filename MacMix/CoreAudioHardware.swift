@@ -418,6 +418,18 @@ struct CoreAudioHardware {
         .joined(separator: " ")
         .lowercased()
 
+        // FaceTime's call audio is rendered by the launchd-owned avconferenced
+        // service instead of the regular FaceTime application process. Associate
+        // that HAL process object with FaceTime only while FaceTime is running so
+        // its audio joins the same per-app tap without exposing the daemon as a
+        // separate mixer row.
+        if searchableText.contains("com.apple.avconferenced")
+            || searchableText.contains("/avconferenced") {
+            return runningApplication(bundleIdentifiers: [
+                "com.apple.FaceTime",
+            ])
+        }
+
         if searchableText.contains("com.apple.safari")
             || searchableText.contains("safari.app")
             || searchableText.contains("safari web content") {
