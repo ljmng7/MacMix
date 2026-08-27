@@ -3124,8 +3124,9 @@ img.header-link__icon {
 }
 
 .changelog-intro {
-  max-width: 720px;
-  margin-left: 222px;
+  max-width: none;
+  margin-left: 0;
+  text-align: center;
 }
 
 .changelog-intro h1 {
