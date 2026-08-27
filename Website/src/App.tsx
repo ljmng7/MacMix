@@ -41,6 +41,7 @@ const DOWNLOAD_URL =
   "https://github.com/ljmng7/MacMix/releases/latest/download/MacMix.dmg";
 const REPOSITORY_URL = "https://github.com/ljmng7/MacMix";
 const ChangelogPage = lazy(() => import("./components/ChangelogPage"));
+const LegalPage = lazy(() => import("./components/LegalPage"));
 
 const FEATURES = [
   {
@@ -517,10 +518,20 @@ export function App() {
   }, []);
 
   useEffect(() => {
-    document.title =
-      route === "changelog"
-        ? "Changelog — MacMix"
-        : "MacMix — Mac's sound. In one mix.";
+    switch (route) {
+      case "changelog":
+        document.title = "Changelog — MacMix";
+        break;
+      case "privacy-policy":
+        document.title = "Privacy Policy — MacMix";
+        break;
+      case "terms-of-use":
+        document.title = "Terms of Use — MacMix";
+        break;
+      case "home":
+        document.title = "MacMix — Mac's sound. In one mix.";
+        break;
+    }
   }, [route]);
 
   useEffect(() => {
@@ -579,8 +590,8 @@ export function App() {
   };
 
   const showBackControl = transitionTarget
-    ? transitionTarget === "changelog"
-    : route === "changelog";
+    ? transitionTarget !== "home"
+    : route !== "home";
 
   return (
     <div className="site-shell" id="top">
@@ -629,6 +640,10 @@ export function App() {
               error={error}
               onRetry={retry}
             />
+          </Suspense>
+        ) : route === "privacy-policy" || route === "terms-of-use" ? (
+          <Suspense fallback={<div className="changelog-module-loading" />}>
+            <LegalPage document={route} />
           </Suspense>
         ) : (
           <HomePage />

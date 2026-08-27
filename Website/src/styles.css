@@ -3136,6 +3136,17 @@ img.header-link__icon {
   letter-spacing: -0.018em;
 }
 
+.legal-document {
+  margin: 92px auto 0;
+}
+
+.legal-document__updated {
+  color: rgba(33, 31, 29, 0.5);
+  font-size: 13px;
+  letter-spacing: -0.01em;
+  text-align: center;
+}
+
 .release-timeline {
   margin-top: 92px;
 }
@@ -3502,6 +3513,10 @@ img.header-link__icon {
     margin-left: 0;
   }
 
+  .legal-document {
+    margin: 66px 0 0;
+  }
+
   .release-timeline,
   .release-skeletons {
     margin-top: 66px;
@@ -3787,6 +3802,10 @@ img.header-link__icon {
 
   .release-entry__markdown {
     color: rgb(244 240 233 / 72%);
+  }
+
+  .legal-document__updated {
+    color: rgb(244 240 233 / 50%);
   }
 
   .release-entry__markdown li::marker {

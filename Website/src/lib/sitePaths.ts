@@ -4,7 +4,11 @@ const baseUrl = import.meta.env.BASE_URL.endsWith("/")
 
 const basePath = baseUrl === "/" ? "" : baseUrl.slice(0, -1);
 
-export type AppRoute = "home" | "changelog";
+export type AppRoute =
+  | "home"
+  | "changelog"
+  | "privacy-policy"
+  | "terms-of-use";
 
 export const publicUrl = (path: string) => {
   if (/^(?:[a-z]+:)?\/\//i.test(path) || path.startsWith("data:")) {
@@ -23,8 +27,18 @@ export const publicSrcSet = (srcSet?: string) =>
     })
     .join(", ");
 
-export const appRoutePath = (route: AppRoute) =>
-  route === "changelog" ? `${basePath}/changelog` : `${basePath}/`;
+export const appRoutePath = (route: AppRoute) => {
+  switch (route) {
+    case "changelog":
+      return `${basePath}/changelog`;
+    case "privacy-policy":
+      return `${basePath}/privacy-policy`;
+    case "terms-of-use":
+      return `${basePath}/terms-of-use`;
+    case "home":
+      return `${basePath}/`;
+  }
+};
 
 export const appRouteFromPathname = (pathname: string): AppRoute => {
   const pathWithinSite =
@@ -32,7 +46,14 @@ export const appRouteFromPathname = (pathname: string): AppRoute => {
       ? pathname.slice(basePath.length) || "/"
       : pathname;
 
-  return pathWithinSite.replace(/\/$/, "") === "/changelog"
-    ? "changelog"
-    : "home";
+  switch (pathWithinSite.replace(/\/$/, "")) {
+    case "/changelog":
+      return "changelog";
+    case "/privacy-policy":
+      return "privacy-policy";
+    case "/terms-of-use":
+      return "terms-of-use";
+    default:
+      return "home";
+  }
 };
