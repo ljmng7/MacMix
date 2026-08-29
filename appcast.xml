@@ -1,15 +1,21 @@
-<rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle">
-  <channel>
-    <title>MacMix Updates</title>
-    <item>
-      <title>MacMix 1.7</title>
-      <sparkle:shortVersionString>1.7</sparkle:shortVersionString>
-      <sparkle:version>10</sparkle:version>
-      <enclosure
-        url="https://github.com/ljmng7/MacMix/releases/download/v1.7/MacMix.dmg"
-        sparkle:edSignature="ITYtAUw9BExpne9Jlm6pgNuBD044KhtBXtDn6kqSgpNUSZ6WlQKpmy59AG0f6+RvmAZlQsPEYyIg9fWWtuDXCA=="
-        length="6714154"
-        type="application/octet-stream" />
-    </item>
-  </channel>
+<?xml version="1.0"?>
+<rss xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle" version="2.0">
+    <channel>
+        <title>MacMix Updates</title>
+        <item>
+            <title>2.0</title>
+            <pubDate>Sat, 29 Aug 2026 01:54:24 +0000</pubDate>
+            <link>https://github.com/ljmng7/MacMix</link>
+            <sparkle:version>11</sparkle:version>
+            <sparkle:shortVersionString>2.0</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.4</sparkle:minimumSystemVersion>
+            <enclosure url="https://github.com/ljmng7/MacMix/releases/download/v2.0/MacMix.dmg" length="13470479" type="application/octet-stream" sparkle:edSignature="yX7QRwpOnQGNKsQk3iJMC4tfPfv3X4vRMXW5HYmQYc3blnrsn1Le5ZnWwa6khRGA4UhRpWwNlmWUrWddkX2DDQ=="/>
+        </item>
+        <item>
+            <title>MacMix 1.7</title>
+            <sparkle:shortVersionString>1.7</sparkle:shortVersionString>
+            <sparkle:version>10</sparkle:version>
+            <enclosure url="https://github.com/ljmng7/MacMix/releases/download/v1.7/MacMix.dmg" sparkle:edSignature="ITYtAUw9BExpne9Jlm6pgNuBD044KhtBXtDn6kqSgpNUSZ6WlQKpmy59AG0f6+RvmAZlQsPEYyIg9fWWtuDXCA==" length="6714154" type="application/octet-stream"/>
+        </item>
+    </channel>
 </rss>
