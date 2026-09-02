@@ -3,13 +3,13 @@
     <channel>
         <title>MacMix Updates</title>
         <item>
-            <title>2.0.3</title>
-            <pubDate>Wed, 02 Sep 2026 10:37:56 +0000</pubDate>
+            <title>2.0.4</title>
+            <pubDate>Wed, 02 Sep 2026 14:45:22 +0000</pubDate>
             <link>https://github.com/ljmng7/MacMix</link>
-            <sparkle:version>14</sparkle:version>
-            <sparkle:shortVersionString>2.0.3</sparkle:shortVersionString>
+            <sparkle:version>15</sparkle:version>
+            <sparkle:shortVersionString>2.0.4</sparkle:shortVersionString>
             <sparkle:minimumSystemVersion>14.4</sparkle:minimumSystemVersion>
-            <enclosure url="https://github.com/ljmng7/MacMix/releases/download/v2.0.3/MacMix.dmg" length="17429951" type="application/octet-stream" sparkle:edSignature="QzYlAfM7lDPhr2LCJwL+ZQM2VyEi+PNISLgqVR63zFGcOJzjdndyxZQrWTS7coPwoRkBwDNWZMZ2DQ+kNBvTCA=="/>
+            <enclosure url="https://github.com/ljmng7/MacMix/releases/download/v2.0.4/MacMix.dmg" length="17424596" type="application/octet-stream" sparkle:edSignature="tP+8hJLJJQrcjXR7GY5h7chqY0mfSAeVLyAiRpPwJXqr+aIe0dB7FuGJ1zBIjO4e7FcTnHw8FIvAOkm2TX04Cw=="/>
         </item>
         <item>
             <title>MacMix 1.7</title>
