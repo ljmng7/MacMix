@@ -38,6 +38,8 @@ MacMix 将常用音频控制集中在 macOS 菜单栏中。它适合经常切换
 
 所有控制都放在一个紧凑的原生面板里，不需要频繁打开系统设置，也不会打断当前工作流。
 
+核心功能（包括单应用混音，以及 2.0 版本之前提供的全部功能）将永久免费可用且开源。本仓库包含免费核心功能的源码；MacMix Studio 是用于解锁更多高级功能的可选升级。
+
 ## 亮点
 
 | 能力 | 说明 |
@@ -55,7 +57,7 @@ MacMix 将常用音频控制集中在 macOS 菜单栏中。它适合经常切换
 
 ## 系统要求
 
-- macOS 15.0 或更高版本。
+- macOS 14.4 或更高版本。
 - 仅在使用单应用音量混音时，需要授予“系统录音”权限。
 
 ## 安装
@@ -75,12 +77,13 @@ MacMix 不会录制、保存或上传音频。
 
 ## 支持
 
-MacMix 完全免费且开源。如果您喜欢它，可以在这里请我喝杯咖啡以支持未来的更新，但这完全出于自愿，绝非强制 🙏
+如果你喜欢 MacMix，并希望支持它的持续开发，可以通过一次性购买升级到 MacMix Studio，解锁更多高级功能。
+
+升级完全自愿。基础音频控制和单应用混音等核心功能始终免费可用且开源，不需要 Studio 许可证。
 
 <p align="center">
-  <a href="https://ko-fi.com/ljmng7">
-    <strong>Buy me a coffee on</strong>
-    <img src="Docs/images/ko-fi.jpg" alt="在 Ko-fi 上支持" width="120" align="middle">
+  <a href="https://macmix.jazminli.com">
+    <strong>升级 MacMix Studio</strong>
   </a>
 </p>
 
@@ -88,7 +91,7 @@ MacMix 完全免费且开源。如果您喜欢它，可以在这里请我喝杯�
 
 Code is MIT; app icon/assets remain copyrighted.
 
-源代码基于 [MIT License](LICENSE) 授权。应用图标、截图和品牌素材不包含在 MIT 授权范围内，未经许可不得复用。
+本仓库中的源代码基于 [MIT License](LICENSE) 授权。应用图标、截图和品牌素材不包含在 MIT 授权范围内，未经许可不得复用。
 
 ## 从源码构建
 

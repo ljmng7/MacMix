@@ -38,6 +38,8 @@ MacMix keeps everyday audio controls one click away in the macOS menu bar. It is
 
 Everything is presented in a compact native panel, so you can adjust sound without opening System Settings or interrupting your current workflow.
 
+Core features, including per-app mixing and all features available before version 2.0, will always remain free and open source. This repository contains the free core; MacMix Studio is an optional upgrade for additional advanced features.
+
 ## Highlights
 
 | Capability | What it does |
@@ -55,7 +57,7 @@ Download the latest `.dmg` from the [GitHub Releases page](https://github.com/lj
 
 ## Requirements
 
-- macOS 15.0 or later.
+- macOS 14.4 or later.
 - System Audio Recording permission is required only when using per-app audio mixing.
 
 ## Installation
@@ -75,12 +77,13 @@ MacMix does not record, save, or upload audio.
 
 ## Support
 
-MacMix is completely free and open source. If you enjoy it, you can buy me a coffee to support future updates here, but genuinely not expected 🙏
+If you enjoy MacMix and want to support its development, you can upgrade to MacMix Studio with a one-time purchase to unlock additional advanced features.
+
+The upgrade is entirely optional. Essential audio controls and per-app mixing remain free and open source, and do not require a Studio license.
 
 <p align="center">
-  <a href="https://ko-fi.com/ljmng7">
-    <strong>Buy me a coffee on</strong>
-    <img src="Docs/images/ko-fi.jpg" alt="Support on Ko-fi" width="120" align="middle">
+  <a href="https://macmix.jazminli.com">
+    <strong>Upgrade to MacMix Studio</strong>
   </a>
 </p>
 
@@ -88,7 +91,7 @@ MacMix is completely free and open source. If you enjoy it, you can buy me a cof
 
 Code is MIT; app icon/assets remain copyrighted.
 
-The source code is licensed under the [MIT License](LICENSE). The app icon, screenshots, and brand assets are not licensed under MIT and may not be reused without permission.
+The source code in this repository is licensed under the [MIT License](LICENSE). The app icon, screenshots, and brand assets are not licensed under MIT and may not be reused without permission.
 
 ## Build From Source
 
