@@ -48,7 +48,7 @@ nonisolated struct DisplayVolumeSnapshot: Sendable {
     let volume: Double
 }
 
-nonisolated private protocol DDCTransport: AnyObject {
+nonisolated protocol DDCTransport: AnyObject {
     func read(command: UInt8) -> (current: UInt16, maximum: UInt16)?
     func write(command: UInt8, value: UInt16) -> Bool
 }
@@ -68,7 +68,8 @@ nonisolated final class DisplayVolumeController: @unchecked Sendable {
 
     private let queue = DispatchQueue(label: "MacMix.DisplayVolumeController", qos: .userInitiated)
     private let pendingLock = NSLock()
-    private let defaults = UserDefaults.standard
+    private let defaults: UserDefaults
+    private let transportFactory: (@Sendable (ExternalDisplayDescriptor) -> DDCTransport?)?
     private var activeRoute: ActiveRoute?
     private var pendingOperation: PendingOperation?
     private var isWriteDrainScheduled = false
@@ -76,6 +77,14 @@ nonisolated final class DisplayVolumeController: @unchecked Sendable {
     private static let speakerVolumeCommand: UInt8 = 0x62
     private static let audioMuteCommand: UInt8 = 0x8D
     private static let safeInitialVolume = 0.15
+
+    init(
+        defaults: UserDefaults = .standard,
+        transportFactory: (@Sendable (ExternalDisplayDescriptor) -> DDCTransport?)? = nil
+    ) {
+        self.defaults = defaults
+        self.transportFactory = transportFactory
+    }
 
     func activate(
         candidate: DisplayAudioRouteCandidate,
@@ -102,10 +111,12 @@ nonisolated final class DisplayVolumeController: @unchecked Sendable {
     }
 
     func setVolume(_ volume: Double, routeUID: String) {
+        guard volume.isFinite else { return }
         schedule(.volume(routeUID: routeUID, value: volume))
     }
 
     func setMuted(_ isMuted: Bool, audibleVolume: Double, routeUID: String) {
+        guard isMuted || audibleVolume.isFinite else { return }
         schedule(
             .mute(
                 routeUID: routeUID,
@@ -126,13 +137,21 @@ nonisolated final class DisplayVolumeController: @unchecked Sendable {
         }
 
         let cachedVolume = defaults.object(forKey: cacheKey(for: display)) as? Double
-        var volume = cachedVolume ?? Self.safeInitialVolume
-        var maximumVolume = UInt16(100)
+        var volume = cachedVolume.flatMap { $0.isFinite ? $0 : nil } ?? Self.safeInitialVolume
+        var maximumVolume = DDCVolumeValue.defaultMaximum
 
-        if let values = transport.read(command: Self.speakerVolumeCommand),
-           values.maximum > 0 {
-            maximumVolume = values.maximum
-            volume = Double(min(values.current, values.maximum)) / Double(values.maximum)
+        if let values = transport.read(command: Self.speakerVolumeCommand) {
+            maximumVolume = DDCVolumeValue.maximum(values.maximum)
+            if let readVolume = DDCVolumeValue.volume(current: values.current, maximum: values.maximum) {
+                volume = readVolume
+            } else {
+                NSLog("MacMix DDC ignored speaker-volume current %u (reported maximum %u)",
+                      values.current, values.maximum)
+            }
+            if maximumVolume != values.maximum {
+                NSLog("MacMix DDC speaker-volume maximum %u replaced with %u (current %u)",
+                      values.maximum, maximumVolume, values.current)
+            }
         }
 
         volume = Self.clampedVolume(volume)
@@ -167,6 +186,7 @@ nonisolated final class DisplayVolumeController: @unchecked Sendable {
     }
 
     private func makeTransport(for display: ExternalDisplayDescriptor) -> DDCTransport? {
+        if let transportFactory { return transportFactory(display) }
         #if arch(arm64)
         return Arm64DDCTransport.transport(for: display)
         #elseif arch(x86_64)
@@ -216,11 +236,16 @@ nonisolated final class DisplayVolumeController: @unchecked Sendable {
                 }
 
                 let volume = Self.clampedVolume(value)
-                _ = activeRoute.transport.write(
+                if volume == 0 { applyMute(true, to: activeRoute) }
+                let didWriteVolume = activeRoute.transport.write(
                     command: Self.speakerVolumeCommand,
                     value: Self.ddcValue(for: volume, maximum: activeRoute.maximumVolume)
                 )
-                defaults.set(volume, forKey: cacheKey(for: activeRoute.display))
+                // A failed volume write must not unmute the old hardware level.
+                if didWriteVolume {
+                    if volume > 0 { applyMute(false, to: activeRoute) }
+                    defaults.set(volume, forKey: cacheKey(for: activeRoute.display))
+                }
 
             case let .mute(routeUID, isMuted, audibleVolume):
                 guard routeUID == activeRoute.uid else {
@@ -229,23 +254,40 @@ nonisolated final class DisplayVolumeController: @unchecked Sendable {
 
                 // MCCS defines 1 as muted and 2 as unmuted for VCP 0x8D.
                 // Also write 0x62 so monitors that omit 0x8D still behave correctly.
-                _ = activeRoute.transport.write(
-                    command: Self.audioMuteCommand,
-                    value: isMuted ? 1 : 2
-                )
+                if isMuted { applyMute(true, to: activeRoute) }
                 let fallbackVolume = isMuted ? 0 : Self.clampedVolume(audibleVolume)
-                _ = activeRoute.transport.write(
+                let didWriteVolume = activeRoute.transport.write(
                     command: Self.speakerVolumeCommand,
                     value: Self.ddcValue(
                         for: fallbackVolume,
                         maximum: activeRoute.maximumVolume
                     )
                 )
-                if !isMuted {
+                if !isMuted && didWriteVolume {
+                    applyMute(false, to: activeRoute)
                     defaults.set(fallbackVolume, forKey: cacheKey(for: activeRoute.display))
                 }
             }
         }
+    }
+
+    private func applyMute(_ muted: Bool, to route: ActiveRoute) {
+        guard activeRoute?.uid == route.uid else { return }
+        // Diagnostic overrides apply only to the reported U9 model.
+        let isU9 = Self.normalizedName(route.display.name) == "r27u91"
+        let sendKey = "MacMixDDCU9SendMuteCommands"
+        let invertKey = "MacMixDDCU9InvertMuteValues"
+        func setting(_ key: String, fallback: Bool) -> Bool {
+            (defaults.object(forKey: key) as? Bool)
+                ?? (Bundle.main.object(forInfoDictionaryKey: key) as? Bool)
+                ?? fallback
+        }
+        if isU9 && !setting(sendKey, fallback: false) { return }
+        let inverted = isU9 && setting(invertKey, fallback: false)
+        let value: UInt16 = (muted != inverted) ? 1 : 2
+        // The monitor may also be changed using its physical controls; do not
+        // treat a cached mute command as authoritative hardware state.
+        _ = route.transport.write(command: Self.audioMuteCommand, value: value)
     }
 
     private func cacheKey(for display: ExternalDisplayDescriptor) -> String {
@@ -261,11 +303,11 @@ nonisolated final class DisplayVolumeController: @unchecked Sendable {
     }
 
     private static func clampedVolume(_ volume: Double) -> Double {
-        max(0, min(1, volume))
+        DDCVolumeValue.clamped(volume)
     }
 
     private static func ddcValue(for volume: Double, maximum: UInt16) -> UInt16 {
-        UInt16((clampedVolume(volume) * Double(maximum)).rounded())
+        DDCVolumeValue.ddcValue(for: volume, maximum: maximum)
     }
 }
 
@@ -336,16 +378,11 @@ nonisolated private final class Arm64DDCTransport: DDCTransport, @unchecked Send
     func read(command: UInt8) -> (current: UInt16, maximum: UInt16)? {
         var reply = [UInt8](repeating: 0, count: 11)
 
-        guard communicate(send: [command], reply: &reply),
-              reply[2] == 0x02,
-              reply[3] == 0x00,
-              reply[4] == command else {
+        guard communicate(send: [command], reply: &reply) else {
             return nil
         }
 
-        let maximum = UInt16(reply[6]) << 8 | UInt16(reply[7])
-        let current = UInt16(reply[8]) << 8 | UInt16(reply[9])
-        return (current, maximum)
+        return DDCReplyParser.read(reply, command: command)
     }
 
     func write(command: UInt8, value: UInt16) -> Bool {
@@ -364,10 +401,9 @@ nonisolated private final class Arm64DDCTransport: DDCTransport, @unchecked Send
         packet[packet.count - 1] = Self.checksum(initial: initialChecksum, bytes: packet.dropLast())
 
         for _ in 0 ..< 3 {
-            var writeSucceeded = false
-            for _ in 0 ..< 2 {
+            let writeSucceeded = DDCWriteRetry.perform {
                 usleep(10_000)
-                writeSucceeded = packet.withUnsafeMutableBytes { bytes in
+                return packet.withUnsafeMutableBytes { bytes in
                     guard let baseAddress = bytes.baseAddress else {
                         return false
                     }
@@ -390,6 +426,11 @@ nonisolated private final class Arm64DDCTransport: DDCTransport, @unchecked Send
             }
 
             usleep(50_000)
+            guard writeSucceeded else {
+                usleep(20_000)
+                continue
+            }
+            reply = [UInt8](repeating: 0, count: reply.count)
             let readSucceeded = reply.withUnsafeMutableBytes { bytes in
                 guard let baseAddress = bytes.baseAddress else {
                     return false
@@ -403,7 +444,8 @@ nonisolated private final class Arm64DDCTransport: DDCTransport, @unchecked Send
                 ) == kIOReturnSuccess
             }
             if readSucceeded,
-               Self.checksum(initial: 0x50, bytes: reply.dropLast()) == reply.last {
+               let command = send.first,
+               DDCReplyParser.read(reply, command: command) != nil {
                 return true
             }
             usleep(20_000)
@@ -555,8 +597,11 @@ nonisolated private final class IntelDDCTransport: DDCTransport, @unchecked Send
     init?(displayID: CGDirectDisplayID) {
         var framebuffer = io_service_t()
         serviceForDisplayNumber(displayID, &framebuffer)
-        guard framebuffer != IO_OBJECT_NULL,
-              let transactionType = Self.supportedTransactionType() else {
+        guard framebuffer != IO_OBJECT_NULL else {
+            return nil
+        }
+        guard let transactionType = Self.supportedTransactionType() else {
+            IOObjectRelease(framebuffer)
             return nil
         }
 
@@ -584,8 +629,10 @@ nonisolated private final class IntelDDCTransport: DDCTransport, @unchecked Send
             var reply = [UInt8](repeating: 0, count: 11)
             let dataCount = UInt32(data.count)
             let replyCount = UInt32(reply.count)
-            let succeeded = withUnsafeMutablePointer(to: &data[0]) { dataPointer in
-                withUnsafeMutablePointer(to: &reply[0]) { replyPointer in
+            let succeeded = data.withUnsafeMutableBufferPointer { dataBuffer in
+                reply.withUnsafeMutableBufferPointer { replyBuffer in
+                    guard let dataPointer = dataBuffer.baseAddress,
+                          let replyPointer = replyBuffer.baseAddress else { return false }
                     var request = IOI2CRequest()
                     request.sendAddress = 0x6E
                     request.sendTransactionType = IOOptionBits(kIOI2CSimpleTransactionType)
@@ -602,16 +649,11 @@ nonisolated private final class IntelDDCTransport: DDCTransport, @unchecked Send
             }
 
             guard succeeded,
-                  reply.dropLast().reduce(0x50, ^) == reply.last,
-                  reply[2] == 0x02,
-                  reply[3] == 0x00,
-                  reply[4] == command else {
+                  let values = DDCReplyParser.read(reply, command: command) else {
                 continue
             }
 
-            let maximum = UInt16(reply[6]) << 8 | UInt16(reply[7])
-            let current = UInt16(reply[8]) << 8 | UInt16(reply[9])
-            return (current, maximum)
+            return values
         }
         return nil
     }
@@ -627,12 +669,12 @@ nonisolated private final class IntelDDCTransport: DDCTransport, @unchecked Send
             0,
         ]
         data[6] = data.dropLast().reduce(0x6E, ^)
-        var succeeded = false
         let dataCount = UInt32(data.count)
 
-        for _ in 0 ..< 2 {
+        return DDCWriteRetry.perform {
             usleep(10_000)
-            succeeded = withUnsafeMutablePointer(to: &data[0]) { pointer in
+            return data.withUnsafeMutableBufferPointer { dataBuffer in
+                guard let pointer = dataBuffer.baseAddress else { return false }
                 var request = IOI2CRequest()
                 request.sendAddress = 0x6E
                 request.sendTransactionType = IOOptionBits(kIOI2CSimpleTransactionType)
@@ -642,7 +684,6 @@ nonisolated private final class IntelDDCTransport: DDCTransport, @unchecked Send
                 return send(request: &request)
             }
         }
-        return succeeded
     }
 
     private func send(request: inout IOI2CRequest) -> Bool {

@@ -1,0 +1,38 @@
+name: DDC volume tests
+
+on:
+  pull_request:
+    paths:
+      - 'MacMix/DDCProtocol.swift'
+      - 'MacMix/DisplayVolumeController.swift'
+      - 'tests/DDCVolumeTests.swift'
+      - 'tests/run-ddc-volume-tests.sh'
+      - '.github/workflows/ddc-tests.yml'
+  push:
+    branches: [main, test/u9-ddc-volume]
+    paths:
+      - 'MacMix/DDCProtocol.swift'
+      - 'MacMix/DisplayVolumeController.swift'
+      - 'tests/DDCVolumeTests.swift'
+      - 'tests/run-ddc-volume-tests.sh'
+      - '.github/workflows/ddc-tests.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  ddc-volume:
+    runs-on: macos-15
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_26.3.app/Contents/Developer
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check both DDC transports with app actor isolation
+        run: |
+          for arch in arm64 x86_64; do
+            xcrun swiftc -typecheck -default-isolation MainActor \
+              -target "$arch-apple-macos14.4" \
+              MacMix/DDCProtocol.swift MacMix/DisplayVolumeController.swift
+          done
+      - name: Run DDC volume regression tests
+        run: bash tests/run-ddc-volume-tests.sh
