@@ -382,23 +382,18 @@ final class AudioModel: NSObject {
         }
 
         if displayVolumeRouteUID == currentOutputDevice.uid {
+            guard volume.isFinite else { return }
             let clampedVolume = max(0, min(1, volume))
+            // The controller carries volume and mute intent in one operation.
             displayVolumeController.setVolume(
                 clampedVolume,
                 routeUID: currentOutputDevice.uid
             )
             displayVolumeValue = clampedVolume
-            if clampedVolume > 0.001 {
+            if clampedVolume > 0 {
                 displayVolumeLastAudibleValue = clampedVolume
-                if outputState.isSystemMuted {
-                    displayVolumeController.setMuted(
-                        false,
-                        audibleVolume: clampedVolume,
-                        routeUID: currentOutputDevice.uid
-                    )
-                    setSystemOutputMutedIfChanged(false)
-                }
             }
+            setSystemOutputMutedIfChanged(clampedVolume == 0)
             setSystemOutputVolumeIfChanged(clampedVolume)
             return
         }

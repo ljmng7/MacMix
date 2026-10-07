@@ -3,6 +3,7 @@ name: DDC volume tests
 on:
   pull_request:
     paths:
+      - 'MacMix/AudioModel.swift'
       - 'MacMix/DDCProtocol.swift'
       - 'MacMix/DisplayVolumeController.swift'
       - 'tests/DDCVolumeTests.swift'
@@ -11,6 +12,7 @@ on:
   push:
     branches: [main, test/u9-ddc-volume]
     paths:
+      - 'MacMix/AudioModel.swift'
       - 'MacMix/DDCProtocol.swift'
       - 'MacMix/DisplayVolumeController.swift'
       - 'tests/DDCVolumeTests.swift'
