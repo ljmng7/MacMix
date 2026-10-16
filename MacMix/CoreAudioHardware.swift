@@ -19,8 +19,22 @@ nonisolated enum DefaultAudioDeviceUIDRead: Sendable, Equatable {
 }
 
 struct CoreAudioHardware {
+    private struct OutputAppIdentity {
+        let ownerPID: pid_t
+        let bundleID: String
+        let name: String
+        let icon: NSImage?
+    }
+    @MainActor private static let outputAppIdentities = AudioProcessIdentityCache<OutputAppIdentity>()
+
+    nonisolated init() {}
     func devices(for direction: AudioDeviceDirection) -> [AudioDevice]? {
         let defaultID = defaultDeviceID(for: direction)
+        let displayNames = direction == .output ? NSScreen.screens.compactMap { screen -> String? in
+            guard let number = screen.deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? NSNumber,
+                  CGDisplayIsBuiltin(CGDirectDisplayID(number.uint32Value)) == 0 else { return nil }
+            return screen.localizedName
+        } : []
 
         guard let deviceIDs = audioObjectIDs(
             objectID: AudioObjectID(kAudioObjectSystemObject),
@@ -52,7 +66,7 @@ struct CoreAudioHardware {
                 id: deviceID,
                 uid: identity.deviceUID ?? "\(deviceID)",
                 name: name,
-                iconName: iconName(for: identity, direction: direction),
+                iconName: iconName(for: identity, direction: direction, connectedDisplayNames: displayNames),
                 transportType: identity.transportType,
                 isCurrent: deviceID == defaultID,
                 volume: volume(for: deviceID, direction: direction)
@@ -60,7 +74,7 @@ struct CoreAudioHardware {
         }
     }
 
-    func defaultDeviceID(for direction: AudioDeviceDirection) -> AudioObjectID? {
+    nonisolated func defaultDeviceID(for direction: AudioDeviceDirection) -> AudioObjectID? {
         var address = propertyAddress(selector: direction.defaultDeviceSelector)
         var deviceID = AudioObjectID(kAudioObjectUnknown)
         var dataSize = UInt32(MemoryLayout<AudioObjectID>.size)
@@ -97,7 +111,7 @@ struct CoreAudioHardware {
         return audioDeviceCanBeDefault(deviceID, scope: direction.scope)
     }
 
-    func volume(for deviceID: AudioObjectID, direction: AudioDeviceDirection) -> Double? {
+    nonisolated func volume(for deviceID: AudioObjectID, direction: AudioDeviceDirection) -> Double? {
         if let masterVolume = scalarProperty(
             objectID: deviceID,
             selector: kAudioDevicePropertyVolumeScalar,
@@ -124,7 +138,7 @@ struct CoreAudioHardware {
         return Double(total / Float32(channelVolumes.count))
     }
 
-    func isMuted(for deviceID: AudioObjectID, direction: AudioDeviceDirection) -> Bool? {
+    nonisolated func isMuted(for deviceID: AudioObjectID, direction: AudioDeviceDirection) -> Bool? {
         if let masterMute = uint32Property(
             objectID: deviceID,
             selector: kAudioDevicePropertyMute,
@@ -154,7 +168,7 @@ struct CoreAudioHardware {
     }
 
     @discardableResult
-    func setVolume(_ volume: Double, for deviceID: AudioObjectID, direction: AudioDeviceDirection) -> Bool {
+    nonisolated func setVolume(_ volume: Double, for deviceID: AudioObjectID, direction: AudioDeviceDirection) -> Bool {
         let clampedVolume = Float32(max(0, min(1, volume)))
 
         if setScalarProperty(
@@ -184,7 +198,7 @@ struct CoreAudioHardware {
     }
 
     @discardableResult
-    func setMuted(_ isMuted: Bool, for deviceID: AudioObjectID, direction: AudioDeviceDirection) -> Bool {
+    nonisolated func setMuted(_ isMuted: Bool, for deviceID: AudioObjectID, direction: AudioDeviceDirection) -> Bool {
         let muteValue: UInt32 = isMuted ? 1 : 0
 
         if setUInt32Property(
@@ -234,6 +248,8 @@ struct CoreAudioHardware {
             return nil
         }
 
+        let now = ProcessInfo.processInfo.systemUptime
+        Self.outputAppIdentities.retain(objectIDs: Set(processIDs))
         for processID in processIDs {
             // Keep audio clients visible as soon as they register with HAL instead of
             // waiting until their first buffers are already playing. That also lets the
@@ -244,27 +260,24 @@ struct CoreAudioHardware {
             }
 
             let audioBundleID = stringProperty(processID, selector: kAudioProcessPropertyBundleID)
-            guard let responsibleApp = responsibleApplication(
-                for: pid,
-                audioBundleID: audioBundleID
-            ) else {
-                continue
+            let identity: OutputAppIdentity
+            if let cached = Self.outputAppIdentities.value(for: processID, pid: pid, bundleID: audioBundleID, now: now) {
+                identity = cached
+            } else {
+                guard let responsibleApp = responsibleApplication(for: pid, audioBundleID: audioBundleID) else { continue }
+                let bundleID = responsibleApp.bundleIdentifier ?? audioBundleID ?? "pid.\(responsibleApp.processIdentifier)"
+                identity = OutputAppIdentity(ownerPID: responsibleApp.processIdentifier,
+                    bundleID: bundleID.isEmpty ? "pid.\(responsibleApp.processIdentifier)" : bundleID,
+                    name: responsibleApp.localizedName ?? bundleID, icon: responsibleApp.icon)
+                Self.outputAppIdentities.insert(identity, for: processID, pid: pid, bundleID: audioBundleID, now: now)
             }
-
-            let bundleID = responsibleApp.bundleIdentifier
-                ?? audioBundleID
-                ?? "pid.\(responsibleApp.processIdentifier)"
-            let appName = responsibleApp.localizedName ?? bundleID
-            let icon = responsibleApp.icon
-            let storageKey = bundleID.isEmpty ? "pid.\(responsibleApp.processIdentifier)" : bundleID
-            let groupingKey = storageKey.isEmpty ? "pid.\(pid)" : storageKey
-
+            let groupingKey = identity.bundleID
             if groupedApps[groupingKey] == nil {
                 groupedApps[groupingKey] = RunningAudioApp(
-                    ownerPID: responsibleApp.processIdentifier,
-                    bundleID: storageKey,
-                    name: appName,
-                    icon: icon,
+                    ownerPID: identity.ownerPID,
+                    bundleID: identity.bundleID,
+                    name: identity.name,
+                    icon: identity.icon,
                     audioObjectIDs: []
                 )
             }
@@ -453,8 +466,8 @@ struct CoreAudioHardware {
 
     private func runningApplication(bundleIdentifiers: [String]) -> NSRunningApplication? {
         for bundleIdentifier in bundleIdentifiers {
-            if let app = NSWorkspace.shared.runningApplications.first(where: {
-                $0.bundleIdentifier == bundleIdentifier && $0.activationPolicy == .regular
+            if let app = NSRunningApplication.runningApplications(withBundleIdentifier: bundleIdentifier).first(where: {
+                $0.activationPolicy == .regular
             }) {
                 return app
             }
@@ -497,7 +510,7 @@ struct CoreAudioHardware {
         return pid_t(info.pbi_ppid)
     }
 
-    private func uint32Property(
+    nonisolated private func uint32Property(
         _ objectID: AudioObjectID,
         selector: AudioObjectPropertySelector
     ) -> UInt32? {
@@ -512,7 +525,7 @@ struct CoreAudioHardware {
         return status == noErr ? value : nil
     }
 
-    private func uint32Property(
+    nonisolated private func uint32Property(
         objectID: AudioObjectID,
         selector: AudioObjectPropertySelector,
         scope: AudioObjectPropertyScope,
@@ -529,7 +542,7 @@ struct CoreAudioHardware {
         return status == noErr ? value : nil
     }
 
-    private func scalarProperty(
+    nonisolated private func scalarProperty(
         objectID: AudioObjectID,
         selector: AudioObjectPropertySelector,
         scope: AudioObjectPropertyScope,
@@ -546,7 +559,7 @@ struct CoreAudioHardware {
         return status == noErr ? value : nil
     }
 
-    private func setScalarProperty(
+    nonisolated private func setScalarProperty(
         _ value: Float32,
         objectID: AudioObjectID,
         selector: AudioObjectPropertySelector,
@@ -576,7 +589,7 @@ struct CoreAudioHardware {
         return status == noErr
     }
 
-    private func setUInt32Property(
+    nonisolated private func setUInt32Property(
         _ value: UInt32,
         objectID: AudioObjectID,
         selector: AudioObjectPropertySelector,
@@ -606,7 +619,7 @@ struct CoreAudioHardware {
         return status == noErr
     }
 
-    private func propertyAddress(
+    nonisolated private func propertyAddress(
         selector: AudioObjectPropertySelector,
         scope: AudioObjectPropertyScope = kAudioObjectPropertyScopeGlobal,
         element: AudioObjectPropertyElement = kAudioObjectPropertyElementMain
@@ -618,7 +631,7 @@ struct CoreAudioHardware {
         )
     }
 
-    private func iconName(for identity: AudioDeviceIdentity, direction: AudioDeviceDirection) -> String {
+    private func iconName(for identity: AudioDeviceIdentity, direction: AudioDeviceDirection, connectedDisplayNames: [String]) -> String {
         guard direction == .output else {
             return "mic.fill"
         }
@@ -626,7 +639,14 @@ struct CoreAudioHardware {
         let searchableText = identity.searchableText
 
         if isBuiltInSpeaker(identity) {
-            return "macbook"
+            return MacBuiltInSpeakerIcon.currentSymbol
+        }
+
+        if DisplayAudioDeviceRecognition.isDisplay(
+            name: identity.name, modelUID: identity.modelUID, deviceUID: identity.deviceUID,
+            transportType: identity.transportType, connectedDisplayNames: connectedDisplayNames
+        ) {
+            return "display"
         }
 
         if let beatsIcon = beatsIconName(for: searchableText) {
@@ -635,10 +655,6 @@ struct CoreAudioHardware {
 
         if let appleIcon = appleAudioIconName(for: searchableText, identity: identity) {
             return appleIcon
-        }
-
-        if searchableText.containsAny(["display", "显示器", "monitor"]) {
-            return "display"
         }
 
         if searchableText.containsAny(["airplay"]) || identity.transportType == kAudioDeviceTransportTypeAirPlay {
@@ -1182,15 +1198,18 @@ nonisolated final class CoreAudioDeviceObserver {
     private var processOutputListeners: [AudioObjectID: AudioObjectPropertyListenerBlock] = [:]
     private var outputVolumeListener: AudioObjectPropertyListenerBlock?
     private var inputVolumeListener: AudioObjectPropertyListenerBlock?
+    private let onOutputVolumeChange: @MainActor () -> Void
     private let onOutputChange: @MainActor () -> Void
     private let onInputChange: @MainActor () -> Void
     private let onOutputAppsChange: @MainActor () -> Void
 
     init(
+        onOutputVolumeChange: @escaping @MainActor () -> Void,
         onOutputChange: @escaping @MainActor () -> Void,
         onInputChange: @escaping @MainActor () -> Void,
         onOutputAppsChange: @escaping @MainActor () -> Void
     ) {
+        self.onOutputVolumeChange = onOutputVolumeChange
         self.onOutputChange = onOutputChange
         self.onInputChange = onInputChange
         self.onOutputAppsChange = onOutputAppsChange
@@ -1295,7 +1314,10 @@ nonisolated final class CoreAudioDeviceObserver {
 
         let addresses = volumeAddresses(for: nextDeviceID, direction: direction)
         let listener: AudioObjectPropertyListenerBlock = { [weak self] _, _ in
-            self?.notifyChange(for: direction)
+            switch direction {
+            case .output: self?.notifyOutputVolumeChange()
+            case .input: self?.notifyChange(for: direction)
+            }
         }
         let registeredAddresses = addDeviceListeners(
             addresses,
@@ -1570,6 +1592,10 @@ nonisolated final class CoreAudioDeviceObserver {
         }
     }
 
+    private func notifyOutputVolumeChange() {
+        Task { @MainActor in onOutputVolumeChange() }
+    }
+
     private func notifyChange(for direction: AudioDeviceDirection) {
         Task { @MainActor in
             switch direction {
@@ -1625,5 +1651,42 @@ private struct AudioDeviceIdentity {
 private extension String {
     func containsAny(_ needles: [String]) -> Bool {
         needles.contains { contains($0) }
+    }
+}
+
+// HAL calls can block on the audio server. Keep them on one dedicated queue;
+// AudioModel coalesces slider edits while an operation is in flight.
+nonisolated struct OutputVolumeSnapshot: Sendable {
+    let volume: Double?
+    let isMuted: Bool
+}
+
+nonisolated final class OutputVolumeController: Sendable {
+    private let queue = DispatchQueue(label: "MacMix.OutputVolume", qos: .userInitiated)
+
+    func update(deviceID: AudioObjectID, volume: Double?, muted: Bool?) async -> OutputVolumeSnapshot? {
+        await withCheckedContinuation { continuation in
+            queue.async {
+                let hardware = CoreAudioHardware()
+                guard hardware.defaultDeviceID(for: .output) == deviceID else {
+                    continuation.resume(returning: nil)
+                    return
+                }
+                if let volume, !hardware.setVolume(volume, for: deviceID, direction: .output) {
+                    continuation.resume(returning: nil)
+                    return
+                }
+                var observedMute = hardware.isMuted(for: deviceID, direction: .output) ?? false
+                let requestedMute = volume.map { $0 == 0 ? true : (muted ?? false) } ?? muted
+                if let muted = requestedMute, observedMute != muted {
+                    hardware.setMuted(muted, for: deviceID, direction: .output)
+                    observedMute = hardware.isMuted(for: deviceID, direction: .output) ?? observedMute
+                }
+                continuation.resume(returning: OutputVolumeSnapshot(
+                    volume: hardware.volume(for: deviceID, direction: .output),
+                    isMuted: observedMute
+                ))
+            }
+        }
     }
 }
