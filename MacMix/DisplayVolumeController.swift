@@ -216,10 +216,12 @@ nonisolated final class DisplayVolumeController: @unchecked Sendable {
                 }
 
                 let volume = Self.clampedVolume(value)
+                if volume == 0 { applyMute(true, to: activeRoute) }
                 _ = activeRoute.transport.write(
                     command: Self.speakerVolumeCommand,
                     value: Self.ddcValue(for: volume, maximum: activeRoute.maximumVolume)
                 )
+                if volume > 0 { applyMute(false, to: activeRoute) }
                 defaults.set(volume, forKey: cacheKey(for: activeRoute.display))
 
             case let .mute(routeUID, isMuted, audibleVolume):
@@ -229,10 +231,7 @@ nonisolated final class DisplayVolumeController: @unchecked Sendable {
 
                 // MCCS defines 1 as muted and 2 as unmuted for VCP 0x8D.
                 // Also write 0x62 so monitors that omit 0x8D still behave correctly.
-                _ = activeRoute.transport.write(
-                    command: Self.audioMuteCommand,
-                    value: isMuted ? 1 : 2
-                )
+                if isMuted { applyMute(true, to: activeRoute) }
                 let fallbackVolume = isMuted ? 0 : Self.clampedVolume(audibleVolume)
                 _ = activeRoute.transport.write(
                     command: Self.speakerVolumeCommand,
@@ -242,10 +241,18 @@ nonisolated final class DisplayVolumeController: @unchecked Sendable {
                     )
                 )
                 if !isMuted {
+                    applyMute(false, to: activeRoute)
                     defaults.set(fallbackVolume, forKey: cacheKey(for: activeRoute.display))
                 }
             }
         }
+    }
+
+    private func applyMute(_ muted: Bool, to route: ActiveRoute) {
+        guard activeRoute?.uid == route.uid else { return }
+        // The monitor may also be changed using its physical controls; do not
+        // treat a cached mute command as authoritative hardware state.
+        _ = route.transport.write(command: Self.audioMuteCommand, value: muted ? 1 : 2)
     }
 
     private func cacheKey(for display: ExternalDisplayDescriptor) -> String {

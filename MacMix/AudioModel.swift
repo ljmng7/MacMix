@@ -95,6 +95,11 @@ final class AudioModel: NSObject {
     let outputAppsState = OutputAppsState()
 
     private let hardware = CoreAudioHardware()
+    private let outputVolumeController = OutputVolumeController()
+    private var outputVolumeTask: Task<Void, Never>?
+    private var pendingOutputVolume: (deviceID: AudioObjectID, uid: String, volume: Double?, muted: Bool?)?
+    private var outputVolumeRevision: UInt64 = 0
+
     private let appAudioMixer = AppAudioMixer.shared
     private let displayVolumeController = DisplayVolumeController()
     private let outputRouteProbe = DefaultOutputRouteProbe()
@@ -137,6 +142,7 @@ final class AudioModel: NSObject {
         restoreCachedSystemAudioPermissionState()
 
         deviceObserver = CoreAudioDeviceObserver(
+            onOutputVolumeChange: { [weak self] in self?.handleOutputVolumeChange() },
             onOutputChange: { [weak self] in
                 self?.handleOutputHardwareChange()
             },
@@ -160,6 +166,7 @@ final class AudioModel: NSObject {
     }
 
     deinit {
+        outputVolumeTask?.cancel()
         deviceObserver?.stop()
         refreshTimer?.invalidate()
         outputRouteRefreshTask?.cancel()
@@ -381,43 +388,22 @@ final class AudioModel: NSObject {
             return
         }
 
+        let clampedVolume = max(0, min(1, volume))
+        let shouldMute = clampedVolume == 0
         if displayVolumeRouteUID == currentOutputDevice.uid {
-            let clampedVolume = max(0, min(1, volume))
-            displayVolumeController.setVolume(
-                clampedVolume,
-                routeUID: currentOutputDevice.uid
-            )
+            // Each coalesced DDC volume operation carries its own mute intent.
+            displayVolumeController.setVolume(clampedVolume, routeUID: currentOutputDevice.uid)
             displayVolumeValue = clampedVolume
-            if clampedVolume > 0.001 {
-                displayVolumeLastAudibleValue = clampedVolume
-                if outputState.isSystemMuted {
-                    displayVolumeController.setMuted(
-                        false,
-                        audibleVolume: clampedVolume,
-                        routeUID: currentOutputDevice.uid
-                    )
-                    setSystemOutputMutedIfChanged(false)
-                }
-            }
+            if clampedVolume > 0 { displayVolumeLastAudibleValue = clampedVolume }
             setSystemOutputVolumeIfChanged(clampedVolume)
+            setSystemOutputMutedIfChanged(shouldMute)
             return
         }
 
-        guard hardware.setVolume(volume, for: currentOutputDevice.id, direction: .output) else {
-            refreshOutputState()
-            return
-        }
-
-        if outputState.isSystemMuted {
-            hardware.setMuted(false, for: currentOutputDevice.id, direction: .output)
-        }
-
-        let appliedVolume = hardware.volume(for: currentOutputDevice.id, direction: .output) ?? volume
-        setSystemOutputVolumeIfChanged(appliedVolume)
-        setSystemOutputMutedIfChanged(
-            hardware.isMuted(for: currentOutputDevice.id, direction: .output) ?? false
-        )
-        setCurrentOutputDeviceVolume(appliedVolume)
+        setSystemOutputVolumeIfChanged(clampedVolume)
+        setSystemOutputMutedIfChanged(shouldMute)
+        setCurrentOutputDeviceVolume(clampedVolume)
+        scheduleOutputVolumeUpdate(volume: clampedVolume, muted: shouldMute)
     }
 
     func toggleSystemOutputMute() {
@@ -446,13 +432,8 @@ final class AudioModel: NSObject {
             return
         }
 
-        guard hardware.setMuted(shouldMute, for: currentOutputDevice.id, direction: .output) else {
-            refreshOutputState()
-            return
-        }
-
-        let appliedMute = hardware.isMuted(for: currentOutputDevice.id, direction: .output) ?? shouldMute
-        setSystemOutputMutedIfChanged(appliedMute)
+        setSystemOutputMutedIfChanged(shouldMute)
+        scheduleOutputVolumeUpdate(muted: shouldMute)
     }
 
     func setInputVolume(_ volume: Double) {
@@ -944,6 +925,54 @@ final class AudioModel: NSObject {
         }
     }
 
+    private func scheduleOutputVolumeUpdate(volume: Double? = nil, muted: Bool? = nil) {
+        guard let device = currentOutputDevice, displayVolumeRouteUID != device.uid else { return }
+        outputVolumeRevision &+= 1
+        // A read notification must not replace a pending explicit slider/mute edit.
+        if volume != nil || muted != nil || pendingOutputVolume == nil {
+            let retainedVolume = pendingOutputVolume?.uid == device.uid ? pendingOutputVolume?.volume : nil
+            pendingOutputVolume = (device.id, device.uid, volume ?? retainedVolume, muted)
+        }
+        guard outputVolumeTask == nil else { return }
+        outputVolumeTask = Task { @MainActor [weak self] in
+            guard let self else { return }
+            while !Task.isCancelled {
+                // Bound the write rate without delaying the visible slider value.
+                do { try await Task.sleep(for: .milliseconds(16)) } catch { break }
+                guard let request = pendingOutputVolume else { break }
+                pendingOutputVolume = nil
+                guard currentOutputDevice?.uid == request.uid,
+                      currentOutputDevice?.id == request.deviceID else { continue }
+                let revision = outputVolumeRevision
+                let snapshot = await outputVolumeController.update(
+                    deviceID: request.deviceID, volume: request.volume, muted: request.muted
+                )
+                guard !Task.isCancelled else { break }
+                guard currentOutputDevice?.uid == request.uid,
+                      currentOutputDevice?.id == request.deviceID,
+                      revision == outputVolumeRevision else { continue }
+                if let snapshot {
+                    setSystemOutputVolumeIfChanged(snapshot.volume)
+                    setSystemOutputMutedIfChanged(snapshot.isMuted)
+                    if let volume = snapshot.volume { setCurrentOutputDeviceVolume(volume) }
+                } else {
+                    refreshOutputState()
+                }
+            }
+            outputVolumeTask = nil
+        }
+    }
+
+    private func handleOutputVolumeChange() {
+        // The final write's readback already covers notifications from our own edits.
+        guard outputVolumeTask == nil else { return }
+        guard !isMixerLifecycleBusy, !isOutputRouteTransitioning else {
+            needsOutputHardwareRefresh = true
+            return
+        }
+        scheduleOutputVolumeUpdate()
+    }
+
     private func handleOutputHardwareChange() {
         guard !isMixerLifecycleBusy else {
             needsOutputHardwareRefresh = true
@@ -1203,7 +1232,7 @@ final class AudioModel: NSObject {
     }
 
     private func nearlyEqual(_ lhs: Double, _ rhs: Double) -> Bool {
-        abs(lhs - rhs) < 0.001
+        AudioVolumeValue.matches(lhs, rhs)
     }
 
     private func optionalVolumesMatch(_ lhs: Double?, _ rhs: Double?) -> Bool {

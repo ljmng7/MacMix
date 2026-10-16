@@ -14,6 +14,14 @@ enum MixVolumePreference {
     static let enables200PercentVolume = "MacMix.Enables200PercentVolume"
 }
 
+// Zero is a semantic boundary: never discard entry to or exit from silence.
+nonisolated enum AudioVolumeValue {
+    static func matches(_ lhs: Double, _ rhs: Double) -> Bool {
+        if lhs == 0 || rhs == 0 { return lhs == rhs }
+        return abs(lhs - rhs) < 0.001
+    }
+}
+
 enum AudioDeviceDirection {
     case input
     case output
@@ -104,7 +112,7 @@ final class AudioAppState: Identifiable {
     }
 
     func updateControls(volume: Double, isMuted: Bool) {
-        if abs(self.volume - volume) >= 0.001 {
+        if !AudioVolumeValue.matches(self.volume, volume) {
             self.volume = volume
         }
 
