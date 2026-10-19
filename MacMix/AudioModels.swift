@@ -52,7 +52,15 @@ struct AudioDevice: Identifiable, Hashable {
     let iconName: String
     let transportType: UInt32?
     let isCurrent: Bool
-    let volume: Double?
+    var volume: Double?
+
+    // Keep uid as the HAL identity used by the mixer and saved routes.
+    var dataSourceID: UInt32? = nil
+
+    var selectionID: String {
+        guard let dataSourceID else { return uid }
+        return "\(uid)#airplay-source:\(dataSourceID)"
+    }
 }
 
 struct AudioApp: Identifiable {

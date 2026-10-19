@@ -14,11 +14,32 @@ import Observation
 @Observable
 final class OutputAudioState {
     var devices: [AudioDevice] = []
+    var airPlayDestinations: [AudioDevice] = []
+
+    var selectionDevices: [AudioDevice] {
+        let destinations = Dictionary(grouping: airPlayDestinations, by: \.uid)
+        return devices.flatMap { device in
+            guard let routes = destinations[device.uid] else { return [device] }
+            return routes.map { route in
+                var route = route
+                route.volume = route.isCurrent ? device.volume : nil
+                return route
+            }
+        }
+    }
     var systemVolume: Double?
     var isSystemMuted = false
 
     var currentDevice: AudioDevice? {
         devices.first(where: \.isCurrent)
+    }
+
+    // A row can be a member of an active group without being the complete
+    // requested output selection. Only the latter should skip a switch.
+    func isSelected(_ device: AudioDevice) -> Bool {
+        guard let current = currentDevice,
+              current.uid == device.uid, current.id == device.id else { return false }
+        return device.dataSourceID == nil || current.dataSourceID == device.dataSourceID
     }
 
     var menuBarSymbolName: String {
@@ -192,10 +213,16 @@ final class AudioModel: NSObject {
 
     func refreshOutputState() {
         let previousOutputUID = currentOutputDevice?.uid
+        let previousDataSourceID = currentOutputDevice?.dataSourceID
+        let previousAirPlaySelection = outputState.airPlayDestinations.filter(\.isCurrent).map(\.selectionID).sorted()
         guard let devices = hardware.devices(for: .output) else {
             return
         }
         setOutputDevicesIfChanged(devices)
+        let airPlayDestinations = hardware.airPlayDestinations(in: devices)
+        if outputState.airPlayDestinations != airPlayDestinations {
+            outputState.airPlayDestinations = airPlayDestinations
+        }
 
         if let currentDevice = devices.first(where: \.isCurrent),
            let nativeVolume = currentDevice.volume {
@@ -220,7 +247,9 @@ final class AudioModel: NSObject {
 
         let currentOutputUID = devices.first(where: \.isCurrent)?.uid
 
-        if previousOutputUID != currentOutputUID {
+        if previousOutputUID != currentOutputUID
+            || previousDataSourceID != devices.first(where: \.isCurrent)?.dataSourceID
+            || previousAirPlaySelection != airPlayDestinations.filter(\.isCurrent).map(\.selectionID).sorted() {
             handleOutputRouteChange(to: currentOutputUID)
         }
     }
@@ -452,7 +481,7 @@ final class AudioModel: NSObject {
     }
 
     func selectOutputDevice(_ device: AudioDevice) {
-        guard !device.isCurrent else {
+        guard !outputSelectionMatches(device) else {
             return
         }
 
@@ -549,7 +578,7 @@ final class AudioModel: NSObject {
                 refreshOutputState()
             }
 
-            if currentOutputDevice?.uid == device.uid {
+            if outputSelectionMatches(device) {
                 if outputRouteGeneration == routeGenerationBeforeFinish {
                     handleOutputRouteChange(to: device.uid)
                 }
@@ -558,7 +587,7 @@ final class AudioModel: NSObject {
             }
         }
 
-        outputDeviceWriter.select(device.id) { [weak self] _ in
+        outputDeviceWriter.select(device.id, dataSourceID: device.dataSourceID) { [weak self] succeeded in
             Task { @MainActor [weak self] in
                 guard let self,
                       outputDeviceSelectionGeneration == selectionGeneration,
@@ -578,7 +607,7 @@ final class AudioModel: NSObject {
                     refreshOutputState()
                 }
 
-                if currentOutputDevice?.uid == device.uid {
+                if (device.dataSourceID == nil || succeeded) && outputSelectionMatches(device) {
                     if outputRouteGeneration == routeGenerationBeforeFinish {
                         handleOutputRouteChange(to: device.uid)
                     }
@@ -587,6 +616,10 @@ final class AudioModel: NSObject {
                 }
             }
         }
+    }
+
+    private func outputSelectionMatches(_ device: AudioDevice) -> Bool {
+        outputState.isSelected(device)
     }
 
     func selectInputDevice(_ device: AudioDevice) {
@@ -1095,7 +1128,8 @@ final class AudioModel: NSObject {
             iconName: device.iconName,
             transportType: device.transportType,
             isCurrent: device.isCurrent,
-            volume: volume
+            volume: volume,
+            dataSourceID: device.dataSourceID
         )
 
         return updatedDevices

@@ -677,7 +677,7 @@ private struct OutputDeviceGroup: View {
     var body: some View {
         DeviceGroup(
             title: nil,
-            devices: state.devices,
+            devices: state.selectionDevices,
             onSelect: onSelect
         )
     }
@@ -802,7 +802,7 @@ private struct DeviceGroup: View {
             if devices.isEmpty {
                 EmptyRow(iconName: "questionmark.circle", title: "No available devices")
             } else {
-                ForEach(devices) { device in
+                ForEach(devices, id: \.selectionID) { device in
                     Button {
                         onSelect(device)
                     } label: {
