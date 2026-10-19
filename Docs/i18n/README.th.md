@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="Docs/images/og-image.webp" alt="MacMix — เสียงทั้งหมดของ Mac อยู่ใน MacMix มิกเซอร์แบบเนทีฟสำหรับแถบเมนู macOS: ระดับเสียงระบบ อุปกรณ์เอาต์พุตและอินพุต และเสียงของแต่ละแอป" width="100%">
+  <img src="../images/og-image.webp" alt="MacMix — เสียงทั้งหมดของ Mac อยู่ใน MacMix มิกเซอร์แบบเนทีฟสำหรับแถบเมนู macOS: ระดับเสียงระบบ อุปกรณ์เอาต์พุตและอินพุต และเสียงของแต่ละแอป" width="100%">
   <br>
   <sub>ภาพหน้าจอนี้เป็นรุ่นเผยแพร่ คุณสมบัติบางอย่างต้องใช้ MacMix Studio</sub>
 </p>
@@ -10,11 +10,11 @@
   <a href="https://github.com/ljmng7/MacMix/releases"><img src="https://img.shields.io/github/downloads/ljmng7/MacMix/total?color=2F80ED" alt="Downloads"></a>
   <img src="https://img.shields.io/badge/macOS-14.4%2B-111111?logo=apple&logoColor=white" alt="macOS 14.4+">
   <img src="https://img.shields.io/badge/Swift-SwiftUI-F05138?logo=swift&logoColor=white" alt="Swift, SwiftUI">
-  <a href="LICENSE"><img src="https://img.shields.io/badge/code-MIT-3DA639" alt="MIT License"></a>
+  <a href="../../LICENSE"><img src="https://img.shields.io/badge/code-MIT-3DA639" alt="MIT License"></a>
 </p>
 
 <p align="center">
-  <a href="README.md">English</a> · <a href="README.zh-Hans.md">简体中文</a> · <a href="README.zh-Hant.md">繁體中文</a> · <a href="README.ja.md">日本語</a> · <a href="README.ko.md">한국어</a> · <a href="README.fr.md">Français</a> · <a href="README.de.md">Deutsch</a> · <a href="README.es.md">Español</a> · <a href="README.it.md">Italiano</a> · <a href="README.pt-BR.md">Português (Brasil)</a> · <a href="README.ru.md">Русский</a> · <a href="README.ar.md">العربية</a> · <a href="README.hi.md">हिन्दी</a> · <a href="README.id.md">Bahasa Indonesia</a> · <b>ไทย</b> · <a href="README.vi.md">Tiếng Việt</a> · <a href="README.tr.md">Türkçe</a> · <a href="README.nl.md">Nederlands</a> · <a href="README.pl.md">Polski</a>
+  <a href="../../README.md">English</a> · <a href="README.zh-Hans.md">简体中文</a> · <a href="README.zh-Hant.md">繁體中文</a> · <a href="README.ja.md">日本語</a> · <a href="README.ko.md">한국어</a> · <a href="README.fr.md">Français</a> · <a href="README.de.md">Deutsch</a> · <a href="README.es.md">Español</a> · <a href="README.it.md">Italiano</a> · <a href="README.pt-BR.md">Português (Brasil)</a> · <a href="README.ru.md">Русский</a> · <a href="README.ar.md">العربية</a> · <a href="README.hi.md">हिन्दी</a> · <a href="README.id.md">Bahasa Indonesia</a> · <b>ไทย</b> · <a href="README.vi.md">Tiếng Việt</a> · <a href="README.tr.md">Türkçe</a> · <a href="README.nl.md">Nederlands</a> · <a href="README.pl.md">Polski</a>
 </p>
 
 <p align="center">
@@ -69,7 +69,7 @@ macOS ให้แถบเลื่อนระดับเสียงมา�
 
 ที่เก็บนี้มี **แกนหลักของ MacMix ที่ฟรีและเป็นโอเพนซอร์ส** ส่วนไฟล์ดาวน์โหลดในหน้า Releases คือ **รุ่นเผยแพร่** ซึ่งเป็นแอปเดียวที่ใช้ได้ฟรี โดยมี **MacMix Studio** เป็นการอัปเกรดแบบซื้อครั้งเดียวที่เลือกได้ ไม่มี “แอป Studio” แยกต่างหาก ไลเซนส์เพียงปลดล็อกคุณสมบัติเพิ่มเติมในแอปเดิม และการตั้งค่าของคุณยังคงอยู่ครบ
 
-| คุณสมบัติที่รวมอยู่ | <div align="center">โอเพนซอร์ส<br><sub>(ที่เก็บนี้)</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> | <div align="center">รุ่นเผยแพร่<br><sub>(ฟรี)</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> | <div align="center">รุ่นเผยแพร่<br><sub>(Studio)</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> |
+| คุณสมบัติที่รวมอยู่ | <div align="center">โอเพนซอร์ส<br><sub>(ที่เก็บนี้)</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> | <div align="center">รุ่นเผยแพร่<br><sub>(ฟรี)</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> | <div align="center">รุ่นเผยแพร่<br><sub>(Studio)</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> |
 | --- | :---: | :---: | :---: |
 | ระดับเสียงระบบ จอภาพ และแต่ละแอป | ✅ | ✅ | ✅ |
 | สลับอุปกรณ์เอาต์พุต AirPlay และอินพุต | ✅ | ✅ | ✅ |
@@ -144,4 +144,4 @@ for test in tests/run-*.sh; do bash "$test"; done
 
 ## สัญญาอนุญาต
 
-ซอร์สโค้ดเผยแพร่ภายใต้ [สัญญาอนุญาต MIT](LICENSE) ไอคอนแอป ภาพหน้าจอ และสินทรัพย์แบรนด์อื่น ๆ **ไม่** อยู่ภายใต้สัญญาอนุญาต MIT และห้ามนำไปใช้ซ้ำโดยไม่ได้รับอนุญาต ดูที่ [สินทรัพย์แบรนด์](BRAND-ASSETS.md)
+ซอร์สโค้ดเผยแพร่ภายใต้ [สัญญาอนุญาต MIT](../../LICENSE) ไอคอนแอป ภาพหน้าจอ และสินทรัพย์แบรนด์อื่น ๆ **ไม่** อยู่ภายใต้สัญญาอนุญาต MIT และห้ามนำไปใช้ซ้ำโดยไม่ได้รับอนุญาต ดูที่ [สินทรัพย์แบรนด์](../../BRAND-ASSETS.md)

@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="Docs/images/og-image.webp" alt="MacMix — आपके Mac की हर आवाज़, MacMix में। macOS मेनू बार के लिए नेटिव मिक्सर: सिस्टम वॉल्यूम, आउटपुट और इनपुट डिवाइस, और हर ऐप की आवाज़।" width="100%">
+  <img src="../images/og-image.webp" alt="MacMix — आपके Mac की हर आवाज़, MacMix में। macOS मेनू बार के लिए नेटिव मिक्सर: सिस्टम वॉल्यूम, आउटपुट और इनपुट डिवाइस, और हर ऐप की आवाज़।" width="100%">
   <br>
   <sub>स्क्रीनशॉट वितरण संस्करण का है। कुछ सुविधाओं के लिए MacMix Studio ज़रूरी है।</sub>
 </p>
@@ -10,11 +10,11 @@
   <a href="https://github.com/ljmng7/MacMix/releases"><img src="https://img.shields.io/github/downloads/ljmng7/MacMix/total?color=2F80ED" alt="Downloads"></a>
   <img src="https://img.shields.io/badge/macOS-14.4%2B-111111?logo=apple&logoColor=white" alt="macOS 14.4+">
   <img src="https://img.shields.io/badge/Swift-SwiftUI-F05138?logo=swift&logoColor=white" alt="Swift, SwiftUI">
-  <a href="LICENSE"><img src="https://img.shields.io/badge/code-MIT-3DA639" alt="MIT License"></a>
+  <a href="../../LICENSE"><img src="https://img.shields.io/badge/code-MIT-3DA639" alt="MIT License"></a>
 </p>
 
 <p align="center">
-  <a href="README.md">English</a> · <a href="README.zh-Hans.md">简体中文</a> · <a href="README.zh-Hant.md">繁體中文</a> · <a href="README.ja.md">日本語</a> · <a href="README.ko.md">한국어</a> · <a href="README.fr.md">Français</a> · <a href="README.de.md">Deutsch</a> · <a href="README.es.md">Español</a> · <a href="README.it.md">Italiano</a> · <a href="README.pt-BR.md">Português (Brasil)</a> · <a href="README.ru.md">Русский</a> · <a href="README.ar.md">العربية</a> · <b>हिन्दी</b> · <a href="README.id.md">Bahasa Indonesia</a> · <a href="README.th.md">ไทย</a> · <a href="README.vi.md">Tiếng Việt</a> · <a href="README.tr.md">Türkçe</a> · <a href="README.nl.md">Nederlands</a> · <a href="README.pl.md">Polski</a>
+  <a href="../../README.md">English</a> · <a href="README.zh-Hans.md">简体中文</a> · <a href="README.zh-Hant.md">繁體中文</a> · <a href="README.ja.md">日本語</a> · <a href="README.ko.md">한국어</a> · <a href="README.fr.md">Français</a> · <a href="README.de.md">Deutsch</a> · <a href="README.es.md">Español</a> · <a href="README.it.md">Italiano</a> · <a href="README.pt-BR.md">Português (Brasil)</a> · <a href="README.ru.md">Русский</a> · <a href="README.ar.md">العربية</a> · <b>हिन्दी</b> · <a href="README.id.md">Bahasa Indonesia</a> · <a href="README.th.md">ไทย</a> · <a href="README.vi.md">Tiếng Việt</a> · <a href="README.tr.md">Türkçe</a> · <a href="README.nl.md">Nederlands</a> · <a href="README.pl.md">Polski</a>
 </p>
 
 <p align="center">
@@ -69,7 +69,7 @@ macOS आपको एक ही वॉल्यूम स्लाइडर द
 
 इस रिपॉज़िटरी में MacMix का **मुफ़्त, ओपन सोर्स कोर** है। Releases पेज से मिलने वाला डाउनलोड **वितरण संस्करण** है: एक ही मुफ़्त ऐप, जिसमें **MacMix Studio** एक वैकल्पिक, एक बार की ख़रीद वाला अपग्रेड है। कोई अलग “Studio ऐप” नहीं है; लाइसेंस उसी ऐप में अतिरिक्त सुविधाएँ अनलॉक करता है, और आपकी सेटिंग्ज़ जैसी हैं वैसी रहती हैं।
 
-| शामिल सुविधाएँ | <div align="center">ओपन सोर्स<br><sub>(यह रिपॉज़िटरी)</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> | <div align="center">वितरण संस्करण<br><sub>(मुफ़्त)</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> | <div align="center">वितरण संस्करण<br><sub>(Studio)</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> |
+| शामिल सुविधाएँ | <div align="center">ओपन सोर्स<br><sub>(यह रिपॉज़िटरी)</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> | <div align="center">वितरण संस्करण<br><sub>(मुफ़्त)</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> | <div align="center">वितरण संस्करण<br><sub>(Studio)</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> |
 | --- | :---: | :---: | :---: |
 | सिस्टम, डिस्प्ले और हर ऐप का वॉल्यूम | ✅ | ✅ | ✅ |
 | आउटपुट, AirPlay और इनपुट डिवाइस बदलना | ✅ | ✅ | ✅ |
@@ -144,4 +144,4 @@ for test in tests/run-*.sh; do bash "$test"; done
 
 ## लाइसेंस
 
-सोर्स कोड [MIT लाइसेंस](LICENSE) के तहत जारी किया गया है। ऐप आइकन, स्क्रीनशॉट और अन्य ब्रांड सामग्री MIT लाइसेंस के दायरे में **नहीं** हैं और बिना अनुमति इनका दोबारा उपयोग नहीं किया जा सकता। देखें [ब्रांड सामग्री](BRAND-ASSETS.md)।
+सोर्स कोड [MIT लाइसेंस](../../LICENSE) के तहत जारी किया गया है। ऐप आइकन, स्क्रीनशॉट और अन्य ब्रांड सामग्री MIT लाइसेंस के दायरे में **नहीं** हैं और बिना अनुमति इनका दोबारा उपयोग नहीं किया जा सकता। देखें [ब्रांड सामग्री](../../BRAND-ASSETS.md)।
