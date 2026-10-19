@@ -1,0 +1,404 @@
+{
+  "schemaVersion": 2,
+  "devices": [
+    {
+      "vendorID": "004C",
+      "productID": "0265",
+      "manufacturer": "Apple Inc.",
+      "model": "Magic Trackpad",
+      "symbolName": "rectangle.and.hand.point.up.left"
+    },
+    {
+      "vendorID": "004C",
+      "productID": "0267",
+      "manufacturer": "Apple Inc.",
+      "model": "Magic Keyboard",
+      "symbolName": "keyboard"
+    },
+    {
+      "vendorID": "004C",
+      "productID": "0269",
+      "manufacturer": "Apple Inc.",
+      "model": "Magic Mouse",
+      "symbolName": "magicmouse.fill"
+    },
+    {
+      "vendorID": "004C",
+      "productID": "026C",
+      "manufacturer": "Apple Inc.",
+      "model": "Magic Keyboard",
+      "symbolName": "keyboard"
+    },
+    {
+      "vendorID": "004C",
+      "productID": "029A",
+      "manufacturer": "Apple Inc.",
+      "model": "Magic Keyboard",
+      "symbolName": "keyboard"
+    },
+    {
+      "vendorID": "004C",
+      "productID": "029C",
+      "manufacturer": "Apple Inc.",
+      "model": "Magic Keyboard",
+      "symbolName": "keyboard"
+    },
+    {
+      "vendorID": "004C",
+      "productID": "029F",
+      "manufacturer": "Apple Inc.",
+      "model": "Magic Keyboard",
+      "symbolName": "keyboard"
+    },
+    {
+      "vendorID": "004C",
+      "productID": "0320",
+      "manufacturer": "Apple Inc.",
+      "model": "Magic Keyboard",
+      "symbolName": "keyboard"
+    },
+    {
+      "vendorID": "004C",
+      "productID": "0321",
+      "manufacturer": "Apple Inc.",
+      "model": "Magic Keyboard",
+      "symbolName": "keyboard"
+    },
+    {
+      "vendorID": "004C",
+      "productID": "0322",
+      "manufacturer": "Apple Inc.",
+      "model": "Magic Keyboard",
+      "symbolName": "keyboard"
+    },
+    {
+      "vendorID": "004C",
+      "productID": "0323",
+      "manufacturer": "Apple Inc.",
+      "model": "Magic Mouse",
+      "symbolName": "magicmouse.fill"
+    },
+    {
+      "vendorID": "004C",
+      "productID": "0324",
+      "manufacturer": "Apple Inc.",
+      "model": "Magic Trackpad",
+      "symbolName": "rectangle.and.hand.point.up.left"
+    },
+    {
+      "vendorID": "004C",
+      "productID": "2002",
+      "manufacturer": "Apple Inc.",
+      "model": "AirPods",
+      "symbolName": "airpods"
+    },
+    {
+      "vendorID": "004C",
+      "productID": "2003",
+      "manufacturer": "Apple Inc.",
+      "model": "Powerbeats³",
+      "symbolName": "beats.powerbeats3"
+    },
+    {
+      "vendorID": "004C",
+      "productID": "2005",
+      "manufacturer": "Apple Inc.",
+      "model": "Beatsˣ",
+      "symbolName": "beats.earphones"
+    },
+    {
+      "vendorID": "004C",
+      "productID": "2006",
+      "manufacturer": "Apple Inc.",
+      "model": "Beats Solo³",
+      "symbolName": "beats.headphones"
+    },
+    {
+      "vendorID": "004C",
+      "productID": "2009",
+      "manufacturer": "Apple Inc.",
+      "model": "Beats Studio³",
+      "symbolName": "beats.headphones"
+    },
+    {
+      "vendorID": "004C",
+      "productID": "200A",
+      "manufacturer": "Apple Inc.",
+      "model": "AirPods Max",
+      "symbolName": "airpods.max"
+    },
+    {
+      "vendorID": "004C",
+      "productID": "200B",
+      "manufacturer": "Apple Inc.",
+      "model": "Powerbeats Pro",
+      "symbolName": "beats.powerbeats.pro"
+    },
+    {
+      "vendorID": "004C",
+      "productID": "200C",
+      "manufacturer": "Apple Inc.",
+      "model": "Solo Pro",
+      "symbolName": "beats.headphones"
+    },
+    {
+      "vendorID": "004C",
+      "productID": "200D",
+      "manufacturer": "Apple Inc.",
+      "model": "Powerbeats⁴",
+      "symbolName": "beats.powerbeats"
+    },
+    {
+      "vendorID": "004C",
+      "productID": "200E",
+      "manufacturer": "Apple Inc.",
+      "model": "AirPods Pro",
+      "symbolName": "airpods.pro"
+    },
+    {
+      "vendorID": "004C",
+      "productID": "200F",
+      "manufacturer": "Apple Inc.",
+      "model": "AirPods",
+      "symbolName": "airpods"
+    },
+    {
+      "vendorID": "004C",
+      "productID": "2010",
+      "manufacturer": "Apple Inc.",
+      "model": "Beats Flex",
+      "symbolName": "beats.earphones"
+    },
+    {
+      "vendorID": "004C",
+      "productID": "2011",
+      "manufacturer": "Apple Inc.",
+      "model": "Beats Studio Buds",
+      "symbolName": "beats.studiobuds"
+    },
+    {
+      "vendorID": "004C",
+      "productID": "2012",
+      "manufacturer": "Apple Inc.",
+      "model": "Beats Fit Pro",
+      "symbolName": "beats.fitpro"
+    },
+    {
+      "vendorID": "004C",
+      "productID": "2013",
+      "manufacturer": "Apple Inc.",
+      "model": "AirPods",
+      "symbolName": "airpods.gen3"
+    },
+    {
+      "vendorID": "004C",
+      "productID": "2014",
+      "manufacturer": "Apple Inc.",
+      "model": "AirPods Pro",
+      "symbolName": "airpods.pro"
+    },
+    {
+      "vendorID": "004C",
+      "productID": "2016",
+      "manufacturer": "Apple Inc.",
+      "model": "Beats Studio Buds +",
+      "symbolName": "beats.studiobuds"
+    },
+    {
+      "vendorID": "004C",
+      "productID": "2017",
+      "manufacturer": "Apple Inc.",
+      "model": "Beats Studio Pro",
+      "symbolName": "beats.headphones"
+    },
+    {
+      "vendorID": "004C",
+      "productID": "2019",
+      "manufacturer": "Apple Inc.",
+      "model": "AirPods 4",
+      "symbolName": "airpods.gen4"
+    },
+    {
+      "vendorID": "004C",
+      "productID": "201A",
+      "manufacturer": "Apple Inc.",
+      "model": "Beats Pill",
+      "symbolName": "beats.pill.fill"
+    },
+    {
+      "vendorID": "004C",
+      "productID": "201B",
+      "manufacturer": "Apple Inc.",
+      "model": "AirPods 4 (ANC)",
+      "symbolName": "airpods.gen4"
+    },
+    {
+      "vendorID": "004C",
+      "productID": "201D",
+      "manufacturer": "Apple Inc.",
+      "model": "PowerBeats Pro",
+      "symbolName": "beats.powerbeats.pro"
+    },
+    {
+      "vendorID": "004C",
+      "productID": "201E",
+      "manufacturer": "Apple Inc.",
+      "model": "AirPods 4",
+      "symbolName": "airpods.gen4"
+    },
+    {
+      "vendorID": "004C",
+      "productID": "201F",
+      "manufacturer": "Apple Inc.",
+      "model": "AirPods Max",
+      "symbolName": "airpods.max"
+    },
+    {
+      "vendorID": "004C",
+      "productID": "2020",
+      "manufacturer": "Apple Inc.",
+      "model": "AirPods 4 (ANC)",
+      "symbolName": "airpods.gen4"
+    },
+    {
+      "vendorID": "004C",
+      "productID": "2024",
+      "manufacturer": "Apple Inc.",
+      "model": "AirPods Pro",
+      "symbolName": "airpods.pro"
+    },
+    {
+      "vendorID": "004C",
+      "productID": "2025",
+      "manufacturer": "Apple Inc.",
+      "model": "Beats Solo 4",
+      "symbolName": "beats.headphones"
+    },
+    {
+      "vendorID": "004C",
+      "productID": "2026",
+      "manufacturer": "Apple Inc.",
+      "model": "Beats Solo Buds",
+      "symbolName": "beats.solobuds"
+    },
+    {
+      "vendorID": "004C",
+      "productID": "2027",
+      "manufacturer": "Apple Inc.",
+      "model": "AirPods Pro",
+      "symbolName": "airpods.pro"
+    },
+    {
+      "vendorID": "004C",
+      "productID": "2028",
+      "manufacturer": "Apple Inc.",
+      "model": "AirPods Pro",
+      "symbolName": "airpods.pro"
+    },
+    {
+      "vendorID": "004C",
+      "productID": "202D",
+      "manufacturer": "Apple Inc.",
+      "model": "AirPods Max",
+      "symbolName": "airpods.max"
+    },
+    {
+      "vendorID": "004C",
+      "productID": "202F",
+      "manufacturer": "Apple Inc.",
+      "model": "Powerbeats Fit",
+      "symbolName": "beats.fitpro"
+    },
+    {
+      "vendorID": "004C",
+      "productID": "2030",
+      "manufacturer": "Apple Inc.",
+      "model": "AirPods 5 (Wireless Charging)",
+      "symbolName": "airpods.gen4"
+    },
+    {
+      "vendorID": "004C",
+      "productID": "2032",
+      "manufacturer": "Apple Inc.",
+      "model": "AirPods 5 (Wireless Charging)",
+      "symbolName": "airpods.gen4"
+    },
+    {
+      "vendorID": "004C",
+      "productID": "2036",
+      "manufacturer": "Apple Inc.",
+      "model": "AirPods 5",
+      "symbolName": "airpods.gen4"
+    },
+    {
+      "vendorID": "004C",
+      "productID": "2037",
+      "manufacturer": "Apple Inc.",
+      "model": "AirPods 5",
+      "symbolName": "airpods.gen4"
+    },
+    {
+      "vendorID": "004C",
+      "productID": "2038",
+      "manufacturer": "Apple Inc.",
+      "model": "Beats 360",
+      "symbolName": "beats.headphones"
+    },
+    {
+      "vendorID": "004C",
+      "productID": "5500",
+      "manufacturer": "Apple Inc.",
+      "model": "AirTag",
+      "symbolName": "airtag"
+    },
+    {
+      "vendorID": "004C",
+      "productID": "6F04",
+      "manufacturer": "Apple Inc.",
+      "model": "Apple TV",
+      "symbolName": "appletv"
+    },
+    {
+      "vendorID": "004C",
+      "productID": "7108",
+      "manufacturer": "Apple Inc.",
+      "model": "Apple TV",
+      "symbolName": "appletv"
+    },
+    {
+      "vendorID": "004C",
+      "productID": "710F",
+      "manufacturer": "Apple Inc.",
+      "model": "HomePod",
+      "symbolName": "homepod"
+    },
+    {
+      "vendorID": "004C",
+      "productID": "7110",
+      "manufacturer": "Apple Inc.",
+      "model": "HomePod",
+      "symbolName": "homepod"
+    },
+    {
+      "vendorID": "004C",
+      "productID": "730F",
+      "manufacturer": "Apple Inc.",
+      "model": "Apple TV",
+      "symbolName": "appletv"
+    },
+    {
+      "vendorID": "004C",
+      "productID": "7413",
+      "manufacturer": "Apple Inc.",
+      "model": "HomePod Mini",
+      "symbolName": "homepodmini"
+    },
+    {
+      "vendorID": "05AC",
+      "productID": "110B",
+      "manufacturer": "Apple, Inc.",
+      "model": "EarPods (USB-C)",
+      "symbolName": "earpods"
+    }
+  ]
+}

@@ -48,29 +48,56 @@ struct CoreAudioHardware {
                 && canBeDefaultDevice($0, direction: direction)
         }
         .compactMap { deviceID in
-            let name = stringProperty(deviceID, selector: kAudioObjectPropertyName)
+            let transportType = uint32Property(deviceID, selector: kAudioDevicePropertyTransportType)
+            let airPlaySources = direction == .output && transportType == kAudioDeviceTransportTypeAirPlay
+                ? AirPlayDataSources.read(deviceID: deviceID) : nil
+            let name = airPlaySources?.selectedName ?? stringProperty(deviceID, selector: kAudioObjectPropertyName)
                 ?? String(localized: "Unknown Device", comment: "Fallback audio device name when Core Audio does not provide one.")
             let identity = AudioDeviceIdentity(
                 name: name,
                 manufacturer: stringProperty(deviceID, selector: kAudioObjectPropertyManufacturer),
                 modelUID: stringProperty(deviceID, selector: kAudioDevicePropertyModelUID),
                 deviceUID: stringProperty(deviceID, selector: kAudioDevicePropertyDeviceUID),
-                transportType: uint32Property(deviceID, selector: kAudioDevicePropertyTransportType)
+                transportType: transportType
             )
 
             guard !isHidden(deviceID), !identity.isMacMixInternalMixer else {
                 return nil
             }
 
+            let systemIconURL = urlProperty(deviceID, selector: kAudioDevicePropertyIcon)
             return AudioDevice(
                 id: deviceID,
                 uid: identity.deviceUID ?? "\(deviceID)",
                 name: name,
                 iconName: iconName(for: identity, direction: direction, connectedDisplayNames: displayNames),
+                systemIconURL: systemIconURL,
+                systemIcon: systemIconURL.flatMap(NSImage.init(contentsOf:)),
                 transportType: identity.transportType,
                 isCurrent: deviceID == defaultID,
-                volume: volume(for: deviceID, direction: direction)
+                volume: volume(for: deviceID, direction: direction),
+                dataSourceID: airPlaySources?.selectedIDs.count == 1 ? airPlaySources?.selectedIDs.first : nil
             )
+        }
+    }
+
+    func airPlayDestinations(in devices: [AudioDevice]) -> [AudioDevice] {
+        devices.filter { $0.transportType == kAudioDeviceTransportTypeAirPlay }.flatMap { device -> [AudioDevice] in
+            let snapshot = AirPlayDataSources.read(deviceID: device.id)
+            // Keep the HAL fallback row when any active receiver is unknown.
+            // An unreadable/empty selection on the default output also needs it.
+            guard (!device.isCurrent || !snapshot.selectedIDs.isEmpty),
+                  snapshot.selectedIDs.allSatisfy({ selectedID in
+                      snapshot.sources.contains { $0.id == selectedID }
+                  }) else { return [] }
+            return snapshot.sources.map { source in
+                let isCurrent = device.isCurrent && snapshot.selectedIDs.contains(source.id)
+                return AudioDevice(id: device.id, uid: device.uid, name: source.name,
+                    iconName: device.iconName, systemIconURL: device.systemIconURL,
+                    systemIcon: device.systemIcon, transportType: device.transportType,
+                    isCurrent: isCurrent, volume: isCurrent ? device.volume : nil,
+                    dataSourceID: source.id)
+            }
         }
     }
 
@@ -349,6 +376,28 @@ struct CoreAudioHardware {
         )
     }
 
+    private func urlProperty(
+        _ objectID: AudioObjectID,
+        selector: AudioObjectPropertySelector
+    ) -> URL? {
+        var address = propertyAddress(selector: selector)
+        guard AudioObjectHasProperty(objectID, &address) else {
+            return nil
+        }
+
+        var value: CFURL?
+        var dataSize = UInt32(MemoryLayout<CFURL?>.size)
+        let status = withUnsafeMutablePointer(to: &value) { pointer in
+            AudioObjectGetPropertyData(objectID, &address, 0, nil, &dataSize, pointer)
+        }
+
+        guard status == noErr else {
+            return nil
+        }
+
+        return value as URL?
+    }
+
     private func stringProperty(
         _ objectID: AudioObjectID,
         selector: AudioObjectPropertySelector
@@ -390,24 +439,23 @@ struct CoreAudioHardware {
         for pid: pid_t,
         audioBundleID: String?
     ) -> NSRunningApplication? {
-        var visited = Set<pid_t>()
-        var currentPID = pid
-
-        while currentPID > 0, !visited.contains(currentPID) {
-            visited.insert(currentPID)
-
-            if currentPID != ProcessInfo.processInfo.processIdentifier,
-               let app = NSRunningApplication(processIdentifier: currentPID),
-               app.activationPolicy == .regular {
-                return app
+        let ownPID = ProcessInfo.processInfo.processIdentifier
+        func regularApplication(_ pid: pid_t) -> NSRunningApplication? {
+            guard pid != ownPID,
+                  let app = NSRunningApplication(processIdentifier: pid),
+                  app.activationPolicy == .regular else {
+                return nil
             }
+            return app
+        }
 
-            guard let parentPID = parentProcessID(for: currentPID),
-                  parentPID != currentPID else {
-                break
-            }
-
-            currentPID = parentPID
+        if let ownerPID = AudioProcessOwner.resolve(
+            pid: pid,
+            isRegularApp: { regularApplication($0) != nil },
+            responsiblePID: AudioProcessOwner.responsiblePID(for:),
+            parentPID: { parentProcessID(for: $0) }
+        ), let app = regularApplication(ownerPID) {
+            return app
         }
 
         return inferredHostApplication(
@@ -649,6 +697,10 @@ struct CoreAudioHardware {
             return "display"
         }
 
+        if let catalogSymbol = AudioDeviceCatalog.shared.symbolName(forModelUID: identity.modelUID) {
+            return catalogSymbol
+        }
+
         if let beatsIcon = beatsIconName(for: searchableText) {
             return beatsIcon
         }
@@ -827,6 +879,7 @@ nonisolated final class DefaultOutputDeviceWriter: @unchecked Sendable {
     private struct Request {
         let generation: UInt64
         let deviceID: AudioObjectID
+        let dataSourceID: UInt32?
     }
 
     private struct PendingCompletion {
@@ -846,6 +899,7 @@ nonisolated final class DefaultOutputDeviceWriter: @unchecked Sendable {
 
     func select(
         _ deviceID: AudioObjectID,
+        dataSourceID: UInt32? = nil,
         completion: @escaping @Sendable (Bool) -> Void
     ) {
         let shouldStartWorker: Bool
@@ -855,7 +909,8 @@ nonisolated final class DefaultOutputDeviceWriter: @unchecked Sendable {
         let generation = nextGeneration
         latestRequest = Request(
             generation: generation,
-            deviceID: deviceID
+            deviceID: deviceID,
+            dataSourceID: dataSourceID
         )
         pendingCompletions.append(
             PendingCompletion(generation: generation, handler: completion)
@@ -884,7 +939,13 @@ nonisolated final class DefaultOutputDeviceWriter: @unchecked Sendable {
             request = latestRequest
             stateLock.unlock()
 
-            let didApply = setDefaultOutputDevice(request.deviceID)
+            let didSelectSource = request.dataSourceID.map {
+                AirPlayDataSources.select($0, deviceID: request.deviceID)
+            } ?? true
+            let didApply = didSelectSource && setDefaultOutputDevice(request.deviceID)
+                && (request.dataSourceID.map {
+                    AirPlayDataSources.isSelected($0, deviceID: request.deviceID)
+                } ?? true)
 
             stateLock.lock()
             guard self.latestRequest?.generation == request.generation else {
@@ -1198,6 +1259,9 @@ nonisolated final class CoreAudioDeviceObserver {
     private var processOutputListeners: [AudioObjectID: AudioObjectPropertyListenerBlock] = [:]
     private var outputVolumeListener: AudioObjectPropertyListenerBlock?
     private var inputVolumeListener: AudioObjectPropertyListenerBlock?
+    private var airPlayRouteListeners: [AudioObjectID: (
+        addresses: [AudioObjectPropertyAddress], listener: AudioObjectPropertyListenerBlock
+    )] = [:]
     private let onOutputVolumeChange: @MainActor () -> Void
     private let onOutputChange: @MainActor () -> Void
     private let onInputChange: @MainActor () -> Void
@@ -1225,6 +1289,7 @@ nonisolated final class CoreAudioDeviceObserver {
         }
 
         let deviceListListener: AudioObjectPropertyListenerBlock = { [weak self] _, _ in
+            self?.rebindAirPlayRouteListeners()
             self?.rebindDevice(for: .output)
             self?.rebindDevice(for: .input)
             self?.notifyChange(for: .output)
@@ -1235,6 +1300,7 @@ nonisolated final class CoreAudioDeviceObserver {
         }
 
         let defaultOutputDeviceListener: AudioObjectPropertyListenerBlock = { [weak self] _, _ in
+            self?.rebindAirPlayRouteListeners()
             self?.rebindDevice(for: .output)
             self?.notifyChange(for: .output)
         }
@@ -1274,10 +1340,12 @@ nonisolated final class CoreAudioDeviceObserver {
 
         rebindDevice(for: .output)
         rebindDevice(for: .input)
+        rebindAirPlayRouteListeners()
         rebindProcessOutputListeners()
     }
 
     func stop() {
+        removeAirPlayRouteListeners()
         removeDeviceListeners(for: .output)
         removeDeviceListeners(for: .input)
         removeProcessOutputListeners()
@@ -1326,6 +1394,50 @@ nonisolated final class CoreAudioDeviceObserver {
         )
         setVolumeAddresses(registeredAddresses, for: direction)
         setVolumeListener(registeredAddresses.isEmpty ? nil : listener, for: direction)
+    }
+
+    // Watch inactive AirPlay devices too: receivers can appear without a change
+    // to the HAL device list or the default output device ID.
+    private func rebindAirPlayRouteListeners() {
+        guard let devices = systemAudioObjectIDs(selector: kAudioHardwarePropertyDevices) else { return }
+        removeAirPlayRouteListeners()
+        for deviceID in devices {
+            var transportAddress = systemAddress(selector: kAudioDevicePropertyTransportType)
+            var transport: UInt32 = 0
+            var size = UInt32(MemoryLayout<UInt32>.size)
+            guard AudioObjectGetPropertyData(deviceID, &transportAddress, 0, nil, &size, &transport) == noErr,
+                  transport == kAudioDeviceTransportTypeAirPlay else { continue }
+            let candidates = [
+                AirPlayDataSources.address(kAudioDevicePropertyDataSource),
+                AirPlayDataSources.address(kAudioDevicePropertyDataSources),
+                AirPlayDataSources.address(kAudioDevicePropertyDataSourceNameForIDCFString),
+                systemAddress(selector: kAudioObjectPropertyName),
+            ]
+            let addresses = candidates.filter { candidate in
+                var address = candidate
+                return AudioObjectHasProperty(deviceID, &address)
+            }
+            let listener: AudioObjectPropertyListenerBlock = { [weak self] _, _ in
+                self?.notifyChange(for: .output)
+            }
+            let registered = addDeviceListeners(addresses, deviceID: deviceID, listener: listener)
+            if !registered.isEmpty {
+                airPlayRouteListeners[deviceID] = (registered, listener)
+            }
+        }
+    }
+
+    private func removeAirPlayRouteListeners() {
+        for (deviceID, registration) in airPlayRouteListeners {
+            for address in registration.addresses {
+                var address = address
+                let status = AudioObjectRemovePropertyListenerBlock(deviceID, &address, queue, registration.listener)
+                if !Self.didRemoveListener(status) {
+                    Self.logger.error("Failed to remove AirPlay listener device=\(deviceID) selector=\(address.mSelector) status=\(status)")
+                }
+            }
+        }
+        airPlayRouteListeners.removeAll()
     }
 
     private func currentDefaultDeviceID(for direction: AudioDeviceDirection) -> AudioObjectID? {

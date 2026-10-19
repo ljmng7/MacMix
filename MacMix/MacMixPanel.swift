@@ -677,7 +677,7 @@ private struct OutputDeviceGroup: View {
     var body: some View {
         DeviceGroup(
             title: nil,
-            devices: state.devices,
+            devices: state.selectionDevices,
             onSelect: onSelect
         )
     }
@@ -802,7 +802,7 @@ private struct DeviceGroup: View {
             if devices.isEmpty {
                 EmptyRow(iconName: "questionmark.circle", title: "No available devices")
             } else {
-                ForEach(devices) { device in
+                ForEach(devices, id: \.selectionID) { device in
                     Button {
                         onSelect(device)
                     } label: {
@@ -1006,11 +1006,18 @@ private struct DeviceIcon: View {
             Circle()
                 .fill(device.isCurrent ? MacMixTint.blue : Color.secondary.opacity(0.16))
 
-            Image(systemName: device.iconName)
-                .font(.body.weight(.semibold))
-                .imageScale(.medium)
-                .foregroundStyle(device.isCurrent ? .white : .secondary)
-                .frame(width: 24, height: 24)
+            if let systemIcon = device.systemIcon {
+                Image(nsImage: systemIcon)
+                    .resizable()
+                    .scaledToFit()
+                    .padding(4)
+            } else {
+                Image(systemName: AudioDeviceSFSymbols.deviceSymbol(preferredName: device.iconName))
+                    .font(.body.weight(.semibold))
+                    .imageScale(.medium)
+                    .foregroundStyle(device.isCurrent ? .white : .secondary)
+                    .frame(width: 24, height: 24)
+            }
         }
         .frame(width: 26, height: 26)
     }
