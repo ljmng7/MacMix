@@ -65,11 +65,14 @@ struct CoreAudioHardware {
                 return nil
             }
 
+            let systemIconURL = urlProperty(deviceID, selector: kAudioDevicePropertyIcon)
             return AudioDevice(
                 id: deviceID,
                 uid: identity.deviceUID ?? "\(deviceID)",
                 name: name,
                 iconName: iconName(for: identity, direction: direction, connectedDisplayNames: displayNames),
+                systemIconURL: systemIconURL,
+                systemIcon: systemIconURL.flatMap(NSImage.init(contentsOf:)),
                 transportType: identity.transportType,
                 isCurrent: deviceID == defaultID,
                 volume: volume(for: deviceID, direction: direction),
@@ -90,7 +93,8 @@ struct CoreAudioHardware {
             return snapshot.sources.map { source in
                 let isCurrent = device.isCurrent && snapshot.selectedIDs.contains(source.id)
                 return AudioDevice(id: device.id, uid: device.uid, name: source.name,
-                    iconName: device.iconName, transportType: device.transportType,
+                    iconName: device.iconName, systemIconURL: device.systemIconURL,
+                    systemIcon: device.systemIcon, transportType: device.transportType,
                     isCurrent: isCurrent, volume: isCurrent ? device.volume : nil,
                     dataSourceID: source.id)
             }
@@ -370,6 +374,28 @@ struct CoreAudioHardware {
             selector: selector,
             scope: scope
         )
+    }
+
+    private func urlProperty(
+        _ objectID: AudioObjectID,
+        selector: AudioObjectPropertySelector
+    ) -> URL? {
+        var address = propertyAddress(selector: selector)
+        guard AudioObjectHasProperty(objectID, &address) else {
+            return nil
+        }
+
+        var value: CFURL?
+        var dataSize = UInt32(MemoryLayout<CFURL?>.size)
+        let status = withUnsafeMutablePointer(to: &value) { pointer in
+            AudioObjectGetPropertyData(objectID, &address, 0, nil, &dataSize, pointer)
+        }
+
+        guard status == noErr else {
+            return nil
+        }
+
+        return value as URL?
     }
 
     private func stringProperty(
@@ -669,6 +695,10 @@ struct CoreAudioHardware {
             transportType: identity.transportType, connectedDisplayNames: connectedDisplayNames
         ) {
             return "display"
+        }
+
+        if let catalogSymbol = AudioDeviceCatalog.shared.symbolName(forModelUID: identity.modelUID) {
+            return catalogSymbol
         }
 
         if let beatsIcon = beatsIconName(for: searchableText) {

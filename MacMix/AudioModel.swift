@@ -1126,6 +1126,8 @@ final class AudioModel: NSObject {
             uid: device.uid,
             name: device.name,
             iconName: device.iconName,
+            systemIconURL: device.systemIconURL,
+            systemIcon: device.systemIcon,
             transportType: device.transportType,
             isCurrent: device.isCurrent,
             volume: volume,

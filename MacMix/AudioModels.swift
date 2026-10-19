@@ -50,6 +50,8 @@ struct AudioDevice: Identifiable, Hashable {
     let uid: String
     let name: String
     let iconName: String
+    var systemIconURL: URL? = nil
+    var systemIcon: NSImage? = nil
     let transportType: UInt32?
     let isCurrent: Bool
     var volume: Double?
@@ -60,6 +62,31 @@ struct AudioDevice: Identifiable, Hashable {
     var selectionID: String {
         guard let dataSourceID else { return uid }
         return "\(uid)#airplay-source:\(dataSourceID)"
+    }
+
+    // A re-read icon is a new NSImage; compare the device's icon URL instead.
+    static func == (lhs: AudioDevice, rhs: AudioDevice) -> Bool {
+        lhs.id == rhs.id
+            && lhs.uid == rhs.uid
+            && lhs.name == rhs.name
+            && lhs.iconName == rhs.iconName
+            && lhs.systemIconURL == rhs.systemIconURL
+            && lhs.transportType == rhs.transportType
+            && lhs.isCurrent == rhs.isCurrent
+            && lhs.volume == rhs.volume
+            && lhs.dataSourceID == rhs.dataSourceID
+    }
+
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
+        hasher.combine(uid)
+        hasher.combine(name)
+        hasher.combine(iconName)
+        hasher.combine(systemIconURL)
+        hasher.combine(transportType)
+        hasher.combine(isCurrent)
+        hasher.combine(volume)
+        hasher.combine(dataSourceID)
     }
 }
 
