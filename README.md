@@ -1,114 +1,147 @@
 <p align="center">
-  <img src="Docs/images/app-icon.png" alt="MacMix app icon" width="128" height="128">
-</p>
-
-<h1 align="center">MacMix</h1>
-
-<p align="center">
-  A native macOS menu bar audio mixer for system volume, audio devices, microphone input, and per-app sound control.
+  <img src="Docs/images/og-image.webp" alt="MacMix — Your Mac's sound. All in MacMix. A native macOS menu bar mixer for system volume, output and input devices, and per-app sound." width="100%">
+  <br>
+  <sub>Screenshot shows the distribution build. Some features require MacMix Studio.</sub>
 </p>
 
 <p align="center">
-  English | <a href="README.zh-CN.md">简体中文</a>
+  <a href="https://github.com/ljmng7/MacMix/releases/latest"><img src="https://img.shields.io/github/v/release/ljmng7/MacMix?label=release&color=7A5CFA" alt="Latest release"></a>
+  <a href="https://github.com/ljmng7/MacMix/stargazers"><img src="https://img.shields.io/github/stars/ljmng7/MacMix?style=flat&color=F5B301&logo=github" alt="GitHub stars"></a>
+  <a href="https://github.com/ljmng7/MacMix/releases"><img src="https://img.shields.io/github/downloads/ljmng7/MacMix/total?color=2F80ED" alt="Downloads"></a>
+  <img src="https://img.shields.io/badge/macOS-14.4%2B-111111?logo=apple&logoColor=white" alt="macOS 14.4 or later">
+  <img src="https://img.shields.io/badge/Swift-SwiftUI-F05138?logo=swift&logoColor=white" alt="Swift and SwiftUI">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/code-MIT-3DA639" alt="MIT licensed code"></a>
+</p>
+
+<p align="center">
+  <b>English</b> · <a href="README.zh-CN.md">简体中文</a>
 </p>
 
 <p align="center">
   <a href="https://github.com/ljmng7/MacMix/releases/latest/download/MacMix.dmg">
-    <img src="Docs/images/download-macos.png" alt="Download app for macOS" width="120">
+    <img src="https://img.shields.io/badge/Download_for_macOS-MacMix.dmg-111111?style=for-the-badge&logo=apple&logoColor=white&labelColor=7A5CFA" alt="Download MacMix for macOS">
   </a>
 </p>
 
 <p align="center">
-  <a href="#privacy">Privacy</a>
-  ·
-  <a href="#support">Support</a>
-  ·
-  <a href="#license">License</a>
-  ·
-  <a href="#build-from-source">Build from Source</a>
+  <a href="#features">Features</a> ·
+  <a href="#open-source-and-distribution-builds">Open Source vs Distribution</a> ·
+  <a href="#install">Install</a> ·
+  <a href="#privacy">Privacy</a> ·
+  <a href="#build-from-source">Build from Source</a> ·
+  <a href="#support-macmix">Support</a>
 </p>
 
-<p align="center">
-  <img src="Docs/images/screenshot.png" alt="MacMix menu bar audio mixer screenshot" width="560">
-</p>
+---
 
-## Overview
+## Why MacMix
 
-MacMix keeps everyday audio controls one click away in the macOS menu bar. It is designed for users who frequently switch audio devices, manage microphone input, or need finer control over the volume of individual apps.
+macOS gives you one volume slider. MacMix gives you the rest: turn a noisy app down without touching your music, jump between AirPods, speakers and a monitor in one click, and pick the right microphone before a call — all from a compact native panel in the menu bar, without opening System Settings.
 
-Everything is presented in a compact native panel, so you can adjust sound without opening System Settings or interrupting your current workflow.
+## Features
 
-Core features, including per-app mixing and all features available before version 2.0, will always remain free and open source. This repository contains the free core; MacMix Studio is an optional upgrade for additional advanced features.
+### 🔊 Volume
 
-## Highlights
+- **System volume** for the current output device, right in the menu bar.
+- **External display speakers** over DDC/CI when macOS offers no volume control, with compatibility fixes for monitors that report unusual ranges.
+- **True zero** — dragging a slider to 0% silences the device instead of leaving a faint residual level.
 
-| Capability | What it does |
-| --- | --- |
-| System volume | Adjust the current output device volume directly from the menu bar, with DDC/CI fallback for compatible external displays. |
-| Output devices | Switch between speakers, headphones, AirPods, external displays, and other available output devices. |
-| Input devices | Switch microphones and control input volume from the same panel. |
-| Per-app mixing | Lower individual apps or optionally boost them up to 200% while they are producing audio. |
-| Menu bar first | Runs quietly as a menu bar utility, with an optional main window for settings and app information. |
-| Automatic updates | Uses Sparkle to check for and install app updates. |
+### 🎧 Devices
 
-## Download
+- **Switch outputs** between speakers, headphones, AirPods, displays and more.
+- **AirPlay receivers by name** — each HomePod or AirPlay speaker gets its own row, and you can switch to a single receiver from an active group.
+- **Recognizable icons** for AirPods, Beats, HomePod, Apple TV, external displays and your Mac's own speakers, plus the icon a device provides itself.
+- **Switch microphones** and adjust input volume from the same panel.
 
-Download the latest `.dmg` from the [GitHub Releases page](https://github.com/ljmng7/MacMix/releases/latest).
+### 🎚️ Per-App Mixing
 
-## Requirements
+- **Turn any app down** while it is playing, or boost it up to **200%** (optional, in Settings).
+- **Remembers your levels** and restores them when the app plays again.
+- **Finds the real app** behind web-based playback, including iPad apps that play media through WebKit.
 
-- macOS 14.4 or later.
-- System Audio Recording permission is required only when using per-app audio mixing.
+### 🍃 Light by Design
 
-## Installation
+- Lives quietly in the menu bar, with an optional window for settings.
+- Native SwiftUI, audio processed locally in real time, no account required.
+- Automatic updates through Sparkle.
 
-1. Download the latest `.dmg`.
-2. Open the disk image.
-3. Drag `MacMix.app` into the Applications folder.
-4. Launch MacMix and open the mixer from the menu bar volume icon.
+## Open Source and Distribution Builds
+
+This repository contains the **free, open-source core** of MacMix. The download on the Releases page is the **distribution build**: one app that is free to use, with **MacMix Studio** as an optional one-time upgrade. There is no separate "Studio app" — a license unlocks extra features in the same app, and your settings stay where they are.
+
+| | Open source<br><sub>this repository</sub> | Distribution build<br><sub>free</sub> | Distribution build<br><sub>with Studio</sub> |
+| --- | :---: | :---: | :---: |
+| System, display and per-app volume | ✅ | ✅ | ✅ |
+| Output, AirPlay and input device switching | ✅ | ✅ | ✅ |
+| 200% per-app boost | ✅ | ✅ | ✅ |
+| Signed and notarized by the developer | — | ✅ | ✅ |
+| Feedback reports with anonymized diagnostic logs | — | ✅ | ✅ |
+| **Custom EQ** per app, with saved presets | — | — | ✅ |
+| **Multi-Device Output** — one app on several devices, each with its own volume | — | — | ✅ |
+| **Pro Control** — Bluetooth battery levels, Listening Mode and Spatial Audio | — | — | ✅ |
+| **Now Playing** — view and control the current media | — | — | ✅ |
+| **Scene Presets** — save devices and app volumes, switch in one click | — | — | ✅ |
+| **System Volume Controls** — take over the volume keys for smoother control | — | — | ✅ |
+| **Input Device Lock** — keep macOS from switching your microphone | — | — | ✅ |
+| **Blacklist** — leave selected apps out of mixing | — | — | ✅ |
+| **Personalization** — custom themes | — | — | ✅ |
+| **Beta Early Access** — try new features first | — | — | ✅ |
+
+> [!NOTE]
+> Studio features are developed privately and are not part of this repository. Everything that has been free — including per-app mixing and every feature available before version 2.0 — will stay free and open source. Fixes to the shared core reach this repository after they have been validated in the distribution build, so the source here can trail the latest release a little.
+
+## Install
+
+1. Download [`MacMix.dmg`](https://github.com/ljmng7/MacMix/releases/latest/download/MacMix.dmg) from the latest release.
+2. Open the disk image and drag **MacMix** into **Applications**.
+3. Launch MacMix and click its icon in the menu bar.
+
+**Requirements:** macOS Sonoma 14.4 or later. Per-app mixing asks for **System Audio Recording** permission the first time you use it; everything else works without it.
 
 ## Privacy
 
-MacMix performs audio processing locally on your Mac.
+MacMix processes audio **locally on your Mac**. It never records, saves or uploads audio.
 
-Per-app mixing uses macOS audio process taps, so macOS requires System Audio Recording permission before MacMix can process another app's audio. MacMix uses this permission only for local real-time volume mixing.
+Per-app mixing is built on macOS audio process taps, which is why macOS asks for System Audio Recording permission before MacMix can change another app's volume. MacMix uses that permission only for real-time local mixing.
 
-MacMix does not record, save, or upload audio.
+## Build from Source
 
-## Support
+```sh
+git clone https://github.com/ljmng7/MacMix.git
+cd MacMix
+open MacMix.xcodeproj
+```
 
-If you enjoy MacMix and want to support its development, you can upgrade to MacMix Studio with a one-time purchase to unlock additional advanced features.
+Select the **MacMix** scheme and press **Run**. Xcode resolves the Swift packages (Sparkle and Swift Atomics) automatically.
 
-The upgrade is entirely optional. Essential audio controls and per-app mixing remain free and open source, and do not require a Studio license.
+The regression tests are plain scripts that only need the Xcode command line tools:
+
+```sh
+for test in tests/run-*.sh; do bash "$test"; done
+```
+
+<details>
+<summary><strong>Notes and limitations</strong></summary>
+
+<br>
+
+- Apps appear in the mixer only while macOS reports that they are producing audio.
+- Per-app levels are stored locally and restored when the same app plays again.
+- Display volume needs a monitor that supports DDC/CI speaker volume (VCP `0x62`) over the current cable or dock. DisplayLink adapters, some HDMI paths, TVs and displays with DDC/CI turned off in their on-screen menu may not expose it.
+- AirPlay receiver names come from the AirPlay device's data sources. When macOS does not report a receiver's name, MacMix shows the plain AirPlay device instead of guessing.
+
+</details>
+
+## Support MacMix
+
+If MacMix is part of your day, consider upgrading to **MacMix Studio**. It is a one-time purchase that unlocks the features above and funds the free, open-source core.
 
 <p align="center">
-  <a href="https://macmix.jazminli.com">
-    <strong>Upgrade to MacMix Studio</strong>
-  </a>
+  <a href="https://checkout.dodopayments.com/buy/pdt_0NmJ2vOqulR07tfZqwKtU?quantity=1"><img src="https://img.shields.io/badge/Get-MacMix_Studio-7A5CFA?style=for-the-badge&labelColor=241A3D" alt="Get MacMix Studio"></a>
 </p>
+
+Bug reports and ideas are welcome in [Issues](https://github.com/ljmng7/MacMix/issues).
 
 ## License
 
-Code is MIT; app icon/assets remain copyrighted.
-
-The source code in this repository is licensed under the [MIT License](LICENSE). The app icon, screenshots, and brand assets are not licensed under MIT and may not be reused without permission.
-
-## Build From Source
-
-1. Clone the repository:
-
-   ```sh
-   git clone https://github.com/ljmng7/MacMix.git
-   cd MacMix
-   ```
-
-2. Open `MacMix.xcodeproj` in Xcode.
-3. Select the `MacMix` scheme.
-4. Build and run the app.
-
-## Notes
-
-- Apps appear in the per-app mixer only while macOS reports that they are actively producing output audio.
-- Per-app volume changes are stored locally and restored when matching apps appear again.
-- 200% per-app volume boost is optional and can be enabled in Settings.
-- External display volume fallback requires the display to support DDC/CI speaker volume (VCP `0x62`) over the current cable or dock. DisplayLink, some HDMI paths, TVs, and displays with DDC/CI disabled in their on-screen menu may not expose this control.
+The source code is released under the [MIT License](LICENSE). The app icon, screenshots and other brand assets are **not** covered by the MIT License and may not be reused without permission — see [Brand Assets](BRAND-ASSETS.md).
