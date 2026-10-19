@@ -69,7 +69,7 @@ macOS の音量スライダーはひとつだけ。MacMix はその先を補い�
 
 このリポジトリには MacMix の**無料でオープンソースのコア**が含まれています。Releases ページからダウンロードできるのは**配布版**です。無料で使える同じひとつのアプリで、**MacMix Studio** は任意の買い切りアップグレードです。別の「Studio アプリ」はなく、ライセンスは同じアプリで追加機能をアンロックするだけなので、設定もそのまま引き継がれます。
 
-| 含まれる機能 | <div align="center">&nbsp;&nbsp;&nbsp;オープンソース版&nbsp;&nbsp;&nbsp;<br><sub>（このリポジトリ）</sub></div> | <div align="center">&nbsp;&nbsp;&nbsp;配布版&nbsp;&nbsp;&nbsp;<br><sub>（無料）</sub></div> | <div align="center">&nbsp;&nbsp;&nbsp;配布版&nbsp;&nbsp;&nbsp;<br><sub>（Studio）</sub></div> |
+| 含まれる機能 | <div align="center">オープンソース版<br><sub>（このリポジトリ）</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> | <div align="center">配布版<br><sub>（無料）</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> | <div align="center">配布版<br><sub>（Studio）</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> |
 | --- | :---: | :---: | :---: |
 | システム・ディスプレイ・アプリごとの音量 | ✅ | ✅ | ✅ |
 | 出力・AirPlay・入力デバイスの切り替え | ✅ | ✅ | ✅ |

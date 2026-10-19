@@ -69,7 +69,7 @@ macOS ให้แถบเลื่อนระดับเสียงมา�
 
 ที่เก็บนี้มี **แกนหลักของ MacMix ที่ฟรีและเป็นโอเพนซอร์ส** ส่วนไฟล์ดาวน์โหลดในหน้า Releases คือ **รุ่นเผยแพร่** ซึ่งเป็นแอปเดียวที่ใช้ได้ฟรี โดยมี **MacMix Studio** เป็นการอัปเกรดแบบซื้อครั้งเดียวที่เลือกได้ ไม่มี “แอป Studio” แยกต่างหาก ไลเซนส์เพียงปลดล็อกคุณสมบัติเพิ่มเติมในแอปเดิม และการตั้งค่าของคุณยังคงอยู่ครบ
 
-| คุณสมบัติที่รวมอยู่ | <div align="center">&nbsp;&nbsp;&nbsp;โอเพนซอร์ส&nbsp;&nbsp;&nbsp;<br><sub>(ที่เก็บนี้)</sub></div> | <div align="center">&nbsp;&nbsp;&nbsp;รุ่นเผยแพร่&nbsp;&nbsp;&nbsp;<br><sub>(ฟรี)</sub></div> | <div align="center">&nbsp;&nbsp;&nbsp;รุ่นเผยแพร่&nbsp;&nbsp;&nbsp;<br><sub>(Studio)</sub></div> |
+| คุณสมบัติที่รวมอยู่ | <div align="center">โอเพนซอร์ส<br><sub>(ที่เก็บนี้)</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> | <div align="center">รุ่นเผยแพร่<br><sub>(ฟรี)</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> | <div align="center">รุ่นเผยแพร่<br><sub>(Studio)</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> |
 | --- | :---: | :---: | :---: |
 | ระดับเสียงระบบ จอภาพ และแต่ละแอป | ✅ | ✅ | ✅ |
 | สลับอุปกรณ์เอาต์พุต AirPlay และอินพุต | ✅ | ✅ | ✅ |

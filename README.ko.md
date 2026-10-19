@@ -69,7 +69,7 @@ macOS에는 음량 슬라이더가 하나뿐입니다. MacMix는 나머지를 �
 
 이 저장소에는 MacMix의 **무료 오픈 소스 핵심**이 들어 있습니다. Releases 페이지에서 받는 것은 **배포판**으로, 무료로 쓸 수 있는 하나의 앱이며 **MacMix Studio**는 선택 사항인 일회성 업그레이드입니다. 별도의 'Studio 앱'은 없습니다. 라이선스는 같은 앱에서 추가 기능을 잠금 해제할 뿐이며 설정은 그대로 유지됩니다.
 
-| 포함된 기능 | <div align="center">&nbsp;&nbsp;&nbsp;오픈 소스판&nbsp;&nbsp;&nbsp;<br><sub>(이 저장소)</sub></div> | <div align="center">&nbsp;&nbsp;&nbsp;배포판&nbsp;&nbsp;&nbsp;<br><sub>(무료)</sub></div> | <div align="center">&nbsp;&nbsp;&nbsp;배포판&nbsp;&nbsp;&nbsp;<br><sub>(Studio)</sub></div> |
+| 포함된 기능 | <div align="center">오픈 소스판<br><sub>(이 저장소)</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> | <div align="center">배포판<br><sub>(무료)</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> | <div align="center">배포판<br><sub>(Studio)</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> |
 | --- | :---: | :---: | :---: |
 | 시스템·디스플레이·앱별 음량 | ✅ | ✅ | ✅ |
 | 출력·AirPlay·입력 기기 전환 | ✅ | ✅ | ✅ |

@@ -69,7 +69,7 @@ macOS 只給你一個音量滑桿，MacMix 把其餘的都補上了：調低吵�
 
 本儲存庫包含 MacMix **免費開源的核心部分**。Releases 頁面提供的下載是**分發版**：同一個 App，免費使用，**MacMix Studio** 是可選的一次性升級。沒有獨立的「Studio App」，授權只會在同一個 App 中解鎖額外功能，你的設定原封不動。
 
-| 包含的功能 | <div align="center">&nbsp;&nbsp;&nbsp;開源版&nbsp;&nbsp;&nbsp;<br><sub>（本儲存庫）</sub></div> | <div align="center">&nbsp;&nbsp;&nbsp;分發版&nbsp;&nbsp;&nbsp;<br><sub>（免費）</sub></div> | <div align="center">&nbsp;&nbsp;&nbsp;分發版&nbsp;&nbsp;&nbsp;<br><sub>（Studio）</sub></div> |
+| 包含的功能 | <div align="center">開源版<br><sub>（本儲存庫）</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> | <div align="center">分發版<br><sub>（免費）</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> | <div align="center">分發版<br><sub>（Studio）</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> |
 | --- | :---: | :---: | :---: |
 | 系統、顯示器與單一 App 音量 | ✅ | ✅ | ✅ |
 | 輸出、AirPlay 與輸入裝置切換 | ✅ | ✅ | ✅ |

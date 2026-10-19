@@ -69,7 +69,7 @@ macOS 只给你一个音量滑块，MacMix 把剩下的都补上了：调低吵�
 
 本仓库包含 MacMix **免费开源的核心部分**。Releases 页面提供的下载是**分发版**：同一个应用，免费使用，**MacMix Studio** 是可选的一次性升级。不存在单独的 “Studio 应用”，许可证只会在同一个应用里解锁额外功能，你的设置原样保留。
 
-| 包含的功能 | <div align="center">&nbsp;&nbsp;&nbsp;开源版&nbsp;&nbsp;&nbsp;<br><sub>（本仓库）</sub></div> | <div align="center">&nbsp;&nbsp;&nbsp;分发版&nbsp;&nbsp;&nbsp;<br><sub>（免费）</sub></div> | <div align="center">&nbsp;&nbsp;&nbsp;分发版&nbsp;&nbsp;&nbsp;<br><sub>（Studio）</sub></div> |
+| 包含的功能 | <div align="center">开源版<br><sub>（本仓库）</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> | <div align="center">分发版<br><sub>（免费）</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> | <div align="center">分发版<br><sub>（Studio）</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> |
 | --- | :---: | :---: | :---: |
 | 系统、显示器与单应用音量 | ✅ | ✅ | ✅ |
 | 输出、AirPlay 与输入设备切换 | ✅ | ✅ | ✅ |

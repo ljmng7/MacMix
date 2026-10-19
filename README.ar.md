@@ -71,7 +71,7 @@
 
 يحتوي هذا المستودع على **النواة المجانية مفتوحة المصدر** لـ MacMix. أما التنزيل من صفحة Releases فهو **نسخة التوزيع**: تطبيق واحد مجاني، مع **MacMix Studio** كترقية اختيارية بشراء لمرة واحدة. لا يوجد «تطبيق Studio» منفصل؛ فالترخيص يفتح ميزات إضافية في التطبيق نفسه، وتبقى إعداداتك كما هي.
 
-| الميزات المضمّنة | <div align="center">&nbsp;&nbsp;&nbsp;المصدر المفتوح&nbsp;&nbsp;&nbsp;<br><sub>(هذا المستودع)</sub></div> | <div align="center">&nbsp;&nbsp;&nbsp;نسخة التوزيع&nbsp;&nbsp;&nbsp;<br><sub>(مجانية)</sub></div> | <div align="center">&nbsp;&nbsp;&nbsp;نسخة التوزيع&nbsp;&nbsp;&nbsp;<br><sub>(Studio)</sub></div> |
+| الميزات المضمّنة | <div align="center">المصدر المفتوح<br><sub>(هذا المستودع)</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> | <div align="center">نسخة التوزيع<br><sub>(مجانية)</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> | <div align="center">نسخة التوزيع<br><sub>(Studio)</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> |
 | --- | :---: | :---: | :---: |
 | مستوى صوت النظام والشاشة وكل تطبيق | ✅ | ✅ | ✅ |
 | التبديل بين أجهزة الإخراج وAirPlay والإدخال | ✅ | ✅ | ✅ |

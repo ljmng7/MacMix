@@ -69,7 +69,7 @@ macOS आपको एक ही वॉल्यूम स्लाइडर द
 
 इस रिपॉज़िटरी में MacMix का **मुफ़्त, ओपन सोर्स कोर** है। Releases पेज से मिलने वाला डाउनलोड **वितरण संस्करण** है: एक ही मुफ़्त ऐप, जिसमें **MacMix Studio** एक वैकल्पिक, एक बार की ख़रीद वाला अपग्रेड है। कोई अलग “Studio ऐप” नहीं है; लाइसेंस उसी ऐप में अतिरिक्त सुविधाएँ अनलॉक करता है, और आपकी सेटिंग्ज़ जैसी हैं वैसी रहती हैं।
 
-| शामिल सुविधाएँ | <div align="center">&nbsp;&nbsp;&nbsp;ओपन सोर्स&nbsp;&nbsp;&nbsp;<br><sub>(यह रिपॉज़िटरी)</sub></div> | <div align="center">&nbsp;&nbsp;&nbsp;वितरण संस्करण&nbsp;&nbsp;&nbsp;<br><sub>(मुफ़्त)</sub></div> | <div align="center">&nbsp;&nbsp;&nbsp;वितरण संस्करण&nbsp;&nbsp;&nbsp;<br><sub>(Studio)</sub></div> |
+| शामिल सुविधाएँ | <div align="center">ओपन सोर्स<br><sub>(यह रिपॉज़िटरी)</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> | <div align="center">वितरण संस्करण<br><sub>(मुफ़्त)</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> | <div align="center">वितरण संस्करण<br><sub>(Studio)</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> |
 | --- | :---: | :---: | :---: |
 | सिस्टम, डिस्प्ले और हर ऐप का वॉल्यूम | ✅ | ✅ | ✅ |
 | आउटपुट, AirPlay और इनपुट डिवाइस बदलना | ✅ | ✅ | ✅ |
