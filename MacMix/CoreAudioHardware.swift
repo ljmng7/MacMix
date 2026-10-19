@@ -413,24 +413,23 @@ struct CoreAudioHardware {
         for pid: pid_t,
         audioBundleID: String?
     ) -> NSRunningApplication? {
-        var visited = Set<pid_t>()
-        var currentPID = pid
-
-        while currentPID > 0, !visited.contains(currentPID) {
-            visited.insert(currentPID)
-
-            if currentPID != ProcessInfo.processInfo.processIdentifier,
-               let app = NSRunningApplication(processIdentifier: currentPID),
-               app.activationPolicy == .regular {
-                return app
+        let ownPID = ProcessInfo.processInfo.processIdentifier
+        func regularApplication(_ pid: pid_t) -> NSRunningApplication? {
+            guard pid != ownPID,
+                  let app = NSRunningApplication(processIdentifier: pid),
+                  app.activationPolicy == .regular else {
+                return nil
             }
+            return app
+        }
 
-            guard let parentPID = parentProcessID(for: currentPID),
-                  parentPID != currentPID else {
-                break
-            }
-
-            currentPID = parentPID
+        if let ownerPID = AudioProcessOwner.resolve(
+            pid: pid,
+            isRegularApp: { regularApplication($0) != nil },
+            responsiblePID: AudioProcessOwner.responsiblePID(for:),
+            parentPID: { parentProcessID(for: $0) }
+        ), let app = regularApplication(ownerPID) {
+            return app
         }
 
         return inferredHostApplication(
