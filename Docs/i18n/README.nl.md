@@ -1,7 +1,7 @@
 <p align="center">
   <img src="../images/og-image.webp" alt="MacMix — Al het geluid van je Mac. Allemaal in MacMix. Een native mixer voor de macOS-menubalk: systeemvolume, uitvoer- en invoerapparaten en het geluid van elke app." width="100%">
   <br>
-  <sub>De schermafbeelding toont de distributieversie. Sommige functies vereisen MacMix Studio.</sub>
+  <sub>De schermafbeelding toont Distribution. Sommige functies vereisen MacMix Studio.</sub>
 </p>
 
 <p align="center">
@@ -25,7 +25,7 @@
 
 <p align="center">
   <a href="#functies">Functies</a> ·
-  <a href="#open-source-en-distributieversie">Open source vs. distributieversie</a> ·
+  <a href="#open-source-en-distribution">Open source vs. Distribution</a> ·
   <a href="#installeren">Installeren</a> ·
   <a href="#privacy">Privacy</a> ·
   <a href="#bouwen-vanuit-de-broncode">Bouwen vanuit de broncode</a> ·
@@ -65,11 +65,11 @@ macOS geeft je één volumeschuifknop. MacMix geeft je de rest: zet een luidruch
 - Native SwiftUI, audio wordt lokaal en realtime verwerkt, geen account nodig.
 - Automatische updates via Sparkle.
 
-## Open source en distributieversie
+## Open source en Distribution
 
-Deze repository bevat de **gratis, opensource kern** van MacMix. De download op de Releases-pagina is de **distributieversie**: één gratis app, met **MacMix Studio** als optionele eenmalige upgrade. Er is geen aparte ‘Studio-app’: een licentie ontgrendelt extra functies in dezelfde app, en je instellingen blijven waar ze zijn.
+Deze repository bevat de **gratis, opensource kern** van MacMix. De download op de Releases-pagina is **Distribution**: één gratis app, met **MacMix Studio** als optionele eenmalige upgrade. Er is geen aparte ‘Studio-app’: een licentie ontgrendelt extra functies in dezelfde app, en je instellingen blijven waar ze zijn.
 
-| Inbegrepen functies | <div align="center">Open source<br><sub>(deze repository)</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> | <div align="center">Distributieversie<br><sub>(gratis)</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> | <div align="center">Distributieversie<br><sub>(Studio)</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> |
+| Inbegrepen functies | <div align="center">Open source<br><sub>(deze repository)</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> | <div align="center">Distribution<br><sub>(gratis)</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> | <div align="center">Distribution<br><sub>(Studio)</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> |
 | --- | :---: | :---: | :---: |
 | Systeem-, beeldscherm- en app-volume | ✅ | ✅ | ✅ |
 | Wisselen van uitvoer-, AirPlay- en invoerapparaten | ✅ | ✅ | ✅ |
@@ -88,7 +88,7 @@ Deze repository bevat de **gratis, opensource kern** van MacMix. De download op 
 | **Vroege toegang tot bèta’s** — probeer nieuwe functies als eerste | — | — | ✅ |
 
 > [!NOTE]
-> Studio-functies worden privé ontwikkeld en maken geen deel uit van deze repository. Alles wat al gratis is, waaronder mixen per app en alle functies van vóór versie 2.0, blijft gratis en open source. Oplossingen in de gedeelde kern komen in deze repository nadat ze in de distributieversie zijn gevalideerd, dus de broncode hier kan iets achterlopen op de nieuwste release.
+> Studio-functies worden privé ontwikkeld en maken geen deel uit van deze repository. Alles wat al gratis is, waaronder mixen per app en alle functies van vóór versie 2.0, blijft gratis en open source. Oplossingen in de gedeelde kern komen in deze repository nadat ze in Distribution zijn gevalideerd, dus de broncode hier kan iets achterlopen op de nieuwste release.
 
 ## Installeren
 

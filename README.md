@@ -1,7 +1,7 @@
 <p align="center">
   <img src="Docs/images/og-image.webp" alt="MacMix — Your Mac's sound. All in MacMix. A native macOS menu bar mixer for system volume, output and input devices, and per-app sound." width="100%">
   <br>
-  <sub>Screenshot shows the distribution build. Some features require MacMix Studio.</sub>
+  <sub>Screenshot shows Distribution. Some features require MacMix Studio.</sub>
 </p>
 
 <p align="center">
@@ -25,7 +25,7 @@
 
 <p align="center">
   <a href="#features">Features</a> ·
-  <a href="#open-source-and-distribution-builds">Open Source vs Distribution</a> ·
+  <a href="#open-source-and-distribution">Open Source vs Distribution</a> ·
   <a href="#install">Install</a> ·
   <a href="#privacy">Privacy</a> ·
   <a href="#build-from-source">Build from Source</a> ·
@@ -65,11 +65,11 @@ macOS gives you one volume slider. MacMix gives you the rest: turn a noisy app d
 - Native SwiftUI, audio processed locally in real time, no account required.
 - Automatic updates through Sparkle.
 
-## Open Source and Distribution Builds
+## Open Source and Distribution
 
-This repository contains the **free, open-source core** of MacMix. The download on the Releases page is the **distribution build**: one app that is free to use, with **MacMix Studio** as an optional one-time upgrade. There is no separate "Studio app" — a license unlocks extra features in the same app, and your settings stay where they are.
+This repository contains the **free, open-source core** of MacMix. The download on the Releases page is **Distribution**: one app that is free to use, with **MacMix Studio** as an optional one-time upgrade. There is no separate "Studio app" — a license unlocks extra features in the same app, and your settings stay where they are.
 
-| Included features | <div align="center">Open source<br><sub>(this repository)</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> | <div align="center">Distribution<br>build<br><sub>(free)</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> | <div align="center">Distribution<br>build<br><sub>(Studio)</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> |
+| Included features | <div align="center">Open source<br><sub>(this repository)</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> | <div align="center">Distribution<br><sub>(free)</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> | <div align="center">Distribution<br><sub>(Studio)</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> |
 | --- | :---: | :---: | :---: |
 | System, display and per-app volume | ✅ | ✅ | ✅ |
 | Output, AirPlay and input device switching | ✅ | ✅ | ✅ |
@@ -88,7 +88,7 @@ This repository contains the **free, open-source core** of MacMix. The download 
 | **Beta Early Access** — try new features first | — | — | ✅ |
 
 > [!NOTE]
-> Studio features are developed privately and are not part of this repository. Everything that has been free — including per-app mixing and every feature available before version 2.0 — will stay free and open source. Fixes to the shared core reach this repository after they have been validated in the distribution build, so the source here can trail the latest release a little.
+> Studio features are developed privately and are not part of this repository. Everything that has been free — including per-app mixing and every feature available before version 2.0 — will stay free and open source. Fixes to the shared core reach this repository after they have been validated in Distribution, so the source here can trail the latest release a little.
 
 ## Install
 

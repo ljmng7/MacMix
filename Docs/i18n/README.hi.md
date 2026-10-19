@@ -1,7 +1,7 @@
 <p align="center">
   <img src="../images/og-image.webp" alt="MacMix — आपके Mac की हर आवाज़, MacMix में। macOS मेनू बार के लिए नेटिव मिक्सर: सिस्टम वॉल्यूम, आउटपुट और इनपुट डिवाइस, और हर ऐप की आवाज़।" width="100%">
   <br>
-  <sub>स्क्रीनशॉट वितरण संस्करण का है। कुछ सुविधाओं के लिए MacMix Studio ज़रूरी है।</sub>
+  <sub>स्क्रीनशॉट Distribution का है। कुछ सुविधाओं के लिए MacMix Studio ज़रूरी है।</sub>
 </p>
 
 <p align="center">
@@ -25,7 +25,7 @@
 
 <p align="center">
   <a href="#सुविधाएँ">सुविधाएँ</a> ·
-  <a href="#ओपन-सोर्स-और-वितरण-संस्करण">ओपन सोर्स और वितरण संस्करण</a> ·
+  <a href="#ओपन-सोर्स-और-distribution">ओपन सोर्स और Distribution</a> ·
   <a href="#इंस्टॉल-करें">इंस्टॉल करें</a> ·
   <a href="#गोपनीयता">गोपनीयता</a> ·
   <a href="#सोर्स-से-बिल्ड-करें">सोर्स से बिल्ड करें</a> ·
@@ -65,11 +65,11 @@ macOS आपको एक ही वॉल्यूम स्लाइडर द
 - नेटिव SwiftUI, ऑडियो स्थानीय रूप से रियल टाइम में प्रोसेस होता है, किसी खाते की ज़रूरत नहीं।
 - Sparkle के ज़रिए स्वचालित अपडेट।
 
-## ओपन सोर्स और वितरण संस्करण
+## ओपन सोर्स और Distribution
 
-इस रिपॉज़िटरी में MacMix का **मुफ़्त, ओपन सोर्स कोर** है। Releases पेज से मिलने वाला डाउनलोड **वितरण संस्करण** है: एक ही मुफ़्त ऐप, जिसमें **MacMix Studio** एक वैकल्पिक, एक बार की ख़रीद वाला अपग्रेड है। कोई अलग “Studio ऐप” नहीं है; लाइसेंस उसी ऐप में अतिरिक्त सुविधाएँ अनलॉक करता है, और आपकी सेटिंग्ज़ जैसी हैं वैसी रहती हैं।
+इस रिपॉज़िटरी में MacMix का **मुफ़्त, ओपन सोर्स कोर** है। Releases पेज से मिलने वाला डाउनलोड **Distribution** है: एक ही मुफ़्त ऐप, जिसमें **MacMix Studio** एक वैकल्पिक, एक बार की ख़रीद वाला अपग्रेड है। कोई अलग “Studio ऐप” नहीं है; लाइसेंस उसी ऐप में अतिरिक्त सुविधाएँ अनलॉक करता है, और आपकी सेटिंग्ज़ जैसी हैं वैसी रहती हैं।
 
-| शामिल सुविधाएँ | <div align="center">ओपन सोर्स<br><sub>(यह रिपॉज़िटरी)</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> | <div align="center">वितरण संस्करण<br><sub>(मुफ़्त)</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> | <div align="center">वितरण संस्करण<br><sub>(Studio)</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> |
+| शामिल सुविधाएँ | <div align="center">ओपन सोर्स<br><sub>(यह रिपॉज़िटरी)</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> | <div align="center">Distribution<br><sub>(मुफ़्त)</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> | <div align="center">Distribution<br><sub>(Studio)</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> |
 | --- | :---: | :---: | :---: |
 | सिस्टम, डिस्प्ले और हर ऐप का वॉल्यूम | ✅ | ✅ | ✅ |
 | आउटपुट, AirPlay और इनपुट डिवाइस बदलना | ✅ | ✅ | ✅ |
@@ -88,7 +88,7 @@ macOS आपको एक ही वॉल्यूम स्लाइडर द
 | **Beta का अर्ली एक्सेस** — नई सुविधाएँ सबसे पहले आज़माएँ | — | — | ✅ |
 
 > [!NOTE]
-> Studio सुविधाएँ निजी तौर पर विकसित की जाती हैं और इस रिपॉज़िटरी का हिस्सा नहीं हैं। जो कुछ अब तक मुफ़्त है, जिसमें हर ऐप की मिक्सिंग और संस्करण 2.0 से पहले की सभी सुविधाएँ शामिल हैं, वह मुफ़्त और ओपन सोर्स ही रहेगा। साझा कोर के सुधार वितरण संस्करण में जाँचे जाने के बाद इस रिपॉज़िटरी में आते हैं, इसलिए यहाँ का कोड नवीनतम रिलीज़ से थोड़ा पीछे हो सकता है।
+> Studio सुविधाएँ निजी तौर पर विकसित की जाती हैं और इस रिपॉज़िटरी का हिस्सा नहीं हैं। जो कुछ अब तक मुफ़्त है, जिसमें हर ऐप की मिक्सिंग और संस्करण 2.0 से पहले की सभी सुविधाएँ शामिल हैं, वह मुफ़्त और ओपन सोर्स ही रहेगा। साझा कोर के सुधार Distribution में जाँचे जाने के बाद इस रिपॉज़िटरी में आते हैं, इसलिए यहाँ का कोड नवीनतम रिलीज़ से थोड़ा पीछे हो सकता है।
 
 ## इंस्टॉल करें
 

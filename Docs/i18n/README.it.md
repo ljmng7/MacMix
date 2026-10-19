@@ -1,7 +1,7 @@
 <p align="center">
   <img src="../images/og-image.webp" alt="MacMix — Tutto il suono del tuo Mac, in MacMix. Un mixer nativo per la barra dei menu di macOS: volume di sistema, dispositivi di uscita e di ingresso e audio di ogni app." width="100%">
   <br>
-  <sub>Lo screenshot mostra la versione distribuita. Alcune funzionalità richiedono MacMix Studio.</sub>
+  <sub>Lo screenshot mostra Distribution. Alcune funzionalità richiedono MacMix Studio.</sub>
 </p>
 
 <p align="center">
@@ -25,7 +25,7 @@
 
 <p align="center">
   <a href="#funzionalità">Funzionalità</a> ·
-  <a href="#versione-open-source-e-versione-distribuita">Open source e versione distribuita</a> ·
+  <a href="#versione-open-source-e-distribution">Open source e Distribution</a> ·
   <a href="#installazione">Installazione</a> ·
   <a href="#privacy">Privacy</a> ·
   <a href="#compilare-dal-codice-sorgente">Compilare dal codice sorgente</a> ·
@@ -65,11 +65,11 @@ macOS ti dà un solo cursore del volume. MacMix ti dà tutto il resto: abbassa u
 - SwiftUI nativo, audio elaborato localmente in tempo reale, nessun account.
 - Aggiornamenti automatici con Sparkle.
 
-## Versione open source e versione distribuita
+## Versione open source e Distribution
 
-Questo repository contiene il **nucleo gratuito e open source** di MacMix. Il download dalla pagina Releases è la **versione distribuita**: un’unica app gratuita, con **MacMix Studio** come aggiornamento facoltativo a pagamento singolo. Non esiste un’«app Studio» separata: una licenza sblocca funzionalità extra nella stessa app e le tue impostazioni restano dove sono.
+Questo repository contiene il **nucleo gratuito e open source** di MacMix. Il download dalla pagina Releases è **Distribution**: un’unica app gratuita, con **MacMix Studio** come aggiornamento facoltativo a pagamento singolo. Non esiste un’«app Studio» separata: una licenza sblocca funzionalità extra nella stessa app e le tue impostazioni restano dove sono.
 
-| Funzionalità incluse | <div align="center">Open source<br><sub>(questo repository)</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> | <div align="center">Versione<br>distribuita<br><sub>(gratuita)</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> | <div align="center">Versione<br>distribuita<br><sub>(Studio)</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> |
+| Funzionalità incluse | <div align="center">Open source<br><sub>(questo repository)</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> | <div align="center">Distribution<br><sub>(gratuita)</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> | <div align="center">Distribution<br><sub>(Studio)</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> |
 | --- | :---: | :---: | :---: |
 | Volume di sistema, dei monitor e per app | ✅ | ✅ | ✅ |
 | Scelta dei dispositivi di uscita, AirPlay e ingresso | ✅ | ✅ | ✅ |
@@ -88,7 +88,7 @@ Questo repository contiene il **nucleo gratuito e open source** di MacMix. Il do
 | **Accesso anticipato alle beta** — prova per primo le novità | — | — | ✅ |
 
 > [!NOTE]
-> Le funzionalità Studio sono sviluppate privatamente e non fanno parte di questo repository. Tutto ciò che è già gratuito, compreso il mix per app e tutte le funzionalità precedenti alla versione 2.0, resterà gratuito e open source. Le correzioni del nucleo comune arrivano in questo repository dopo essere state verificate nella versione distribuita, quindi il codice qui può essere leggermente indietro rispetto all’ultima versione.
+> Le funzionalità Studio sono sviluppate privatamente e non fanno parte di questo repository. Tutto ciò che è già gratuito, compreso il mix per app e tutte le funzionalità precedenti alla versione 2.0, resterà gratuito e open source. Le correzioni del nucleo comune arrivano in questo repository dopo essere state verificate in Distribution, quindi il codice qui può essere leggermente indietro rispetto all’ultima versione.
 
 ## Installazione
 

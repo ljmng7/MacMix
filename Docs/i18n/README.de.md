@@ -1,7 +1,7 @@
 <p align="center">
   <img src="../images/og-image.webp" alt="MacMix — Der ganze Sound deines Mac. Alles in MacMix. Ein nativer Mixer für die macOS-Menüleiste: Systemlautstärke, Aus- und Eingabegeräte und der Ton jeder App." width="100%">
   <br>
-  <sub>Der Screenshot zeigt die Vertriebsversion. Einige Funktionen erfordern MacMix Studio.</sub>
+  <sub>Der Screenshot zeigt Distribution. Einige Funktionen erfordern MacMix Studio.</sub>
 </p>
 
 <p align="center">
@@ -25,7 +25,7 @@
 
 <p align="center">
   <a href="#funktionen">Funktionen</a> ·
-  <a href="#open-source-und-vertriebsversion">Open Source vs. Vertriebsversion</a> ·
+  <a href="#open-source-und-distribution">Open Source vs. Distribution</a> ·
   <a href="#installation">Installation</a> ·
   <a href="#datenschutz">Datenschutz</a> ·
   <a href="#aus-dem-quellcode-erstellen">Aus dem Quellcode erstellen</a> ·
@@ -65,11 +65,11 @@ macOS gibt dir einen einzigen Lautstärkeregler. MacMix gibt dir den Rest: Mach 
 - Natives SwiftUI, Audio wird lokal in Echtzeit verarbeitet, kein Konto nötig.
 - Automatische Updates über Sparkle.
 
-## Open Source und Vertriebsversion
+## Open Source und Distribution
 
-Dieses Repository enthält den **kostenlosen Open-Source-Kern** von MacMix. Der Download auf der Releases-Seite ist die **Vertriebsversion**: eine einzige kostenlose App, mit **MacMix Studio** als optionalem Einmalkauf. Es gibt keine separate „Studio-App“ – eine Lizenz schaltet in derselben App zusätzliche Funktionen frei, und deine Einstellungen bleiben erhalten.
+Dieses Repository enthält den **kostenlosen Open-Source-Kern** von MacMix. Der Download auf der Releases-Seite ist **Distribution**: eine einzige kostenlose App, mit **MacMix Studio** als optionalem Einmalkauf. Es gibt keine separate „Studio-App“ – eine Lizenz schaltet in derselben App zusätzliche Funktionen frei, und deine Einstellungen bleiben erhalten.
 
-| Enthaltene Funktionen | <div align="center">Open Source<br><sub>(dieses Repository)</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> | <div align="center">Vertriebsversion<br><sub>(kostenlos)</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> | <div align="center">Vertriebsversion<br><sub>(Studio)</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> |
+| Enthaltene Funktionen | <div align="center">Open Source<br><sub>(dieses Repository)</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> | <div align="center">Distribution<br><sub>(kostenlos)</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> | <div align="center">Distribution<br><sub>(Studio)</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> |
 | --- | :---: | :---: | :---: |
 | System-, Display- und App-Lautstärke | ✅ | ✅ | ✅ |
 | Wechsel von Ausgabe-, AirPlay- und Eingabegeräten | ✅ | ✅ | ✅ |
@@ -88,7 +88,7 @@ Dieses Repository enthält den **kostenlosen Open-Source-Kern** von MacMix. Der 
 | **Frühzugang zu Betaversionen** — neue Funktionen zuerst ausprobieren | — | — | ✅ |
 
 > [!NOTE]
-> Studio-Funktionen werden privat entwickelt und sind nicht Teil dieses Repositorys. Alles, was bisher kostenlos war – einschließlich der Lautstärke pro App und aller Funktionen vor Version 2.0 –, bleibt kostenlos und Open Source. Korrekturen am gemeinsamen Kern gelangen in dieses Repository, nachdem sie in der Vertriebsversion geprüft wurden. Der Quellcode hier kann der neuesten Version daher etwas hinterherhinken.
+> Studio-Funktionen werden privat entwickelt und sind nicht Teil dieses Repositorys. Alles, was bisher kostenlos war – einschließlich der Lautstärke pro App und aller Funktionen vor Version 2.0 –, bleibt kostenlos und Open Source. Korrekturen am gemeinsamen Kern gelangen in dieses Repository, nachdem sie in Distribution geprüft wurden. Der Quellcode hier kann der neuesten Version daher etwas hinterherhinken.
 
 ## Installation
 

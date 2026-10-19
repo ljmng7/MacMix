@@ -3,7 +3,7 @@
 <p align="center">
   <img src="../images/og-image.webp" alt="MacMix — كل أصوات جهاز Mac، في MacMix. خلاط أصلي لشريط القائمة في macOS: مستوى صوت النظام وأجهزة الإخراج والإدخال وصوت كل تطبيق." width="100%">
   <br>
-  <sub>لقطة الشاشة من نسخة التوزيع. تتطلب بعض الميزات MacMix Studio.</sub>
+  <sub>لقطة الشاشة من Distribution. تتطلب بعض الميزات MacMix Studio.</sub>
 </p>
 
 <p align="center">
@@ -27,7 +27,7 @@
 
 <p align="center">
   <a href="#الميزات">الميزات</a> ·
-  <a href="#نسخة-المصدر-المفتوح-ونسخة-التوزيع">المصدر المفتوح ونسخة التوزيع</a> ·
+  <a href="#نسخة-المصدر-المفتوح-وdistribution">المصدر المفتوح وDistribution</a> ·
   <a href="#التثبيت">التثبيت</a> ·
   <a href="#الخصوصية">الخصوصية</a> ·
   <a href="#البناء-من-المصدر">البناء من المصدر</a> ·
@@ -67,11 +67,11 @@
 - SwiftUI أصلي، ويُعالَج الصوت محليًا في الوقت الفعلي، دون حاجة إلى حساب.
 - تحديثات تلقائية عبر Sparkle.
 
-## نسخة المصدر المفتوح ونسخة التوزيع
+## نسخة المصدر المفتوح وDistribution
 
-يحتوي هذا المستودع على **النواة المجانية مفتوحة المصدر** لـ MacMix. أما التنزيل من صفحة Releases فهو **نسخة التوزيع**: تطبيق واحد مجاني، مع **MacMix Studio** كترقية اختيارية بشراء لمرة واحدة. لا يوجد «تطبيق Studio» منفصل؛ فالترخيص يفتح ميزات إضافية في التطبيق نفسه، وتبقى إعداداتك كما هي.
+يحتوي هذا المستودع على **النواة المجانية مفتوحة المصدر** لـ MacMix. أما التنزيل من صفحة Releases فهو **Distribution**: تطبيق واحد مجاني، مع **MacMix Studio** كترقية اختيارية بشراء لمرة واحدة. لا يوجد «تطبيق Studio» منفصل؛ فالترخيص يفتح ميزات إضافية في التطبيق نفسه، وتبقى إعداداتك كما هي.
 
-| الميزات المضمّنة | <div align="center">المصدر المفتوح<br><sub>(هذا المستودع)</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> | <div align="center">نسخة التوزيع<br><sub>(مجانية)</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> | <div align="center">نسخة التوزيع<br><sub>(Studio)</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> |
+| الميزات المضمّنة | <div align="center">المصدر المفتوح<br><sub>(هذا المستودع)</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> | <div align="center">Distribution<br><sub>(مجانية)</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> | <div align="center">Distribution<br><sub>(Studio)</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> |
 | --- | :---: | :---: | :---: |
 | مستوى صوت النظام والشاشة وكل تطبيق | ✅ | ✅ | ✅ |
 | التبديل بين أجهزة الإخراج وAirPlay والإدخال | ✅ | ✅ | ✅ |
@@ -92,7 +92,7 @@
 </div>
 
 > [!NOTE]
-> تُطوَّر ميزات Studio بشكل خاص وليست جزءًا من هذا المستودع. كل ما هو مجاني الآن، بما في ذلك مزج كل تطبيق وجميع الميزات السابقة للإصدار 2.0، سيبقى مجانيًا ومفتوح المصدر. تصل إصلاحات النواة المشتركة إلى هذا المستودع بعد التحقق منها في نسخة التوزيع، لذا قد تتأخر الشيفرة هنا قليلًا عن أحدث إصدار.
+> تُطوَّر ميزات Studio بشكل خاص وليست جزءًا من هذا المستودع. كل ما هو مجاني الآن، بما في ذلك مزج كل تطبيق وجميع الميزات السابقة للإصدار 2.0، سيبقى مجانيًا ومفتوح المصدر. تصل إصلاحات النواة المشتركة إلى هذا المستودع بعد التحقق منها في Distribution، لذا قد تتأخر الشيفرة هنا قليلًا عن أحدث إصدار.
 
 <div dir="rtl">
 

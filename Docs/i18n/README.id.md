@@ -1,7 +1,7 @@
 <p align="center">
   <img src="../images/og-image.webp" alt="MacMix — Semua suara Mac Anda, ada di MacMix. Mixer bawaan untuk bar menu macOS: volume sistem, perangkat output dan input, serta suara setiap app." width="100%">
   <br>
-  <sub>Tangkapan layar menampilkan versi distribusi. Beberapa fitur memerlukan MacMix Studio.</sub>
+  <sub>Tangkapan layar menampilkan Distribution. Beberapa fitur memerlukan MacMix Studio.</sub>
 </p>
 
 <p align="center">
@@ -25,7 +25,7 @@
 
 <p align="center">
   <a href="#fitur">Fitur</a> ·
-  <a href="#sumber-terbuka-dan-versi-distribusi">Sumber terbuka vs. versi distribusi</a> ·
+  <a href="#sumber-terbuka-dan-distribution">Sumber terbuka vs. Distribution</a> ·
   <a href="#instalasi">Instalasi</a> ·
   <a href="#privasi">Privasi</a> ·
   <a href="#build-dari-kode-sumber">Build dari kode sumber</a> ·
@@ -65,11 +65,11 @@ macOS memberi Anda satu penggeser volume. MacMix memberi sisanya: kecilkan app y
 - SwiftUI bawaan, audio diproses secara lokal dan real time, tanpa akun.
 - Pembaruan otomatis melalui Sparkle.
 
-## Sumber terbuka dan versi distribusi
+## Sumber terbuka dan Distribution
 
-Repositori ini berisi **inti MacMix yang gratis dan bersumber terbuka**. Unduhan di halaman Releases adalah **versi distribusi**: satu app yang gratis digunakan, dengan **MacMix Studio** sebagai peningkatan opsional sekali beli. Tidak ada “app Studio” terpisah; lisensi hanya membuka fitur tambahan di app yang sama, dan pengaturan Anda tetap utuh.
+Repositori ini berisi **inti MacMix yang gratis dan bersumber terbuka**. Unduhan di halaman Releases adalah **Distribution**: satu app yang gratis digunakan, dengan **MacMix Studio** sebagai peningkatan opsional sekali beli. Tidak ada “app Studio” terpisah; lisensi hanya membuka fitur tambahan di app yang sama, dan pengaturan Anda tetap utuh.
 
-| Fitur yang disertakan | <div align="center">Sumber<br>terbuka<br><sub>(repositori ini)</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> | <div align="center">Versi<br>distribusi<br><sub>(gratis)</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> | <div align="center">Versi<br>distribusi<br><sub>(Studio)</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> |
+| Fitur yang disertakan | <div align="center">Sumber<br>terbuka<br><sub>(repositori ini)</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> | <div align="center">Distribution<br><sub>(gratis)</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> | <div align="center">Distribution<br><sub>(Studio)</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> |
 | --- | :---: | :---: | :---: |
 | Volume sistem, layar, dan per app | ✅ | ✅ | ✅ |
 | Peralihan perangkat output, AirPlay, dan input | ✅ | ✅ | ✅ |
@@ -88,7 +88,7 @@ Repositori ini berisi **inti MacMix yang gratis dan bersumber terbuka**. Unduhan
 | **Akses Awal Beta** — coba fitur baru lebih dulu | — | — | ✅ |
 
 > [!NOTE]
-> Fitur Studio dikembangkan secara privat dan tidak termasuk dalam repositori ini. Semua yang sudah gratis, termasuk mixing per app dan semua fitur sebelum versi 2.0, akan tetap gratis dan bersumber terbuka. Perbaikan pada inti bersama masuk ke repositori ini setelah divalidasi di versi distribusi, sehingga kode di sini bisa sedikit tertinggal dari rilis terbaru.
+> Fitur Studio dikembangkan secara privat dan tidak termasuk dalam repositori ini. Semua yang sudah gratis, termasuk mixing per app dan semua fitur sebelum versi 2.0, akan tetap gratis dan bersumber terbuka. Perbaikan pada inti bersama masuk ke repositori ini setelah divalidasi di Distribution, sehingga kode di sini bisa sedikit tertinggal dari rilis terbaru.
 
 ## Instalasi
 

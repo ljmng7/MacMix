@@ -1,7 +1,7 @@
 <p align="center">
   <img src="../images/og-image.webp" alt="MacMix — Todo o som do seu Mac, no MacMix. Um mixer nativo para a barra de menus do macOS: volume do sistema, dispositivos de saída e entrada e o som de cada app." width="100%">
   <br>
-  <sub>A captura mostra a versão distribuída. Alguns recursos exigem o MacMix Studio.</sub>
+  <sub>A captura mostra o Distribution. Alguns recursos exigem o MacMix Studio.</sub>
 </p>
 
 <p align="center">
@@ -25,7 +25,7 @@
 
 <p align="center">
   <a href="#recursos">Recursos</a> ·
-  <a href="#código-aberto-e-versão-distribuída">Código aberto vs. versão distribuída</a> ·
+  <a href="#código-aberto-e-distribution">Código aberto vs. Distribution</a> ·
   <a href="#instalação">Instalação</a> ·
   <a href="#privacidade">Privacidade</a> ·
   <a href="#compilar-a-partir-do-código">Compilar a partir do código</a> ·
@@ -65,11 +65,11 @@ O macOS oferece um único controle de volume. O MacMix oferece o resto: abaixe u
 - SwiftUI nativo, áudio processado localmente em tempo real, sem conta.
 - Atualizações automáticas com o Sparkle.
 
-## Código aberto e versão distribuída
+## Código aberto e Distribution
 
-Este repositório contém o **núcleo gratuito e de código aberto** do MacMix. O download da página Releases é a **versão distribuída**: um único app gratuito, com o **MacMix Studio** como upgrade opcional de compra única. Não existe um “app Studio” separado: a licença apenas desbloqueia recursos extras no mesmo app, e seus ajustes continuam onde estão.
+Este repositório contém o **núcleo gratuito e de código aberto** do MacMix. O download da página Releases é o **Distribution**: um único app gratuito, com o **MacMix Studio** como upgrade opcional de compra única. Não existe um “app Studio” separado: a licença apenas desbloqueia recursos extras no mesmo app, e seus ajustes continuam onde estão.
 
-| Recursos incluídos | <div align="center">Código aberto<br><sub>(este repositório)</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> | <div align="center">Versão<br>distribuída<br><sub>(gratuita)</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> | <div align="center">Versão<br>distribuída<br><sub>(Studio)</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> |
+| Recursos incluídos | <div align="center">Código aberto<br><sub>(este repositório)</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> | <div align="center">Distribution<br><sub>(gratuita)</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> | <div align="center">Distribution<br><sub>(Studio)</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> |
 | --- | :---: | :---: | :---: |
 | Volume do sistema, do monitor e por app | ✅ | ✅ | ✅ |
 | Troca de dispositivos de saída, AirPlay e entrada | ✅ | ✅ | ✅ |
@@ -88,7 +88,7 @@ Este repositório contém o **núcleo gratuito e de código aberto** do MacMix. 
 | **Acesso antecipado às betas** — experimente as novidades primeiro | — | — | ✅ |
 
 > [!NOTE]
-> Os recursos do Studio são desenvolvidos de forma privada e não fazem parte deste repositório. Tudo o que já é gratuito, incluindo a mixagem por app e todos os recursos anteriores à versão 2.0, continuará gratuito e de código aberto. As correções do núcleo comum chegam a este repositório depois de validadas na versão distribuída, então o código aqui pode ficar um pouco atrás da versão mais recente.
+> Os recursos do Studio são desenvolvidos de forma privada e não fazem parte deste repositório. Tudo o que já é gratuito, incluindo a mixagem por app e todos os recursos anteriores à versão 2.0, continuará gratuito e de código aberto. As correções do núcleo comum chegam a este repositório depois de validadas no Distribution, então o código aqui pode ficar um pouco atrás da versão mais recente.
 
 ## Instalação
 

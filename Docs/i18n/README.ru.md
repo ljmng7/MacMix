@@ -1,7 +1,7 @@
 <p align="center">
   <img src="../images/og-image.webp" alt="MacMix — Весь звук вашего Mac — в MacMix. Нативный микшер для строки меню macOS: системная громкость, устройства вывода и ввода и звук каждого приложения." width="100%">
   <br>
-  <sub>На снимке — распространяемая версия. Для некоторых функций нужен MacMix Studio.</sub>
+  <sub>На снимке — Distribution. Для некоторых функций нужен MacMix Studio.</sub>
 </p>
 
 <p align="center">
@@ -25,7 +25,7 @@
 
 <p align="center">
   <a href="#возможности">Возможности</a> ·
-  <a href="#открытый-код-и-распространяемая-версия">Открытый код и распространяемая версия</a> ·
+  <a href="#открытый-код-и-distribution">Открытый код и Distribution</a> ·
   <a href="#установка">Установка</a> ·
   <a href="#конфиденциальность">Конфиденциальность</a> ·
   <a href="#сборка-из-исходников">Сборка из исходников</a> ·
@@ -65,11 +65,11 @@
 - Нативный SwiftUI, звук обрабатывается локально в реальном времени, учётная запись не нужна.
 - Автоматические обновления через Sparkle.
 
-## Открытый код и распространяемая версия
+## Открытый код и Distribution
 
-В этом репозитории находится **бесплатное ядро MacMix с открытым кодом**. На странице Releases можно скачать **распространяемую версию**: одно бесплатное приложение, а **MacMix Studio** — необязательное обновление с разовой оплатой. Отдельного «приложения Studio» нет: лицензия просто открывает дополнительные функции в том же приложении, а ваши настройки остаются на месте.
+В этом репозитории находится **бесплатное ядро MacMix с открытым кодом**. На странице Releases можно скачать **Distribution**: одно бесплатное приложение, а **MacMix Studio** — необязательное обновление с разовой оплатой. Отдельного «приложения Studio» нет: лицензия просто открывает дополнительные функции в том же приложении, а ваши настройки остаются на месте.
 
-| Что входит | <div align="center">Открытый<br>код<br><sub>(этот репозиторий)</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> | <div align="center">Распространяемая<br>версия<br><sub>(бесплатно)</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> | <div align="center">Распространяемая<br>версия<br><sub>(Studio)</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> |
+| Что входит | <div align="center">Открытый<br>код<br><sub>(этот репозиторий)</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> | <div align="center">Distribution<br><sub>(бесплатно)</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> | <div align="center">Distribution<br><sub>(Studio)</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> |
 | --- | :---: | :---: | :---: |
 | Громкость системы, монитора и приложений | ✅ | ✅ | ✅ |
 | Переключение устройств вывода, AirPlay и ввода | ✅ | ✅ | ✅ |
@@ -88,7 +88,7 @@
 | **Ранний доступ к бета-версиям** — пробуйте новые функции первыми | — | — | ✅ |
 
 > [!NOTE]
-> Функции Studio разрабатываются закрыто и не входят в этот репозиторий. Всё, что уже бесплатно, включая громкость приложений и все функции до версии 2.0, останется бесплатным и открытым. Исправления общего ядра попадают сюда после проверки в распространяемой версии, поэтому код в репозитории может немного отставать от последнего релиза.
+> Функции Studio разрабатываются закрыто и не входят в этот репозиторий. Всё, что уже бесплатно, включая громкость приложений и все функции до версии 2.0, останется бесплатным и открытым. Исправления общего ядра попадают сюда после проверки в Distribution, поэтому код в репозитории может немного отставать от последнего релиза.
 
 ## Установка
 

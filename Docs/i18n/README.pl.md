@@ -1,7 +1,7 @@
 <p align="center">
   <img src="../images/og-image.webp" alt="MacMix — Cały dźwięk Twojego Maca. Wszystko w MacMix. Natywny mikser na pasek menu macOS: głośność systemu, urządzenia wyjściowe i wejściowe oraz dźwięk każdej aplikacji." width="100%">
   <br>
-  <sub>Zrzut ekranu przedstawia wersję dystrybucyjną. Niektóre funkcje wymagają MacMix Studio.</sub>
+  <sub>Zrzut ekranu przedstawia Distribution. Niektóre funkcje wymagają MacMix Studio.</sub>
 </p>
 
 <p align="center">
@@ -25,7 +25,7 @@
 
 <p align="center">
   <a href="#funkcje">Funkcje</a> ·
-  <a href="#open-source-i-wersja-dystrybucyjna">Open source a wersja dystrybucyjna</a> ·
+  <a href="#open-source-i-distribution">Open source a Distribution</a> ·
   <a href="#instalacja">Instalacja</a> ·
   <a href="#prywatność">Prywatność</a> ·
   <a href="#kompilacja-ze-źródeł">Kompilacja ze źródeł</a> ·
@@ -65,11 +65,11 @@ macOS daje Ci jeden suwak głośności. MacMix daje całą resztę: przycisz ha�
 - Natywny SwiftUI, dźwięk przetwarzany lokalnie w czasie rzeczywistym, bez konta.
 - Automatyczne aktualizacje przez Sparkle.
 
-## Open source i wersja dystrybucyjna
+## Open source i Distribution
 
-To repozytorium zawiera **darmowy rdzeń MacMix o otwartym kodzie**. Do pobrania na stronie Releases jest **wersja dystrybucyjna**: jedna darmowa aplikacja, a **MacMix Studio** to opcjonalne ulepszenie z jednorazową opłatą. Nie ma osobnej „aplikacji Studio” — licencja odblokowuje dodatkowe funkcje w tej samej aplikacji, a Twoje ustawienia pozostają bez zmian.
+To repozytorium zawiera **darmowy rdzeń MacMix o otwartym kodzie**. Do pobrania na stronie Releases jest **Distribution**: jedna darmowa aplikacja, a **MacMix Studio** to opcjonalne ulepszenie z jednorazową opłatą. Nie ma osobnej „aplikacji Studio” — licencja odblokowuje dodatkowe funkcje w tej samej aplikacji, a Twoje ustawienia pozostają bez zmian.
 
-| Zawarte funkcje | <div align="center">Open source<br><sub>(to repozytorium)</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> | <div align="center">Wersja<br>dystrybucyjna<br><sub>(darmowa)</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> | <div align="center">Wersja<br>dystrybucyjna<br><sub>(Studio)</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> |
+| Zawarte funkcje | <div align="center">Open source<br><sub>(to repozytorium)</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> | <div align="center">Distribution<br><sub>(darmowa)</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> | <div align="center">Distribution<br><sub>(Studio)</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> |
 | --- | :---: | :---: | :---: |
 | Głośność systemu, monitora i aplikacji | ✅ | ✅ | ✅ |
 | Przełączanie urządzeń wyjściowych, AirPlay i wejściowych | ✅ | ✅ | ✅ |
@@ -88,7 +88,7 @@ To repozytorium zawiera **darmowy rdzeń MacMix o otwartym kodzie**. Do pobrania
 | **Wczesny dostęp do wersji beta** — wypróbuj nowości jako pierwszy | — | — | ✅ |
 
 > [!NOTE]
-> Funkcje Studio są rozwijane prywatnie i nie wchodzą w skład tego repozytorium. Wszystko, co już jest darmowe — w tym miksowanie aplikacji i wszystkie funkcje sprzed wersji 2.0 — pozostanie darmowe i otwarte. Poprawki wspólnego rdzenia trafiają tutaj po sprawdzeniu w wersji dystrybucyjnej, więc kod w repozytorium może być nieco w tyle za najnowszym wydaniem.
+> Funkcje Studio są rozwijane prywatnie i nie wchodzą w skład tego repozytorium. Wszystko, co już jest darmowe — w tym miksowanie aplikacji i wszystkie funkcje sprzed wersji 2.0 — pozostanie darmowe i otwarte. Poprawki wspólnego rdzenia trafiają tutaj po sprawdzeniu w Distribution, więc kod w repozytorium może być nieco w tyle za najnowszym wydaniem.
 
 ## Instalacja
 

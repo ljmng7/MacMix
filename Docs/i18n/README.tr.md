@@ -1,7 +1,7 @@
 <p align="center">
   <img src="../images/og-image.webp" alt="MacMix — Mac’inizin sesi. Hepsi MacMix’te. macOS menü çubuğu için yerel bir mikser: sistem ses düzeyi, çıkış ve giriş aygıtları ve her uygulamanın sesi." width="100%">
   <br>
-  <sub>Ekran görüntüsü dağıtım sürümüne aittir. Bazı özellikler MacMix Studio gerektirir.</sub>
+  <sub>Ekran görüntüsü Distribution’a aittir. Bazı özellikler MacMix Studio gerektirir.</sub>
 </p>
 
 <p align="center">
@@ -25,7 +25,7 @@
 
 <p align="center">
   <a href="#özellikler">Özellikler</a> ·
-  <a href="#açık-kaynak-ve-dağıtım-sürümü">Açık kaynak ve dağıtım sürümü</a> ·
+  <a href="#açık-kaynak-ve-distribution">Açık kaynak ve Distribution</a> ·
   <a href="#kurulum">Kurulum</a> ·
   <a href="#gizlilik">Gizlilik</a> ·
   <a href="#kaynaktan-derleme">Kaynaktan derleme</a> ·
@@ -65,11 +65,11 @@ macOS size tek bir ses kaydırıcısı verir. MacMix gerisini verir: müziğiniz
 - Yerel SwiftUI, ses yerel olarak gerçek zamanlı işlenir, hesap gerekmez.
 - Sparkle ile otomatik güncellemeler.
 
-## Açık kaynak ve dağıtım sürümü
+## Açık kaynak ve Distribution
 
-Bu depo MacMix’in **ücretsiz ve açık kaynak çekirdeğini** içerir. Releases sayfasındaki indirme **dağıtım sürümüdür**: ücretsiz kullanılan tek bir uygulama; **MacMix Studio** ise isteğe bağlı, tek seferlik bir yükseltmedir. Ayrı bir “Studio uygulaması” yoktur; lisans aynı uygulamada ek özelliklerin kilidini açar ve ayarlarınız olduğu gibi kalır.
+Bu depo MacMix’in **ücretsiz ve açık kaynak çekirdeğini** içerir. Releases sayfasındaki indirme **Distribution**’dır: ücretsiz kullanılan tek bir uygulama; **MacMix Studio** ise isteğe bağlı, tek seferlik bir yükseltmedir. Ayrı bir “Studio uygulaması” yoktur; lisans aynı uygulamada ek özelliklerin kilidini açar ve ayarlarınız olduğu gibi kalır.
 
-| Dahil olan özellikler | <div align="center">Açık kaynak<br><sub>(bu depo)</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> | <div align="center">Dağıtım<br>sürümü<br><sub>(ücretsiz)</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> | <div align="center">Dağıtım<br>sürümü<br><sub>(Studio)</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> |
+| Dahil olan özellikler | <div align="center">Açık kaynak<br><sub>(bu depo)</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> | <div align="center">Distribution<br><sub>(ücretsiz)</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> | <div align="center">Distribution<br><sub>(Studio)</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> |
 | --- | :---: | :---: | :---: |
 | Sistem, ekran ve uygulama ses düzeyi | ✅ | ✅ | ✅ |
 | Çıkış, AirPlay ve giriş aygıtı değiştirme | ✅ | ✅ | ✅ |
@@ -88,7 +88,7 @@ Bu depo MacMix’in **ücretsiz ve açık kaynak çekirdeğini** içerir. Releas
 | **Beta Sürümlere Erken Erişim** — yeni özellikleri ilk siz deneyin | — | — | ✅ |
 
 > [!NOTE]
-> Studio özellikleri özel olarak geliştirilir ve bu depoda yer almaz. Uygulama başına karıştırma ve 2.0 sürümünden önceki tüm özellikler dahil, ücretsiz olan her şey ücretsiz ve açık kaynak kalacaktır. Ortak çekirdekteki düzeltmeler dağıtım sürümünde doğrulandıktan sonra bu depoya gelir; bu nedenle buradaki kod en son sürümün biraz gerisinde olabilir.
+> Studio özellikleri özel olarak geliştirilir ve bu depoda yer almaz. Uygulama başına karıştırma ve 2.0 sürümünden önceki tüm özellikler dahil, ücretsiz olan her şey ücretsiz ve açık kaynak kalacaktır. Ortak çekirdekteki düzeltmeler Distribution’da doğrulandıktan sonra bu depoya gelir; bu nedenle buradaki kod en son sürümün biraz gerisinde olabilir.
 
 ## Kurulum
 

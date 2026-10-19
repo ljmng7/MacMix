@@ -1,7 +1,7 @@
 <p align="center">
   <img src="../images/og-image.webp" alt="MacMix — Toàn bộ âm thanh của máy Mac, gói gọn trong MacMix. Bộ trộn âm gốc cho thanh menu macOS: âm lượng hệ thống, thiết bị đầu ra và đầu vào, cùng âm thanh của từng ứng dụng." width="100%">
   <br>
-  <sub>Ảnh chụp màn hình là bản phân phối. Một số tính năng cần MacMix Studio.</sub>
+  <sub>Ảnh chụp màn hình là Distribution. Một số tính năng cần MacMix Studio.</sub>
 </p>
 
 <p align="center">
@@ -25,7 +25,7 @@
 
 <p align="center">
   <a href="#tính-năng">Tính năng</a> ·
-  <a href="#bản-mã-nguồn-mở-và-bản-phân-phối">Mã nguồn mở và bản phân phối</a> ·
+  <a href="#bản-mã-nguồn-mở-và-distribution">Mã nguồn mở và Distribution</a> ·
   <a href="#cài-đặt">Cài đặt</a> ·
   <a href="#quyền-riêng-tư">Quyền riêng tư</a> ·
   <a href="#biên-dịch-từ-mã-nguồn">Biên dịch từ mã nguồn</a> ·
@@ -65,11 +65,11 @@ macOS chỉ cho bạn một thanh trượt âm lượng. MacMix lo phần còn l
 - SwiftUI gốc, âm thanh được xử lý cục bộ theo thời gian thực, không cần tài khoản.
 - Tự động cập nhật qua Sparkle.
 
-## Bản mã nguồn mở và bản phân phối
+## Bản mã nguồn mở và Distribution
 
-Kho mã này chứa **phần lõi miễn phí, mã nguồn mở** của MacMix. Bản tải xuống trên trang Releases là **bản phân phối**: một ứng dụng duy nhất, dùng miễn phí, với **MacMix Studio** là gói nâng cấp tùy chọn mua một lần. Không có “ứng dụng Studio” riêng; giấy phép chỉ mở khóa thêm tính năng trong cùng ứng dụng, và cài đặt của bạn vẫn giữ nguyên.
+Kho mã này chứa **phần lõi miễn phí, mã nguồn mở** của MacMix. Bản tải xuống trên trang Releases là **Distribution**: một ứng dụng duy nhất, dùng miễn phí, với **MacMix Studio** là gói nâng cấp tùy chọn mua một lần. Không có “ứng dụng Studio” riêng; giấy phép chỉ mở khóa thêm tính năng trong cùng ứng dụng, và cài đặt của bạn vẫn giữ nguyên.
 
-| Tính năng đi kèm | <div align="center">Mã nguồn mở<br><sub>(kho mã này)</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> | <div align="center">Bản phân phối<br><sub>(miễn phí)</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> | <div align="center">Bản phân phối<br><sub>(Studio)</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> |
+| Tính năng đi kèm | <div align="center">Mã nguồn mở<br><sub>(kho mã này)</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> | <div align="center">Distribution<br><sub>(miễn phí)</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> | <div align="center">Distribution<br><sub>(Studio)</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> |
 | --- | :---: | :---: | :---: |
 | Âm lượng hệ thống, màn hình và từng ứng dụng | ✅ | ✅ | ✅ |
 | Chuyển thiết bị đầu ra, AirPlay và đầu vào | ✅ | ✅ | ✅ |
@@ -88,7 +88,7 @@ Kho mã này chứa **phần lõi miễn phí, mã nguồn mở** của MacMix. 
 | **Trải nghiệm sớm bản Beta** — dùng thử tính năng mới trước tiên | — | — | ✅ |
 
 > [!NOTE]
-> Các tính năng Studio được phát triển riêng và không có trong kho mã này. Mọi thứ đang miễn phí, bao gồm trộn âm theo ứng dụng và toàn bộ tính năng trước phiên bản 2.0, sẽ tiếp tục miễn phí và mã nguồn mở. Các bản sửa cho phần lõi chung được đưa vào kho mã này sau khi đã kiểm chứng trên bản phân phối, nên mã ở đây có thể chậm hơn một chút so với bản phát hành mới nhất.
+> Các tính năng Studio được phát triển riêng và không có trong kho mã này. Mọi thứ đang miễn phí, bao gồm trộn âm theo ứng dụng và toàn bộ tính năng trước phiên bản 2.0, sẽ tiếp tục miễn phí và mã nguồn mở. Các bản sửa cho phần lõi chung được đưa vào kho mã này sau khi đã kiểm chứng trên Distribution, nên mã ở đây có thể chậm hơn một chút so với bản phát hành mới nhất.
 
 ## Cài đặt
 
