@@ -14,7 +14,7 @@
 </p>
 
 <p align="center">
-  <a href="README.md">English</a> · <b>简体中文</b>
+  <a href="README.md">English</a> · <b>简体中文</b> · <a href="README.zh-TW.md">繁體中文</a> · <a href="README.ja.md">日本語</a> · <a href="README.ko.md">한국어</a> · <a href="README.fr.md">Français</a> · <a href="README.de.md">Deutsch</a> · <a href="README.es.md">Español</a> · <a href="README.it.md">Italiano</a> · <a href="README.pt-BR.md">Português (Brasil)</a> · <a href="README.ru.md">Русский</a> · <a href="README.ar.md">العربية</a> · <a href="README.hi.md">हिन्दी</a> · <a href="README.id.md">Bahasa Indonesia</a> · <a href="README.th.md">ไทย</a> · <a href="README.vi.md">Tiếng Việt</a> · <a href="README.tr.md">Türkçe</a> · <a href="README.nl.md">Nederlands</a> · <a href="README.pl.md">Polski</a>
 </p>
 
 <p align="center">
@@ -69,7 +69,7 @@ macOS 只给你一个音量滑块，MacMix 把剩下的都补上了：调低吵�
 
 本仓库包含 MacMix **免费开源的核心部分**。Releases 页面提供的下载是**分发版**：同一个应用，免费使用，**MacMix Studio** 是可选的一次性升级。不存在单独的 “Studio 应用”，许可证只会在同一个应用里解锁额外功能，你的设置原样保留。
 
-| | 开源版<br><sub>本仓库</sub> | 分发版<br><sub>免费</sub> | 分发版<br><sub>含 Studio</sub> |
+| 包含的功能 | <div align="center">&nbsp;&nbsp;&nbsp;开源版&nbsp;&nbsp;&nbsp;<br><sub>（本仓库）</sub></div> | <div align="center">&nbsp;&nbsp;&nbsp;分发版&nbsp;&nbsp;&nbsp;<br><sub>（免费）</sub></div> | <div align="center">&nbsp;&nbsp;&nbsp;分发版&nbsp;&nbsp;&nbsp;<br><sub>（Studio）</sub></div> |
 | --- | :---: | :---: | :---: |
 | 系统、显示器与单应用音量 | ✅ | ✅ | ✅ |
 | 输出、AirPlay 与输入设备切换 | ✅ | ✅ | ✅ |
@@ -78,14 +78,14 @@ macOS 只给你一个音量滑块，MacMix 把剩下的都补上了：调低吵�
 | 附带匿名诊断日志的问题反馈 | — | ✅ | ✅ |
 | **自定义 EQ**：为每个应用调音，并保存常用预设 | — | — | ✅ |
 | **多设备输出**：一个应用同时在多台设备播放，每台设备单独调音量 | — | — | ✅ |
-| **Pro Control**：查看蓝牙设备电量，控制聆听模式与空间音频 | — | — | ✅ |
+| **Pro 级控制**：查看蓝牙设备电量，控制聆听模式与空间音频 | — | — | ✅ |
 | **播放中**：查看并控制正在播放的媒体 | — | — | ✅ |
 | **场景预设**：保存设备与应用音量，一键切换 | — | — | ✅ |
-| **系统音量控制**：接管音量键，调节更顺滑 | — | — | ✅ |
+| **系统音量调节**：接管音量键，调节更顺滑 | — | — | ✅ |
 | **锁定输入设备**：防止 macOS 自动切换麦克风 | — | — | ✅ |
 | **黑名单**：让指定应用不参与混音 | — | — | ✅ |
 | **个性化**：自定义主题 | — | — | ✅ |
-| **Beta 抢先体验**：抢先试用新功能 | — | — | ✅ |
+| **抢先体验 Beta 版**：抢先试用新功能 | — | — | ✅ |
 
 > [!NOTE]
 > Studio 功能为私有开发，不包含在本仓库中。已经免费提供的功能（包括单应用混音，以及 2.0 版本之前的全部功能）将始终免费并保持开源。公共核心的修复会在分发版中验证后再同步到本仓库，因此这里的源码可能略晚于最新发布版本。

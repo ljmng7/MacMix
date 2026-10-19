@@ -14,7 +14,7 @@
 </p>
 
 <p align="center">
-  <b>English</b> · <a href="README.zh-CN.md">简体中文</a>
+  <b>English</b> · <a href="README.zh-CN.md">简体中文</a> · <a href="README.zh-TW.md">繁體中文</a> · <a href="README.ja.md">日本語</a> · <a href="README.ko.md">한국어</a> · <a href="README.fr.md">Français</a> · <a href="README.de.md">Deutsch</a> · <a href="README.es.md">Español</a> · <a href="README.it.md">Italiano</a> · <a href="README.pt-BR.md">Português (Brasil)</a> · <a href="README.ru.md">Русский</a> · <a href="README.ar.md">العربية</a> · <a href="README.hi.md">हिन्दी</a> · <a href="README.id.md">Bahasa Indonesia</a> · <a href="README.th.md">ไทย</a> · <a href="README.vi.md">Tiếng Việt</a> · <a href="README.tr.md">Türkçe</a> · <a href="README.nl.md">Nederlands</a> · <a href="README.pl.md">Polski</a>
 </p>
 
 <p align="center">
@@ -69,7 +69,7 @@ macOS gives you one volume slider. MacMix gives you the rest: turn a noisy app d
 
 This repository contains the **free, open-source core** of MacMix. The download on the Releases page is the **distribution build**: one app that is free to use, with **MacMix Studio** as an optional one-time upgrade. There is no separate "Studio app" — a license unlocks extra features in the same app, and your settings stay where they are.
 
-| | Open source<br><sub>this repository</sub> | Distribution build<br><sub>free</sub> | Distribution build<br><sub>with Studio</sub> |
+| Included features | <div align="center">&nbsp;&nbsp;&nbsp;Open source&nbsp;&nbsp;&nbsp;<br><sub>(this repository)</sub></div> | <div align="center">&nbsp;&nbsp;&nbsp;Distribution build&nbsp;&nbsp;&nbsp;<br><sub>(free)</sub></div> | <div align="center">&nbsp;&nbsp;&nbsp;Distribution build&nbsp;&nbsp;&nbsp;<br><sub>(Studio)</sub></div> |
 | --- | :---: | :---: | :---: |
 | System, display and per-app volume | ✅ | ✅ | ✅ |
 | Output, AirPlay and input device switching | ✅ | ✅ | ✅ |
