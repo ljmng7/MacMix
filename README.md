@@ -14,6 +14,10 @@
 </p>
 
 <p align="center">
+  <a href="https://trendshift.io/repositories/197969?utm_source=trendshift-badge&amp;utm_medium=badge&amp;utm_campaign=badge-trendshift-197969" target="_blank" rel="noopener noreferrer"><img src="https://trendshift.io/api/badge/trendshift/repositories/197969/daily?language=Swift" alt="ljmng7%2FMacMix | Trendshift" width="250" height="55"/></a>
+</p>
+
+<p align="center">
   <b>English</b> · <a href="Docs/i18n/README.zh-Hans.md">简体中文</a> · <a href="Docs/i18n/README.zh-Hant.md">繁體中文</a> · <a href="Docs/i18n/README.ja.md">日本語</a> · <a href="Docs/i18n/README.ko.md">한국어</a> · <a href="Docs/i18n/README.fr.md">Français</a> · <a href="Docs/i18n/README.de.md">Deutsch</a> · <a href="Docs/i18n/README.es.md">Español</a> · <a href="Docs/i18n/README.it.md">Italiano</a> · <a href="Docs/i18n/README.pt-BR.md">Português (Brasil)</a> · <a href="Docs/i18n/README.ru.md">Русский</a> · <a href="Docs/i18n/README.ar.md">العربية</a> · <a href="Docs/i18n/README.hi.md">हिन्दी</a> · <a href="Docs/i18n/README.id.md">Bahasa Indonesia</a> · <a href="Docs/i18n/README.th.md">ไทย</a> · <a href="Docs/i18n/README.vi.md">Tiếng Việt</a> · <a href="Docs/i18n/README.tr.md">Türkçe</a> · <a href="Docs/i18n/README.nl.md">Nederlands</a> · <a href="Docs/i18n/README.pl.md">Polski</a>
 </p>
 
