@@ -32,6 +32,12 @@ struct MixVolumeChord {
     private static let digits: [Int64: Int] = [18: 0, 19: 1, 20: 2, 21: 3, 23: 4,
         22: 5, 26: 6, 28: 7, 25: 8]
 
+    // Spelled out: before Swift 6.4 the memberwise initializer is private
+    // because of the private stored properties above.
+    init(modifier: MixVolumeShortcutModifier = .disabled) {
+        self.modifier = modifier
+    }
+
     func matches(_ flags: CGEventFlags) -> Bool {
         let relevant: CGEventFlags = [.maskControl, .maskAlternate, .maskShift, .maskCommand]
         return modifier != .disabled && flags.intersection(relevant) == modifier.flags
