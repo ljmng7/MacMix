@@ -1,7 +1,5 @@
 <p align="center">
   <img src="../images/og-image.webp" alt="MacMix — Todo o som do seu Mac, no MacMix. Um mixer nativo para a barra de menus do macOS: volume do sistema, dispositivos de saída e entrada e o som de cada app." width="100%">
-  <br>
-  <sub>A captura mostra o Distribution. Alguns recursos exigem o MacMix Studio.</sub>
 </p>
 
 <p align="center">
@@ -10,7 +8,7 @@
   <a href="https://github.com/ljmng7/MacMix/releases"><img src="https://img.shields.io/github/downloads/ljmng7/MacMix/total?color=2F80ED" alt="Downloads"></a>
   <img src="https://img.shields.io/badge/macOS-14.4%2B-111111?logo=apple&logoColor=white" alt="macOS 14.4+">
   <img src="https://img.shields.io/badge/Swift-SwiftUI-F05138?logo=swift&logoColor=white" alt="Swift, SwiftUI">
-  <a href="../../LICENSE"><img src="https://img.shields.io/badge/code-MIT-3DA639" alt="MIT License"></a>
+  <a href="../../LICENSE"><img src="https://img.shields.io/badge/license-GPL--3.0-3DA639" alt="GPL-3.0"></a>
 </p>
 
 <p align="center">
@@ -33,7 +31,8 @@
   <a href="#instalação">Instalação</a> ·
   <a href="#privacidade">Privacidade</a> ·
   <a href="#compilar-a-partir-do-código">Compilar a partir do código</a> ·
-  <a href="#apoie-o-macmix">Apoiar</a>
+  <a href="#apoie-o-macmix">Apoiar</a> ·
+  <a href="#licença-e-marca">Licença</a>
 </p>
 
 ---
@@ -67,32 +66,35 @@ O macOS oferece um único controle de volume. O MacMix oferece o resto: abaixe u
 
 - Fica discreto na barra de menus, com uma janela de ajustes opcional.
 - SwiftUI nativo, áudio processado localmente em tempo real, sem conta.
-- Atualizações automáticas com o Sparkle.
+- O app oficial se atualiza sozinho com o Sparkle.
 
 ## Código aberto e Distribution
 
-Este repositório contém o **núcleo gratuito e de código aberto** do MacMix. O download da página Releases é o **Distribution**: um único app gratuito, com o **MacMix Studio** como upgrade opcional de compra única. Não existe um “app Studio” separado: a licença apenas desbloqueia recursos extras no mesmo app, e seus ajustes continuam onde estão.
+**Todos os recursos do MacMix são de código aberto, incluindo o MacMix Studio.** Compile este repositório você mesmo e você terá o app completo com todos os recursos desbloqueados: sem licença, sem conta, sem nada guardado.
 
-| Recursos incluídos | <div align="center">Código aberto<br><sub>(este repositório)</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> | <div align="center">Distribution<br><sub>(gratuita)</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> | <div align="center">Distribution<br><sub>(Studio)</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> |
+O download da página Releases é o **Distribution**: a versão oficial do mesmo app. Ele é gratuito, e o **MacMix Studio** é uma compra opcional e única que desbloqueia os recursos do Studio nessa versão. Não existe um “app Studio” separado: a licença desbloqueia recursos no mesmo app, e seus ajustes continuam onde estão.
+
+| Recursos incluídos | <div align="center">Compilado do código-fonte<br><sub>(este repositório)</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> | <div align="center">Distribution<br><sub>(gratuita)</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> | <div align="center">Distribution<br><sub>(Studio)</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> |
 | --- | :---: | :---: | :---: |
 | Volume do sistema, do monitor e por app | ✅ | ✅ | ✅ |
 | Troca de dispositivos de saída, AirPlay e entrada | ✅ | ✅ | ✅ |
 | Amplificação de 200% por app | ✅ | ✅ | ✅ |
+| Envio de feedback com registros de diagnóstico anônimos | ✅ | ✅ | ✅ |
+| **EQ personalizado** — ajuste o som de cada app e salve seus presets | ✅ | — | ✅ |
+| **Saída para vários dispositivos** — um app em vários dispositivos ao mesmo tempo, cada um com seu próprio volume | ✅ | — | ✅ |
+| **Controles Pro** — bateria de dispositivos Bluetooth, Modo de Audição e Áudio Espacial | ✅ | — | ✅ |
+| **Reproduzindo agora** — veja e controle a mídia atual | ✅ | — | ✅ |
+| **Predefinições de cena** — salve dispositivos e volumes dos apps e alterne com um clique | ✅ | — | ✅ |
+| **Controles de Volume do Sistema** — assuma as teclas de volume para um ajuste mais suave | ✅ | — | ✅ |
+| **Bloquear dispositivo de entrada** — impeça o macOS de trocar seu microfone | ✅ | — | ✅ |
+| **Lista de bloqueio** — deixe apps específicos fora da mixagem | ✅ | — | ✅ |
+| **Personalização** — temas personalizados | ✅ | — | ✅ |
 | Assinada e autenticada pelo desenvolvedor | — | ✅ | ✅ |
-| Envio de feedback com registros de diagnóstico anônimos | — | ✅ | ✅ |
-| **EQ personalizado** — ajuste o som de cada app e salve seus presets | — | — | ✅ |
-| **Saída para vários dispositivos** — um app em vários dispositivos ao mesmo tempo, cada um com seu próprio volume | — | — | ✅ |
-| **Controles Pro** — bateria de dispositivos Bluetooth, Modo de Audição e Áudio Espacial | — | — | ✅ |
-| **Reproduzindo agora** — veja e controle a mídia atual | — | — | ✅ |
-| **Predefinições de cena** — salve dispositivos e volumes dos apps e alterne com um clique | — | — | ✅ |
-| **Controles de Volume do Sistema** — assuma as teclas de volume para um ajuste mais suave | — | — | ✅ |
-| **Bloquear dispositivo de entrada** — impeça o macOS de trocar seu microfone | — | — | ✅ |
-| **Lista de bloqueio** — deixe apps específicos fora da mixagem | — | — | ✅ |
-| **Personalização** — temas personalizados | — | — | ✅ |
+| Atualizações automáticas | — | ✅ | ✅ |
 | **Acesso antecipado às betas** — experimente as novidades primeiro | — | — | ✅ |
 
 > [!NOTE]
-> Os recursos do Studio são desenvolvidos de forma privada e não fazem parte deste repositório. Tudo o que já é gratuito, incluindo a mixagem por app e todos os recursos anteriores à versão 2.0, continuará gratuito e de código aberto. As correções do núcleo comum chegam a este repositório depois de validadas no Distribution, então o código aqui pode ficar um pouco atrás da versão mais recente.
+> Só as partes que existem exclusivamente para o Distribution continuam privadas: ativação de licença, fluxo de compra, apresentação inicial e atualizador. Nenhuma delas é necessária para compilar ou executar o MacMix, e as versões compiladas deste repositório não incluem nenhuma delas.
 
 ## Instalação
 
@@ -116,7 +118,11 @@ cd MacMix
 open MacMix.xcodeproj
 ```
 
-Selecione o esquema **MacMix** e clique em **Run**. O Xcode resolve automaticamente os pacotes Swift (Sparkle e Swift Atomics).
+Selecione o esquema **MacMix** e clique em **Run**. O Xcode resolve automaticamente os pacotes Swift (MenuBarExtraAccess e Swift Atomics). Todos os recursos do Studio vêm desbloqueados na sua versão.
+
+Sem uma equipe de desenvolvimento, o Xcode assina o app apenas para execução local, e o macOS pode pedir de novo a permissão de **Gravação de Áudio do Sistema** a cada nova compilação. Para manter a permissão, copie `Config/Local.example.xcconfig` para `Config/Local.xcconfig` e defina o seu próprio `DEVELOPMENT_TEAM`. O Git ignora esse arquivo.
+
+Versões compiladas do código-fonte não se atualizam sozinhas. Para atualizar, baixe o código mais recente e compile de novo.
 
 Os testes de regressão são scripts simples que só precisam das ferramentas de linha de comando do Xcode:
 
@@ -138,14 +144,18 @@ for test in tests/run-*.sh; do bash "$test"; done
 
 ## Apoie o MacMix
 
-Se o MacMix faz parte do seu dia, considere fazer o upgrade para o **MacMix Studio**. É uma compra única que desbloqueia os recursos acima e financia o núcleo gratuito e de código aberto.
+Compilar do código-fonte é, e continuará sendo, gratuito. Se o MacMix faz parte do seu dia, considere comprar o **MacMix Studio**: uma compra única que desbloqueia os recursos do Studio no Distribution — o app assinado, notarizado e que se mantém atualizado sozinho — e financia diretamente o desenvolvimento do MacMix.
 
 <p align="center">
   <a href="https://checkout.dodopayments.com/buy/pdt_0NmJ2vOqulR07tfZqwKtU?quantity=1"><img src="https://img.shields.io/badge/Obter-MacMix_Studio-7A5CFA?style=for-the-badge&labelColor=241A3D" alt="Obter o MacMix Studio"></a>
 </p>
 
-Relatos de bugs e ideias são bem-vindos em [Issues](https://github.com/ljmng7/MacMix/issues).
+Relatos de bugs e ideias são bem-vindos em [Issues](https://github.com/ljmng7/MacMix/issues). Para contribuir com código, veja o [guia de contribuição](../../CONTRIBUTING.md); pull requests exigem a assinatura de um Contrato de Licença de Colaborador (CLA).
 
-## Licença
+## Licença e marca
 
-O código-fonte é distribuído sob a [Licença MIT](../../LICENSE). O ícone do app, as capturas de tela e outros elementos da marca **não** estão cobertos pela Licença MIT e não podem ser reutilizados sem permissão. Veja [Elementos da marca](../../BRAND-ASSETS.md).
+O MacMix é software livre: você pode redistribuí-lo e/ou modificá-lo nos termos da [Licença Pública Geral GNU, versão 3](../../LICENSE) (GPL-3.0). As versões até a 2.3.2, inclusive, foram lançadas sob a Licença MIT; o código que você recebeu sob esses termos continua disponível sob eles.
+
+**Marca.** O nome “MacMix” e o ícone do app MacMix identificam o app oficial e são reservados às versões oficiais. A GPL cobre o código, não o nome nem a marca. Se você distribuir um fork ou uma versão modificada, dê a ela outro nome, outro ícone e outro identificador de pacote, e não a apresente como o MacMix oficial. Compilar e usar o MacMix para você mesmo é sempre permitido.
+
+O ícone do app, as capturas de tela e outros elementos da marca **não** estão cobertos pela GPL e não podem ser reutilizados sem permissão. Veja [Elementos da marca](../../BRAND-ASSETS.md).
