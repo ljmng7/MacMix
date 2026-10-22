@@ -7,9 +7,9 @@ python3 - "$ROOT" "$TEST_DIR" <<'PY'
 from pathlib import Path
 import sys
 root, out = map(Path, sys.argv[1:])
-health = (root / 'MacMix/OutputRouteHealth.swift').read_text()
+health = (root / 'MacMix/Audio/OutputRouteHealth.swift').read_text()
 budget = health[health.index('nonisolated struct OutputRecoveryBudget'):health.index('nonisolated struct OutputRouteHealth:')]
-mixer = (root / 'MacMix/AppAudioMixer.swift').read_text()
+mixer = (root / 'MacMix/Audio/AppAudioMixer.swift').read_text()
 recovery = mixer[mixer.index('    private func reconcileWithOutputHealth'):mixer.index('    private func protectRoutingProcesses')].replace('private func', 'func').replace('AppMixerCommand', 'Command').replace('AppMixTarget', 'Target')
 projection = health[health.index('    func selecting'):health.index('    static func uintProperty')]
 state = mixer[mixer.index('    private final class MemberOutputRecovery'):mixer.index('    private var engine:')].replace('private ', '')

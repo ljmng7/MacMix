@@ -3,13 +3,13 @@ name: Validate AirPlay receiver routes
 on:
   pull_request:
     paths:
-      - 'MacMix/AirPlayAudioRoutes.swift'
-      - 'MacMix/AudioModels.swift'
-      - 'MacMix/AudioModel.swift'
-      - 'MacMix/CoreAudioHardware.swift'
-      - 'MacMix/MacMixPanel.swift'
-      - 'MacMix/AppAudioMixer.swift'
-      - 'MacMix/AppOutputRouting*'
+      - 'MacMix/Devices/AirPlayAudioRoutes.swift'
+      - 'MacMix/Audio/AudioModels.swift'
+      - 'MacMix/Audio/AudioModel.swift'
+      - 'MacMix/Audio/CoreAudioHardware.swift'
+      - 'MacMix/App/MacMixPanel.swift'
+      - 'MacMix/Audio/AppAudioMixer.swift'
+      - 'MacMix/Features/OutputRouting/**'
       - 'Packages/MacMixStudio/Sources/MacMixStudio/AppOutputRouting.swift'
       - 'Packages/MacMixStudio/Tests/MacMixStudioTests/AppOutputRoutingTests.swift'
       - 'tests/*airplay*'

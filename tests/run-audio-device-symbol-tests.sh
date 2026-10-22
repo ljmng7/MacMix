@@ -6,7 +6,7 @@ trap 'rm -rf "$symbol_test_dir"' EXIT
 # Compile the production resolver against simulated symbol sets for older OSes.
 python3 - "$symbol_test_dir/AudioDeviceSFSymbols.swift" <<'PY'
 import pathlib, sys
-source = pathlib.Path('MacMix/BluetoothAudioBattery.swift').read_text()
+source = pathlib.Path('MacMix/Devices/BluetoothAudioBattery.swift').read_text()
 start = source.index('enum AudioDeviceSFSymbols {')
 end = source.index('\nnonisolated private func normalizedAudioAccessoryName', start)
 pathlib.Path(sys.argv[1]).write_text(source[start:end])

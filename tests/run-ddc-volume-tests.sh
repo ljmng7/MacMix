@@ -7,8 +7,8 @@ python3 - "$ROOT" "$DDC_TEST_DIR" <<'PY'
 from pathlib import Path
 import sys
 root, out = map(Path, sys.argv[1:])
-protocol = (root / 'MacMix/DDCProtocol.swift').read_text()
-controller = (root / 'MacMix/DisplayVolumeController.swift').read_text()
+protocol = (root / 'MacMix/Devices/DDCProtocol.swift').read_text()
+controller = (root / 'MacMix/Devices/DisplayVolumeController.swift').read_text()
 if sys.platform != 'darwin':
     # Keep the actual queue, routing, caching and mute/write implementation.
     # Only platform imports and IOKit transports need substitutes on Linux.

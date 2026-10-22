@@ -7,16 +7,16 @@ python3 - "$ROOT" "$AIRPLAY_TEST_DIR" <<'PY'
 from pathlib import Path
 import sys
 root, out = map(Path, sys.argv[1:])
-routes = (root / 'MacMix/AirPlayAudioRoutes.swift').read_text()
-models = (root / 'MacMix/AudioModels.swift').read_text()
-model = (root / 'MacMix/AudioModel.swift').read_text()
+routes = (root / 'MacMix/Devices/AirPlayAudioRoutes.swift').read_text()
+models = (root / 'MacMix/Audio/AudioModels.swift').read_text()
+model = (root / 'MacMix/Audio/AudioModel.swift').read_text()
 device = models[models.index('struct AudioDevice:'):models.index('struct AudioApp:')]
 state = model[model.index('@MainActor\n@Observable\nfinal class OutputAudioState'):model.index('@MainActor\n@Observable\nfinal class InputAudioState')]
 store = (root / 'Packages/MacMixStudio/Sources/MacMixStudio/AppOutputRouting.swift').read_text()
 tests = (root / 'tests/AirPlayAudioRoutesTests.swift').read_text()
-hardware = (root / 'MacMix/CoreAudioHardware.swift').read_text()
+hardware = (root / 'MacMix/Audio/CoreAudioHardware.swift').read_text()
 destinations = hardware[hardware.index('    func airPlayDestinations'):hardware.index('    nonisolated func defaultDeviceID')]
-mixer = (root / 'MacMix/AppAudioMixer.swift').read_text()
+mixer = (root / 'MacMix/Audio/AppAudioMixer.swift').read_text()
 silence = mixer[mixer.index('    nonisolated func silenceChangedAirPlayReceivers'):mixer.index('    private var routingTapIndices')]
 mask = mixer[mixer.index('    private func destinationMask'):mixer.index('    private struct OutputStreamCandidate')]
 (out / 'Tests.swift').write_text(tests + '\n' + routes + '\n' + device + '\n' + store + '\n' + state

@@ -3,16 +3,16 @@ name: DDC volume tests
 on:
   pull_request:
     paths:
-      - 'MacMix/DDCProtocol.swift'
-      - 'MacMix/DisplayVolumeController.swift'
+      - 'MacMix/Devices/DDCProtocol.swift'
+      - 'MacMix/Devices/DisplayVolumeController.swift'
       - 'tests/DDCVolumeTests.swift'
       - 'tests/run-ddc-volume-tests.sh'
       - '.github/workflows/ddc-tests.yml'
   push:
     branches: [main]
     paths:
-      - 'MacMix/DDCProtocol.swift'
-      - 'MacMix/DisplayVolumeController.swift'
+      - 'MacMix/Devices/DDCProtocol.swift'
+      - 'MacMix/Devices/DisplayVolumeController.swift'
       - 'tests/DDCVolumeTests.swift'
       - 'tests/run-ddc-volume-tests.sh'
       - '.github/workflows/ddc-tests.yml'
@@ -32,7 +32,7 @@ jobs:
           for arch in arm64 x86_64; do
             xcrun swiftc -typecheck -default-isolation MainActor \
               -target "$arch-apple-macos14.4" \
-              MacMix/DDCProtocol.swift MacMix/DisplayVolumeController.swift
+              MacMix/Devices/DDCProtocol.swift MacMix/Devices/DisplayVolumeController.swift
           done
       - name: Run DDC volume regression tests
         run: bash tests/run-ddc-volume-tests.sh

@@ -7,9 +7,9 @@ python3 - "$ROOT" "$TEST_DIR" <<'PY'
 from pathlib import Path
 import sys
 root, out = map(Path, sys.argv[1:])
-mixer = (root / 'MacMix/AppAudioMixer.swift').read_text()
-model = (root / 'MacMix/AudioModel.swift').read_text()
-health = (root / 'MacMix/OutputRouteHealth.swift').read_text()
+mixer = (root / 'MacMix/Audio/AppAudioMixer.swift').read_text()
+model = (root / 'MacMix/Audio/AudioModel.swift').read_text()
+health = (root / 'MacMix/Audio/OutputRouteHealth.swift').read_text()
 target = mixer[mixer.index('nonisolated struct AppMixTarget:'):mixer.index('nonisolated struct AppMixerSnapshot:')]
 start = health.index('nonisolated enum WarmGraphPolicy')
 policy = health[start:health.index('\nnonisolated struct', start)]

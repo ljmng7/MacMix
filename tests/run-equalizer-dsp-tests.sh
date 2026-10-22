@@ -8,7 +8,7 @@ SANITIZERS="${EQ_SANITIZERS:-address,undefined}"
 xcrun clang -std=c11 -O1 -g -Wall -Wextra -Werror "-fsanitize=$SANITIZERS" \
   "$ROOT/tests/AppEqualizerDSPTests.c" \
   "$ROOT/Packages/MacMixStudio/Sources/MacMixEQDSP/MacMixEQDSP.c" \
-  "$ROOT/MacMix/MacMixAudioIOProc.c" \
-  -I "$ROOT/Packages/MacMixStudio/Sources/MacMixEQDSP/include" -I "$ROOT/MacMix" \
+  "$ROOT/MacMix/Audio/MacMixAudioIOProc.c" \
+  -I "$ROOT/Packages/MacMixStudio/Sources/MacMixEQDSP/include" -I "$ROOT/MacMix/Audio" \
   -framework Accelerate -framework CoreAudio -o "$EQ_TEST_DIR/tests"
 "$EQ_TEST_DIR/tests"
