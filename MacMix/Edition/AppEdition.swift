@@ -50,6 +50,9 @@ protocol AppEdition: AnyObject {
 
     /// A window to show before the control panel, such as a first-run introduction.
     var pendingIntroWindowID: String? { get }
+    /// Whether the first-run introduction is done. Later introductions, such as what's new
+    /// in a release, don't delay work that waits for the first run.
+    var hasCompletedFirstRunIntro: Bool { get }
 
     // MARK: Interface
 
@@ -82,8 +85,9 @@ final class OpenSourceEdition: AppEdition {
     func interfaceDidAppear() {}
     func entitlementDidChange(from previous: Bool, to current: Bool) {}
     var pendingIntroWindowID: String? { nil }
+    var hasCompletedFirstRunIntro: Bool { true }
 
-    func scenes(_ context: EditionSceneContext) -> some Scene { _EmptyScene() }
+    func scenes(_ context: EditionSceneContext) -> some Scene { Group {} }
     func appMenuItems() -> AnyView? { nil }
     func controlPanel(_ content: AnyView) -> AnyView { content }
     func studioPrompt(_ placement: StudioPromptPlacement) -> AnyView? { nil }

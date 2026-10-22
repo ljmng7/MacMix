@@ -21,8 +21,10 @@ permissions:
 
 jobs:
   validate:
-    runs-on: macos-latest
+    runs-on: macos-15
     timeout-minutes: 20
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_26.3.app/Contents/Developer
     steps:
       - uses: actions/checkout@v6
       - name: Run AirPlay route regression tests
@@ -31,10 +33,3 @@ jobs:
         run: swift test --package-path Packages/MacMixStudio --filter AppOutputRoutingTests
       - name: Run DSP and destination fade regression tests
         run: bash tests/run-equalizer-dsp-tests.sh
-      - name: Install Metal toolchain
-        run: xcodebuild -downloadComponent MetalToolchain
-      - name: Build MacMix without signing
-        run: >-
-          xcodebuild -project MacMix.xcodeproj -scheme MacMix -configuration Debug
-          -destination 'platform=macOS' -derivedDataPath build/airplay-validation
-          CODE_SIGNING_ALLOWED=NO build

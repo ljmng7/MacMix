@@ -67,8 +67,8 @@ struct MacMixApp: App {
                         runtime.updateStudioAccess(entitlements.hasStudioAccess)
                         await presentIntroIfNeeded()
                     }
-                    .task(id: edition.pendingIntroWindowID == nil) {
-                        guard edition.pendingIntroWindowID == nil else { return }
+                    .task(id: edition.hasCompletedFirstRunIntro) {
+                        guard edition.hasCompletedFirstRunIntro else { return }
                         await runtime.systemAudioPermissionStatus.runPeriodicRefreshLoop()
                     }
             }
