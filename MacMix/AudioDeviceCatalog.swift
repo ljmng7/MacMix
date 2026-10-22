@@ -61,6 +61,12 @@ struct AudioDeviceCatalog {
         return entryByHardwareID[hardwareID]?.symbolName
     }
 
+    func diagnosticModel(forModelUID modelUID: String?) -> (manufacturer: String, model: String)? {
+        guard let hardwareID = Self.hardwareID(fromModelUID: modelUID),
+              let entry = entryByHardwareID[hardwareID] else { return nil }
+        return (entry.manufacturer, entry.model)
+    }
+
     private static func hardwareID(fromModelUID modelUID: String?) -> HardwareID? {
         guard let modelUID else {
             return nil

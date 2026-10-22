@@ -1,0 +1,40 @@
+name: Validate AirPlay receiver routes
+
+on:
+  pull_request:
+    paths:
+      - 'MacMix/AirPlayAudioRoutes.swift'
+      - 'MacMix/AudioModels.swift'
+      - 'MacMix/AudioModel.swift'
+      - 'MacMix/CoreAudioHardware.swift'
+      - 'MacMix/MacMixPanel.swift'
+      - 'MacMix/AppAudioMixer.swift'
+      - 'MacMix/AppOutputRouting*'
+      - 'Packages/MacMixStudio/Sources/MacMixStudio/AppOutputRouting.swift'
+      - 'Packages/MacMixStudio/Tests/MacMixStudioTests/AppOutputRoutingTests.swift'
+      - 'tests/*airplay*'
+      - 'tests/AirPlayAudioRoutesTests.swift'
+      - '.github/workflows/airplay-validation.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: macos-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v6
+      - name: Run AirPlay route regression tests
+        run: bash tests/run-airplay-route-tests.sh
+      - name: Run app output routing persistence tests
+        run: swift test --package-path Packages/MacMixStudio --filter AppOutputRoutingTests
+      - name: Run DSP and destination fade regression tests
+        run: bash tests/run-equalizer-dsp-tests.sh
+      - name: Install Metal toolchain
+        run: xcodebuild -downloadComponent MetalToolchain
+      - name: Build MacMix without signing
+        run: >-
+          xcodebuild -project MacMix.xcodeproj -scheme MacMix -configuration Debug
+          -destination 'platform=macOS' -derivedDataPath build/airplay-validation
+          CODE_SIGNING_ALLOWED=NO build

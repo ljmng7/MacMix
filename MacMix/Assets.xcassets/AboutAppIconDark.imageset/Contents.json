@@ -1,8 +1,14 @@
 {
   "images" : [
     {
-      "filename" : "MacMix-macOS-Dark-1024@1x.png",
-      "idiom" : "universal"
+      "filename" : "MacMix-macOS-Dark-128@1x.png",
+      "idiom" : "mac",
+      "scale" : "1x"
+    },
+    {
+      "filename" : "MacMix-macOS-Dark-128@2x.png",
+      "idiom" : "mac",
+      "scale" : "2x"
     }
   ],
   "info" : {

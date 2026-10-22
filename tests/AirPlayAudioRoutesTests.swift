@@ -15,6 +15,7 @@ nonisolated enum FakeHAL {
     nonisolated(unsafe) static var readFails = false
     nonisolated(unsafe) static var malformedSize = false
     nonisolated(unsafe) static var writes: [UInt32] = []
+    nonisolated(unsafe) static var maskWrites: [(UInt64, Bool)] = []
 
     static func values(_ selector: AudioObjectPropertySelector) -> [UInt32] {
         selector == kAudioDevicePropertyDataSource ? selected : available
@@ -66,6 +67,15 @@ nonisolated func AudioObjectSetPropertyData(_ id: AudioObjectID, _ address: Unsa
     FakeHAL.writes.append(sourceID)
     FakeHAL.selected = [sourceID]
     return noErr
+}
+
+struct AudioDeviceBattery: Equatable {}
+struct AudioAccessoryControlState: Equatable {}
+
+nonisolated func MacMixAudioIOContextSetDestinationMask(_ context: Int, _ index: Int,
+    _ mask: UInt64, _ initializeBeforeStart: Bool) {
+    precondition(index == 0)
+    FakeHAL.maskWrites.append((mask, initializeBeforeStart))
 }
 
 @main struct AirPlayAudioRoutesTests {
@@ -156,11 +166,66 @@ nonisolated func AudioObjectSetPropertyData(_ id: AudioObjectID, _ address: Unsa
         precondition(state.selectionDevices.count == 2 && state.selectionDevices.allSatisfy(\.isCurrent))
         precondition(!state.isSelected(state.selectionDevices[0]), "A production-expanded group member can switch to a single receiver")
 
+        var group = base
+        group.selectedDataSourceIDs = [7, 9]
+        state.devices = [group]
+        precondition(state.routingDevices.count == 1, "A shared HAL receiver group is one app output")
+        precondition(state.routingDestinations[0].dataSourceIDs == [7, 9])
+        group.selectedDataSourceIDs = []
+        state.devices = [group]
+        precondition(state.routingDevices.isEmpty, "Do not offer an unreadable or unconnected receiver")
+
+        FakeHAL.selected = [9, 7]
+        let route = AirPlayOutputRoute(deviceID: 100, sourceIDs: [7, 9])
+        precondition(route.isConnected, "Receiver group order is not significant")
+        precondition(AirPlayOutputRoute.validatedUIDs(["local", "airplay-hal"], routes: ["airplay-hal": route]) == ["local", "airplay-hal"])
+        FakeHAL.selected = [9]
+        precondition(AirPlayOutputRoute.validatedUIDs(["local", "airplay-hal"], routes: ["airplay-hal": route]) == ["local"], "A changed receiver must not steal the old app route; local output remains")
+        precondition(!AirPlayOutputRoute(deviceID: 100, sourceIDs: []).isConnected)
+        FakeHAL.readFails = true
+        precondition(!AirPlayOutputRoute(deviceID: 100, sourceIDs: [9]).isConnected)
+        FakeHAL.readFails = false
+        precondition(AirPlayOutputRoute.validatedUIDs(["local", "airplay-hal"], routes: ["airplay-hal": AirPlayOutputRoute(deviceID: 100, sourceIDs: [9])]) == ["local", "airplay-hal"], "Transient read failures must recover when the same receiver is readable again")
+        precondition(FakeHAL.writes == [9], "App route validation never changes the shared receiver")
+
+        let runningMixer = RunningMixerMaskProbe()
+        runningMixer.silenceChangedAirPlayReceivers()
+        precondition(FakeHAL.maskWrites.count == 1 && FakeHAL.maskWrites[0].0 == 1)
+        precondition(!FakeHAL.maskWrites[0].1, "A running engine must publish an atomic mask, never write callback-owned gains")
+        precondition(runningMixer.outputRoutes["music"] == ["local"], "Rendered route cache must match the published mask")
+        runningMixer.silenceChangedAirPlayReceivers()
+        precondition(FakeHAL.maskWrites.count == 1, "Do not repeat writes after the stale receiver is removed")
+
+        let domain = "MacMix.Incomplete.AirPlay.Tests.\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: domain)!
+        defer { defaults.removePersistentDomain(forName: domain) }
+        let store = AppOutputRoutingStore(defaults: defaults)
+        store.updateAccess(true)
+        store.setFeatureEnabled(true)
+        store.setSelected(true, destination: .init(uid: "airplay-hal", name: "AirPlay"), for: "music")
+        FakeHAL.selected = [7, 9]
+        FakeHAL.names = [7: "Living Room HomePod"]
+        let incomplete = AirPlayDataSources.read(deviceID: 100)
+        precondition(incomplete.selectedName == nil && incomplete.routingSourceIDs.isEmpty)
+        group.selectedDataSourceIDs = incomplete.routingSourceIDs
+        state.devices = [group]
+        precondition(state.routingDestinations.isEmpty, "A partially unnamed group must not be offered to app routing")
+        store.bindLegacyAirPlayDestinations(state.routingDestinations)
+        precondition(store.destinations(for: "music")[0].dataSourceIDs == nil, "Do not permanently migrate a legacy preference using incomplete names")
+        FakeHAL.selected = [9]
+        precondition(AirPlayDataSources.read(deviceID: 100).routingSourceIDs.isEmpty, "An unnamed single receiver is also unreadable")
+        FakeHAL.selected = [9, 7]
+        FakeHAL.names[9] = "Bedroom HomePod"
+        group.selectedDataSourceIDs = AirPlayDataSources.read(deviceID: 100).routingSourceIDs
+        state.devices = [group]
+        store.bindLegacyAirPlayDestinations(state.routingDestinations)
+        precondition(store.destinations(for: "music")[0].dataSourceIDs == [7, 9], "Complete recovered metadata enables migration")
         print("AirPlay route regression tests passed")
     }
 
     static func device(name: String, current: Bool) -> AudioDevice {
-        AudioDevice(id: 100, uid: "airplay-hal", name: name, iconName: "airplayaudio",
+        AudioDevice(id: 100, uid: "airplay-hal", name: name, manufacturer: nil, modelUID: nil,
+            iconName: "airplayaudio", systemIconURL: nil, systemIcon: nil,
             transportType: kAudioDeviceTransportTypeAirPlay, isCurrent: current, volume: 0.5)
     }
 }

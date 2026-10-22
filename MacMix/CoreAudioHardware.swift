@@ -66,17 +66,21 @@ struct CoreAudioHardware {
             }
 
             let systemIconURL = urlProperty(deviceID, selector: kAudioDevicePropertyIcon)
+
             return AudioDevice(
                 id: deviceID,
                 uid: identity.deviceUID ?? "\(deviceID)",
                 name: name,
+                manufacturer: identity.manufacturer,
+                modelUID: identity.modelUID,
                 iconName: iconName(for: identity, direction: direction, connectedDisplayNames: displayNames),
                 systemIconURL: systemIconURL,
                 systemIcon: systemIconURL.flatMap(NSImage.init(contentsOf:)),
                 transportType: identity.transportType,
                 isCurrent: deviceID == defaultID,
                 volume: volume(for: deviceID, direction: direction),
-                dataSourceID: airPlaySources?.selectedIDs.count == 1 ? airPlaySources?.selectedIDs.first : nil
+                dataSourceID: airPlaySources?.selectedIDs.count == 1 ? airPlaySources?.selectedIDs.first : nil,
+                selectedDataSourceIDs: airPlaySources.map(\.routingSourceIDs)
             )
         }
     }
@@ -93,6 +97,7 @@ struct CoreAudioHardware {
             return snapshot.sources.map { source in
                 let isCurrent = device.isCurrent && snapshot.selectedIDs.contains(source.id)
                 return AudioDevice(id: device.id, uid: device.uid, name: source.name,
+                    manufacturer: device.manufacturer, modelUID: device.modelUID,
                     iconName: device.iconName, systemIconURL: device.systemIconURL,
                     systemIcon: device.systemIcon, transportType: device.transportType,
                     isCurrent: isCurrent, volume: isCurrent ? device.volume : nil,
@@ -329,6 +334,21 @@ struct CoreAudioHardware {
         }
     }
 
+    func runningOutputProcessIDs(
+        forAudioProcessObjectIDs objectIDs: [AudioObjectID]
+    ) -> [pid_t] {
+        objectIDs.compactMap { objectID in
+            guard boolProperty(
+                objectID,
+                selector: kAudioProcessPropertyIsRunningOutput
+            ) else {
+                return nil
+            }
+
+            return pidProperty(objectID)
+        }
+    }
+
     private func setSystemDevice(_ deviceID: AudioObjectID, selector: AudioObjectPropertySelector) {
         var address = propertyAddress(selector: selector)
         var mutableDeviceID = deviceID
@@ -376,6 +396,24 @@ struct CoreAudioHardware {
         )
     }
 
+    private func stringProperty(
+        _ objectID: AudioObjectID,
+        selector: AudioObjectPropertySelector
+    ) -> String? {
+        var address = propertyAddress(selector: selector)
+        var value: CFString?
+        var dataSize = UInt32(MemoryLayout<CFString?>.size)
+        let status = withUnsafeMutablePointer(to: &value) { pointer in
+            AudioObjectGetPropertyData(objectID, &address, 0, nil, &dataSize, pointer)
+        }
+
+        guard status == noErr else {
+            return nil
+        }
+
+        return value as String?
+    }
+
     private func urlProperty(
         _ objectID: AudioObjectID,
         selector: AudioObjectPropertySelector
@@ -396,24 +434,6 @@ struct CoreAudioHardware {
         }
 
         return value as URL?
-    }
-
-    private func stringProperty(
-        _ objectID: AudioObjectID,
-        selector: AudioObjectPropertySelector
-    ) -> String? {
-        var address = propertyAddress(selector: selector)
-        var value: CFString?
-        var dataSize = UInt32(MemoryLayout<CFString?>.size)
-        let status = withUnsafeMutablePointer(to: &value) { pointer in
-            AudioObjectGetPropertyData(objectID, &address, 0, nil, &dataSize, pointer)
-        }
-
-        guard status == noErr else {
-            return nil
-        }
-
-        return value as String?
     }
 
     private func pidProperty(_ objectID: AudioObjectID) -> pid_t? {
@@ -734,6 +754,10 @@ struct CoreAudioHardware {
         for searchableText: String,
         identity: AudioDeviceIdentity
     ) -> String? {
+        if searchableText.contains("earpods") {
+            return "earpods"
+        }
+
         if searchableText.containsAny(["airpods max", "airpodsmax"]) {
             return "airpods.max"
         }
@@ -838,6 +862,7 @@ nonisolated final class DefaultOutputRouteProbe: @unchecked Sendable {
     private let timeoutQueue = DispatchQueue(label: "MacMix.DefaultOutputRouteProbe.Timeout")
     private let stateLock = NSLock()
     private var isQueryInFlight = false
+    private var lastReadyOutputHealth: OutputRouteHealth?
 
     func read(timeout: TimeInterval = 0.15) async -> DefaultAudioDeviceUIDRead {
         guard beginQuery() else {
@@ -848,7 +873,16 @@ nonisolated final class DefaultOutputRouteProbe: @unchecked Sendable {
             let gate = DefaultOutputRouteProbeGate(continuation: continuation)
             queryQueue.async { [self] in
                 defer { endQuery() }
-                gate.resume(with: readDefaultAudioDeviceUID(for: .output))
+                let route = readDefaultAudioDeviceUID(for: .output)
+                if case let .device(uid) = route {
+                    let health = OutputRouteHealth.read(uids: [uid])
+                    let stable = health.ready && health == lastReadyOutputHealth
+                    lastReadyOutputHealth = health.ready ? health : nil
+                    gate.resume(with: stable ? route : .failed)
+                } else {
+                    lastReadyOutputHealth = nil
+                    gate.resume(with: route)
+                }
             }
             timeoutQueue.asyncAfter(deadline: .now() + timeout) {
                 gate.resume(with: .failed)
@@ -1802,3 +1836,4 @@ nonisolated final class OutputVolumeController: Sendable {
         }
     }
 }
+

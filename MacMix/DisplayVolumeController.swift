@@ -69,6 +69,7 @@ nonisolated final class DisplayVolumeController: @unchecked Sendable {
     private let queue = DispatchQueue(label: "MacMix.DisplayVolumeController", qos: .userInitiated)
     private let pendingLock = NSLock()
     private let defaults: UserDefaults
+    private let diagnosticEvent: (@Sendable (String, Bool, [String: String]) -> Void)?
     private let transportFactory: (@Sendable (ExternalDisplayDescriptor) -> DDCTransport?)?
     private var activeRoute: ActiveRoute?
     private var pendingOperation: PendingOperation?
@@ -80,10 +81,12 @@ nonisolated final class DisplayVolumeController: @unchecked Sendable {
 
     init(
         defaults: UserDefaults = .standard,
-        transportFactory: (@Sendable (ExternalDisplayDescriptor) -> DDCTransport?)? = nil
+        transportFactory: (@Sendable (ExternalDisplayDescriptor) -> DDCTransport?)? = nil,
+        diagnosticEvent: (@Sendable (String, Bool, [String: String]) -> Void)? = nil
     ) {
         self.defaults = defaults
         self.transportFactory = transportFactory
+        self.diagnosticEvent = diagnosticEvent
     }
 
     func activate(
@@ -132,6 +135,7 @@ nonisolated final class DisplayVolumeController: @unchecked Sendable {
     ) -> DisplayVolumeSnapshot? {
         guard let display = targetDisplay(for: candidate, displays: displays),
               let transport = makeTransport(for: display) else {
+            diagnosticEvent?("activation_unavailable", false, [:])
             activeRoute = nil
             return nil
         }
@@ -139,8 +143,10 @@ nonisolated final class DisplayVolumeController: @unchecked Sendable {
         let cachedVolume = defaults.object(forKey: cacheKey(for: display)) as? Double
         var volume = cachedVolume.flatMap { $0.isFinite ? $0 : nil } ?? Self.safeInitialVolume
         var maximumVolume = DDCVolumeValue.defaultMaximum
+        var readSucceeded = false
 
         if let values = transport.read(command: Self.speakerVolumeCommand) {
+            readSucceeded = true
             maximumVolume = DDCVolumeValue.maximum(values.maximum)
             if let readVolume = DDCVolumeValue.volume(current: values.current, maximum: values.maximum) {
                 volume = readVolume
@@ -154,6 +160,8 @@ nonisolated final class DisplayVolumeController: @unchecked Sendable {
             }
         }
 
+        diagnosticEvent?("activation_read", readSucceeded, [
+            "usedFallback": String(!readSucceeded), "maximum": String(maximumVolume)])
         volume = Self.clampedVolume(volume)
         defaults.set(volume, forKey: cacheKey(for: display))
         activeRoute = ActiveRoute(
@@ -241,6 +249,7 @@ nonisolated final class DisplayVolumeController: @unchecked Sendable {
                     command: Self.speakerVolumeCommand,
                     value: Self.ddcValue(for: volume, maximum: activeRoute.maximumVolume)
                 )
+                diagnosticEvent?("volume_write", didWriteVolume, ["requestedVolume": String(volume)])
                 // A failed volume write must not unmute the old hardware level.
                 if didWriteVolume {
                     if volume > 0 { applyMute(false, to: activeRoute) }
@@ -263,6 +272,7 @@ nonisolated final class DisplayVolumeController: @unchecked Sendable {
                         maximum: activeRoute.maximumVolume
                     )
                 )
+                diagnosticEvent?("mute_fallback_write", didWriteVolume, ["muted": String(isMuted)])
                 if !isMuted && didWriteVolume {
                     applyMute(false, to: activeRoute)
                     defaults.set(fallbackVolume, forKey: cacheKey(for: activeRoute.display))
@@ -279,7 +289,8 @@ nonisolated final class DisplayVolumeController: @unchecked Sendable {
         guard Self.normalizedName(route.display.name) != "r27u91" else { return }
         // The monitor may also be changed using its physical controls; do not
         // treat a cached mute command as authoritative hardware state.
-        _ = route.transport.write(command: Self.audioMuteCommand, value: muted ? 1 : 2)
+        let succeeded = route.transport.write(command: Self.audioMuteCommand, value: muted ? 1 : 2)
+        diagnosticEvent?("mute_write", succeeded, ["muted": String(muted)])
     }
 
     private func cacheKey(for display: ExternalDisplayDescriptor) -> String {

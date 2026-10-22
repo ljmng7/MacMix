@@ -239,6 +239,126 @@
           }
         }
       }
+    },
+    "NSBluetoothAlwaysUsageDescription" : {
+      "comment" : "Privacy usage description for reading the battery levels of connected Bluetooth audio devices.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يستخدم MacMix البلوتوث لقراءة مستويات بطارية أجهزة الصوت المتصلة."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MacMix verwendet Bluetooth, um den Batteriestand verbundener Audiogeräte auszulesen."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MacMix uses Bluetooth to read battery levels for connected audio devices."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MacMix usa Bluetooth para consultar el nivel de batería de los dispositivos de audio conectados."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MacMix utilise le Bluetooth pour lire le niveau de batterie des appareils audio connectés."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MacMix कनेक्ट किए गए ऑडियो डिवाइस का बैटरी स्तर पढ़ने के लिए Bluetooth का उपयोग करता है।"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MacMix menggunakan Bluetooth untuk membaca tingkat baterai perangkat audio yang terhubung."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MacMix usa il Bluetooth per leggere il livello della batteria dei dispositivi audio connessi."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MacMixは、接続されているオーディオデバイスのバッテリー残量を読み取るためにBluetoothを使用します。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MacMix는 연결된 오디오 기기의 배터리 잔량을 읽기 위해 Bluetooth를 사용합니다."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MacMix gebruikt Bluetooth om het batterijniveau van verbonden audioapparaten uit te lezen."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MacMix używa Bluetooth do odczytywania poziomu baterii podłączonych urządzeń audio."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O MacMix usa Bluetooth para ler o nível da bateria de dispositivos de áudio conectados."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MacMix использует Bluetooth для чтения уровня заряда подключённых аудиоустройств."
+          }
+        },
+        "th" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MacMix ใช้บลูทูธเพื่ออ่านระดับแบตเตอรี่ของอุปกรณ์เสียงที่เชื่อมต่ออยู่"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MacMix, bağlı ses aygıtlarının pil düzeylerini okumak için Bluetooth'u kullanır."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MacMix sử dụng Bluetooth để đọc mức pin của các thiết bị âm thanh được kết nối."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MacMix 使用蓝牙读取已连接音频设备的电量。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MacMix 使用藍牙讀取已連接音訊裝置的電量。"
+          }
+        }
+      }
     }
   },
   "version" : "1.0"

@@ -49,45 +49,56 @@ struct AudioDevice: Identifiable, Hashable {
     let id: AudioObjectID
     let uid: String
     let name: String
+    let manufacturer: String?
+    let modelUID: String?
     let iconName: String
-    var systemIconURL: URL? = nil
-    var systemIcon: NSImage? = nil
+    let systemIconURL: URL?
+    let systemIcon: NSImage?
     let transportType: UInt32?
     let isCurrent: Bool
     var volume: Double?
 
     // Keep uid as the HAL identity used by the mixer and saved routes.
     var dataSourceID: UInt32? = nil
+    // The complete connected selection, including an AirPlay receiver group.
+    // nil is a regular HAL output; [] is an unreadable/unconnected AirPlay route.
+    var selectedDataSourceIDs: [UInt32]? = nil
 
     var selectionID: String {
         guard let dataSourceID else { return uid }
         return "\(uid)#airplay-source:\(dataSourceID)"
     }
 
-    // A re-read icon is a new NSImage; compare the device's icon URL instead.
     static func == (lhs: AudioDevice, rhs: AudioDevice) -> Bool {
         lhs.id == rhs.id
             && lhs.uid == rhs.uid
             && lhs.name == rhs.name
+            && lhs.manufacturer == rhs.manufacturer
+            && lhs.modelUID == rhs.modelUID
             && lhs.iconName == rhs.iconName
             && lhs.systemIconURL == rhs.systemIconURL
             && lhs.transportType == rhs.transportType
             && lhs.isCurrent == rhs.isCurrent
             && lhs.volume == rhs.volume
             && lhs.dataSourceID == rhs.dataSourceID
+            && lhs.selectedDataSourceIDs == rhs.selectedDataSourceIDs
     }
 
     func hash(into hasher: inout Hasher) {
         hasher.combine(id)
         hasher.combine(uid)
         hasher.combine(name)
+        hasher.combine(manufacturer)
+        hasher.combine(modelUID)
         hasher.combine(iconName)
         hasher.combine(systemIconURL)
         hasher.combine(transportType)
         hasher.combine(isCurrent)
         hasher.combine(volume)
         hasher.combine(dataSourceID)
+        hasher.combine(selectedDataSourceIDs)
     }
+
 }
 
 struct AudioApp: Identifiable {
@@ -99,6 +110,20 @@ struct AudioApp: Identifiable {
     let icon: NSImage?
     var volume: Double
     var isMuted: Bool
+}
+
+struct AudioAppBlacklistEntry: Identifiable, Equatable {
+    let id: String
+    let bundleID: String
+    let name: String
+    let icon: NSImage?
+
+    static func == (lhs: AudioAppBlacklistEntry, rhs: AudioAppBlacklistEntry) -> Bool {
+        lhs.id == rhs.id
+            && lhs.bundleID == rhs.bundleID
+            && lhs.name == rhs.name
+            && (lhs.icon == nil) == (rhs.icon == nil)
+    }
 }
 
 @MainActor
@@ -165,3 +190,4 @@ struct NowPlayingItem {
     var progress: Double
     var artwork: NSImage?
 }
+

@@ -1,6 +1,21 @@
 import CoreAudio
 import Foundation
 
+// A connected receiver selection belongs to the shared HAL output. App routes
+// may reuse it, but must never change it on behalf of an individual application.
+nonisolated struct AirPlayOutputRoute: Equatable, Sendable {
+    let deviceID: AudioObjectID
+    let sourceIDs: [UInt32]
+
+    var isConnected: Bool {
+        AirPlayDataSources.matchesSelection(sourceIDs, deviceID: deviceID)
+    }
+
+    static func validatedUIDs(_ uids: [String], routes: [String: Self]) -> [String] {
+        uids.filter { routes[$0]?.isConnected != false }
+    }
+}
+
 // AirPlay can expose one HAL device with multiple receiver data sources.
 // These are receiver choices, not independently routable HAL devices.
 nonisolated struct AirPlayDataSources {
@@ -17,6 +32,13 @@ nonisolated struct AirPlayDataSources {
         // Never label an unknown selection with another receiver's name.
         guard !names.isEmpty, names.count == selectedIDs.count else { return nil }
         return names.joined(separator: ", ")
+    }
+
+    // App routing and preference migration require complete selected metadata.
+    // Keep the HAL fallback for display, but never pin an unnamed receiver.
+    var routingSourceIDs: [UInt32] {
+        guard selectedName != nil else { return [] }
+        return Array(Set(selectedIDs)).sorted()
     }
 
     static func read(deviceID: AudioObjectID) -> Self {
@@ -48,6 +70,12 @@ nonisolated struct AirPlayDataSources {
 
     static func isSelected(_ sourceID: UInt32, deviceID: AudioObjectID) -> Bool {
         ids(deviceID: deviceID, selector: kAudioDevicePropertyDataSource) == [sourceID]
+    }
+
+    static func matchesSelection(_ sourceIDs: [UInt32], deviceID: AudioObjectID) -> Bool {
+        guard !sourceIDs.isEmpty,
+              let selected = ids(deviceID: deviceID, selector: kAudioDevicePropertyDataSource) else { return false }
+        return Array(Set(selected)).sorted() == Array(Set(sourceIDs)).sorted()
     }
 
     private static func ids(deviceID: AudioObjectID, selector: AudioObjectPropertySelector) -> [UInt32]? {
