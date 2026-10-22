@@ -1,7 +1,5 @@
 <p align="center">
   <img src="../images/og-image.webp" alt="MacMix — 你的Mac音量，尽在MacMix。原生 macOS 菜单栏混音器：系统音量、输出与输入设备、单个应用的音量，一处搞定。" width="100%">
-  <br>
-  <sub>截图为分发版，部分功能需要 MacMix Studio。</sub>
 </p>
 
 <p align="center">
@@ -10,7 +8,7 @@
   <a href="https://github.com/ljmng7/MacMix/releases"><img src="https://img.shields.io/github/downloads/ljmng7/MacMix/total?color=2F80ED" alt="下载量"></a>
   <img src="https://img.shields.io/badge/macOS-14.4%2B-111111?logo=apple&logoColor=white" alt="macOS 14.4 或更高版本">
   <img src="https://img.shields.io/badge/Swift-SwiftUI-F05138?logo=swift&logoColor=white" alt="Swift 与 SwiftUI">
-  <a href="../../LICENSE"><img src="https://img.shields.io/badge/code-MIT-3DA639" alt="代码采用 MIT 许可证"></a>
+  <a href="../../LICENSE"><img src="https://img.shields.io/badge/license-GPL--3.0-3DA639" alt="GPL-3.0 许可证"></a>
 </p>
 
 <p align="center">
@@ -33,7 +31,8 @@
   <a href="#安装">安装</a> ·
   <a href="#隐私">隐私</a> ·
   <a href="#从源码构建">从源码构建</a> ·
-  <a href="#支持-macmix">支持</a>
+  <a href="#支持-macmix">支持</a> ·
+  <a href="#许可证与商标">许可证</a>
 </p>
 
 ---
@@ -67,32 +66,35 @@ macOS 只给你一个音量滑块，MacMix 把剩下的都补上了：调低吵�
 
 - 安静地待在菜单栏，另有可选的设置窗口。
 - 原生 SwiftUI，音频在本机实时处理，无需账户。
-- 通过 Sparkle 自动更新。
+- 官方版通过 Sparkle 自动更新。
 
 ## 开源版与分发版
 
-本仓库包含 MacMix **免费开源的核心部分**。Releases 页面提供的下载是**分发版**：同一个应用，免费使用，**MacMix Studio** 是可选的一次性升级。不存在单独的 “Studio 应用”，许可证只会在同一个应用里解锁额外功能，你的设置原样保留。
+**MacMix 的全部功能都已开源，包括 MacMix Studio。** 自己构建本仓库，就能得到功能完整、全部解锁的应用：不需要许可证，不需要账户，没有任何保留。
 
-| 包含的功能 | <div align="center">开源版<br><sub>（本仓库）</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> | <div align="center">分发版<br><sub>（免费）</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> | <div align="center">分发版<br><sub>（Studio）</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> |
+Releases 页面提供的下载是**分发版**，也就是同一个应用的官方构建。分发版可以免费使用，**MacMix Studio** 是可选的一次性购买，用于在分发版中解锁 Studio 功能。不存在单独的 “Studio 应用”，许可证只会在同一个应用里解锁功能，你的设置原样保留。
+
+| 包含的功能 | <div align="center">从源码构建<br><sub>（本仓库）</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> | <div align="center">分发版<br><sub>（免费）</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> | <div align="center">分发版<br><sub>（Studio）</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> |
 | --- | :---: | :---: | :---: |
 | 系统、显示器与单应用音量 | ✅ | ✅ | ✅ |
 | 输出、AirPlay 与输入设备切换 | ✅ | ✅ | ✅ |
 | 单应用 200% 音量增强 | ✅ | ✅ | ✅ |
+| 附带匿名诊断日志的问题反馈 | ✅ | ✅ | ✅ |
+| **自定义 EQ**：为每个应用调音，并保存常用预设 | ✅ | — | ✅ |
+| **多设备输出**：一个应用同时在多台设备播放，每台设备单独调音量 | ✅ | — | ✅ |
+| **Pro 级控制**：查看蓝牙设备电量，控制聆听模式与空间音频 | ✅ | — | ✅ |
+| **播放中**：查看并控制正在播放的媒体 | ✅ | — | ✅ |
+| **场景预设**：保存设备与应用音量，一键切换 | ✅ | — | ✅ |
+| **系统音量调节**：接管音量键，调节更顺滑 | ✅ | — | ✅ |
+| **锁定输入设备**：防止 macOS 自动切换麦克风 | ✅ | — | ✅ |
+| **黑名单**：让指定应用不参与混音 | ✅ | — | ✅ |
+| **个性化**：自定义主题 | ✅ | — | ✅ |
 | 开发者签名与 Apple 公证 | — | ✅ | ✅ |
-| 附带匿名诊断日志的问题反馈 | — | ✅ | ✅ |
-| **自定义 EQ**：为每个应用调音，并保存常用预设 | — | — | ✅ |
-| **多设备输出**：一个应用同时在多台设备播放，每台设备单独调音量 | — | — | ✅ |
-| **Pro 级控制**：查看蓝牙设备电量，控制聆听模式与空间音频 | — | — | ✅ |
-| **播放中**：查看并控制正在播放的媒体 | — | — | ✅ |
-| **场景预设**：保存设备与应用音量，一键切换 | — | — | ✅ |
-| **系统音量调节**：接管音量键，调节更顺滑 | — | — | ✅ |
-| **锁定输入设备**：防止 macOS 自动切换麦克风 | — | — | ✅ |
-| **黑名单**：让指定应用不参与混音 | — | — | ✅ |
-| **个性化**：自定义主题 | — | — | ✅ |
+| 自动更新 | — | ✅ | ✅ |
 | **抢先体验 Beta 版**：抢先试用新功能 | — | — | ✅ |
 
 > [!NOTE]
-> Studio 功能为私有开发，不包含在本仓库中。已经免费提供的功能（包括单应用混音，以及 2.0 版本之前的全部功能）将始终免费并保持开源。公共核心的修复会在分发版中验证后再同步到本仓库，因此这里的源码可能略晚于最新发布版本。
+> 只有分发版专用的部分保持私有：许可证激活、购买流程、首次引导和更新器。构建和运行 MacMix 都不需要它们，从本仓库构建的应用也不包含它们。
 
 ## 安装
 
@@ -116,7 +118,11 @@ cd MacMix
 open MacMix.xcodeproj
 ```
 
-选择 **MacMix** scheme 并点击 **Run**。Xcode 会自动解析 Swift 依赖包（Sparkle 和 Swift Atomics）。
+选择 **MacMix** scheme 并点击 **Run**。Xcode 会自动解析 Swift 依赖包（MenuBarExtraAccess 和 Swift Atomics）。你构建出的应用已解锁全部 Studio 功能。
+
+没有设置开发团队时，Xcode 会以“仅在本机运行”的方式签名，每次重新构建后 macOS 可能会再次请求“系统录音”权限。如需保留权限，请把 `Config/Local.example.xcconfig` 复制为 `Config/Local.xcconfig`，并填入你自己的 `DEVELOPMENT_TEAM`。该文件不会被 Git 跟踪。
+
+从源码构建的应用不会自动更新。需要更新时，拉取最新源码重新构建即可。
 
 回归测试是普通脚本，只需要 Xcode 命令行工具：
 
@@ -138,14 +144,18 @@ for test in tests/run-*.sh; do bash "$test"; done
 
 ## 支持 MacMix
 
-如果 MacMix 已经成为你日常的一部分，欢迎升级到 **MacMix Studio**。一次性购买即可解锁上面的全部功能，也直接支持免费开源的核心部分。
+从源码构建始终免费。如果 MacMix 已经成为你日常的一部分，欢迎购买 **MacMix Studio**：一次性购买，在分发版（经过签名和公证、可自动更新的官方应用）中解锁 Studio 功能，并直接支持 MacMix 的开发。
 
 <p align="center">
   <a href="https://checkout.dodopayments.com/buy/pdt_0NmJ2vOqulR07tfZqwKtU?quantity=1"><img src="https://img.shields.io/badge/%E8%8E%B7%E5%8F%96-MacMix_Studio-7A5CFA?style=for-the-badge&labelColor=241A3D" alt="获取 MacMix Studio"></a>
 </p>
 
-欢迎在 [Issues](https://github.com/ljmng7/MacMix/issues) 中反馈问题或提出建议。
+欢迎在 [Issues](https://github.com/ljmng7/MacMix/issues) 中反馈问题或提出建议。贡献代码请参阅 [贡献指南](../../CONTRIBUTING.md)；提交 Pull Request 前需要签署贡献者许可协议（CLA）。
 
-## 许可证
+## 许可证与商标
 
-源代码基于 [MIT License](../../LICENSE) 发布。应用图标、截图和其他品牌素材**不在** MIT 授权范围内，未经许可不得复用，详见 [品牌素材说明](../../BRAND-ASSETS.md)。
+MacMix 是自由软件：你可以依据 [GNU 通用公共许可证第 3 版](../../LICENSE)（GPL-3.0）的条款再分发和修改它。2.3.2 及更早的版本以 MIT 许可证发布；你依据这些条款获得的代码，仍可继续按 MIT 许可证使用。
+
+**商标。** “MacMix”名称和 MacMix 应用图标用于标识官方应用，仅限官方构建使用。GPL 授权的是代码，而不是名称或品牌。如果你分发 fork 或修改后的构建，请使用不同的名称、不同的图标和不同的 Bundle ID，并且不要把它当作官方 MacMix 发布。自己构建和使用 MacMix 始终没有问题。
+
+应用图标、截图和其他品牌素材**不在** GPL 授权范围内，未经许可不得复用，详见 [品牌素材说明](../../BRAND-ASSETS.md)。
