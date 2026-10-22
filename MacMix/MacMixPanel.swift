@@ -1791,6 +1791,38 @@ private struct AboutVersionRow: View {
     }
 }
 
+struct StarOnGitHubLink: View {
+    private let repositoryURL = URL(string: "https://github.com/ljmng7/MacMix")!
+
+    var body: some View {
+        Link(destination: repositoryURL) {
+            HStack(spacing: 8) {
+                Text("Star me on GitHub🤗")
+                    .font(.body.weight(.semibold))
+
+                Image("GitHub")
+                    .resizable()
+                    .interpolation(.high)
+                    .scaledToFit()
+                    .frame(width: 76, height: 28)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 5)
+                    .background(.secondary.opacity(0.08), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+                    .overlay {
+                        RoundedRectangle(cornerRadius: 8, style: .continuous)
+                            .stroke(.secondary.opacity(0.14), lineWidth: 1)
+                    }
+                    .accessibilityHidden(true)
+            }
+            .foregroundStyle(.primary)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("Star me on GitHub🤗")
+        .frame(maxWidth: .infinity, alignment: .center)
+    }
+}
+
 private struct AboutMadeWithLoveFooter: View {
     var body: some View {
         Text("Made with 🫶 by Jazmín")

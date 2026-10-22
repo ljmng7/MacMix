@@ -90,7 +90,7 @@ final class OpenSourceEdition: AppEdition {
     func aboutHeader() -> AnyView? { nil }
     func aboutSettingsRows() -> AnyView? { nil }
     func aboutToolbarButton() -> AnyView? { nil }
-    func aboutFooterLinks() -> AnyView? { nil }
+    func aboutFooterLinks() -> AnyView? { AnyView(StarOnGitHubLink()) }
     var aboutSearchLabels: [LocalizedStringResource] { [] }
     var displayVersion: String? { nil }
     var releaseChannel: String { "source" }
