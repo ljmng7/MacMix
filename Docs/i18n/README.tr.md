@@ -1,7 +1,5 @@
 <p align="center">
   <img src="../images/og-image.webp" alt="MacMix — Mac’inizin sesi. Hepsi MacMix’te. macOS menü çubuğu için yerel bir mikser: sistem ses düzeyi, çıkış ve giriş aygıtları ve her uygulamanın sesi." width="100%">
-  <br>
-  <sub>Ekran görüntüsü Distribution’a aittir. Bazı özellikler MacMix Studio gerektirir.</sub>
 </p>
 
 <p align="center">
@@ -10,7 +8,7 @@
   <a href="https://github.com/ljmng7/MacMix/releases"><img src="https://img.shields.io/github/downloads/ljmng7/MacMix/total?color=2F80ED" alt="Downloads"></a>
   <img src="https://img.shields.io/badge/macOS-14.4%2B-111111?logo=apple&logoColor=white" alt="macOS 14.4+">
   <img src="https://img.shields.io/badge/Swift-SwiftUI-F05138?logo=swift&logoColor=white" alt="Swift, SwiftUI">
-  <a href="../../LICENSE"><img src="https://img.shields.io/badge/code-MIT-3DA639" alt="MIT License"></a>
+  <a href="../../LICENSE"><img src="https://img.shields.io/badge/license-GPL--3.0-3DA639" alt="GPL-3.0"></a>
 </p>
 
 <p align="center">
@@ -33,7 +31,8 @@
   <a href="#kurulum">Kurulum</a> ·
   <a href="#gizlilik">Gizlilik</a> ·
   <a href="#kaynaktan-derleme">Kaynaktan derleme</a> ·
-  <a href="#macmixi-destekleyin">Destek</a>
+  <a href="#macmixi-destekleyin">Destek</a> ·
+  <a href="#lisans-ve-marka">Lisans</a>
 </p>
 
 ---
@@ -67,32 +66,35 @@ macOS size tek bir ses kaydırıcısı verir. MacMix gerisini verir: müziğiniz
 
 - Menü çubuğunda sessizce çalışır; ayarlar için isteğe bağlı bir pencere sunar.
 - Yerel SwiftUI, ses yerel olarak gerçek zamanlı işlenir, hesap gerekmez.
-- Sparkle ile otomatik güncellemeler.
+- Resmî uygulama Sparkle ile kendini günceller.
 
 ## Açık kaynak ve Distribution
 
-Bu depo MacMix’in **ücretsiz ve açık kaynak çekirdeğini** içerir. Releases sayfasındaki indirme **Distribution**’dır: ücretsiz kullanılan tek bir uygulama; **MacMix Studio** ise isteğe bağlı, tek seferlik bir yükseltmedir. Ayrı bir “Studio uygulaması” yoktur; lisans aynı uygulamada ek özelliklerin kilidini açar ve ayarlarınız olduğu gibi kalır.
+**MacMix’in tüm özellikleri, MacMix Studio dahil, açık kaynaktır.** Bu depoyu kendiniz derlediğinizde tüm özellikleri açık, eksiksiz uygulamayı elde edersiniz: lisans yok, hesap yok, saklanan hiçbir şey yok.
 
-| Dahil olan özellikler | <div align="center">Açık kaynak<br><sub>(bu depo)</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> | <div align="center">Distribution<br><sub>(ücretsiz)</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> | <div align="center">Distribution<br><sub>(Studio)</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> |
+Releases sayfasındaki indirme **Distribution**’dır: aynı uygulamanın resmî derlemesi. Ücretsiz kullanılır; **MacMix Studio** ise bu derlemede Studio özelliklerinin kilidini açan isteğe bağlı, tek seferlik bir satın alımdır. Ayrı bir “Studio uygulaması” yoktur; lisans aynı uygulamada özelliklerin kilidini açar ve ayarlarınız olduğu gibi kalır.
+
+| Dahil olan özellikler | <div align="center">Kaynaktan derlenen<br><sub>(bu depo)</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> | <div align="center">Distribution<br><sub>(ücretsiz)</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> | <div align="center">Distribution<br><sub>(Studio)</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> |
 | --- | :---: | :---: | :---: |
 | Sistem, ekran ve uygulama ses düzeyi | ✅ | ✅ | ✅ |
 | Çıkış, AirPlay ve giriş aygıtı değiştirme | ✅ | ✅ | ✅ |
 | Uygulama başına %200 yükseltme | ✅ | ✅ | ✅ |
+| Anonimleştirilmiş tanılama kayıtlarıyla geri bildirim | ✅ | ✅ | ✅ |
+| **Özel EQ** — her uygulamanın sesini ayarlayın ve ön ayar olarak kaydedin | ✅ | — | ✅ |
+| **Çoklu Cihaz Çıkışı** — bir uygulamayı aynı anda birden çok aygıtta çalın, her aygıtın kendi ses düzeyiyle | ✅ | — | ✅ |
+| **Pro Denetimler** — Bluetooth aygıt pil düzeyleri, Dinleme Modu ve Uzamsal Ses | ✅ | — | ✅ |
+| **Şu An Çalınan** — çalan medyayı görüntüleyin ve denetleyin | ✅ | — | ✅ |
+| **Sahne Ön Ayarları** — aygıtları ve uygulama ses düzeylerini kaydedin, tek tıkla geçin | ✅ | — | ✅ |
+| **Sistem Ses Düzeyi Denetimleri** — daha akıcı denetim için ses tuşlarını devralın | ✅ | — | ✅ |
+| **Giriş Aygıtını Kilitle** — macOS’in mikrofonunuzu değiştirmesini önleyin | ✅ | — | ✅ |
+| **Engelleme Listesi** — seçtiğiniz uygulamaları karıştırma dışında bırakın | ✅ | — | ✅ |
+| **Kişiselleştirme** — özel temalar | ✅ | — | ✅ |
 | Geliştirici tarafından imzalı ve onaylı | — | ✅ | ✅ |
-| Anonimleştirilmiş tanılama kayıtlarıyla geri bildirim | — | ✅ | ✅ |
-| **Özel EQ** — her uygulamanın sesini ayarlayın ve ön ayar olarak kaydedin | — | — | ✅ |
-| **Çoklu Cihaz Çıkışı** — bir uygulamayı aynı anda birden çok aygıtta çalın, her aygıtın kendi ses düzeyiyle | — | — | ✅ |
-| **Pro Denetimler** — Bluetooth aygıt pil düzeyleri, Dinleme Modu ve Uzamsal Ses | — | — | ✅ |
-| **Şu An Çalınan** — çalan medyayı görüntüleyin ve denetleyin | — | — | ✅ |
-| **Sahne Ön Ayarları** — aygıtları ve uygulama ses düzeylerini kaydedin, tek tıkla geçin | — | — | ✅ |
-| **Sistem Ses Düzeyi Denetimleri** — daha akıcı denetim için ses tuşlarını devralın | — | — | ✅ |
-| **Giriş Aygıtını Kilitle** — macOS’in mikrofonunuzu değiştirmesini önleyin | — | — | ✅ |
-| **Engelleme Listesi** — seçtiğiniz uygulamaları karıştırma dışında bırakın | — | — | ✅ |
-| **Kişiselleştirme** — özel temalar | — | — | ✅ |
+| Otomatik güncellemeler | — | ✅ | ✅ |
 | **Beta Sürümlere Erken Erişim** — yeni özellikleri ilk siz deneyin | — | — | ✅ |
 
 > [!NOTE]
-> Studio özellikleri özel olarak geliştirilir ve bu depoda yer almaz. Uygulama başına karıştırma ve 2.0 sürümünden önceki tüm özellikler dahil, ücretsiz olan her şey ücretsiz ve açık kaynak kalacaktır. Ortak çekirdekteki düzeltmeler Distribution’da doğrulandıktan sonra bu depoya gelir; bu nedenle buradaki kod en son sürümün biraz gerisinde olabilir.
+> Yalnızca Distribution için var olan parçalar gizli tutulur: lisans etkinleştirme, satın alma akışı, karşılama ekranı ve güncelleyici. Hiçbiri MacMix’i derlemek veya çalıştırmak için gerekmez ve bu depodan yapılan derlemeler bunların hiçbirini içermez.
 
 ## Kurulum
 
@@ -116,7 +118,11 @@ cd MacMix
 open MacMix.xcodeproj
 ```
 
-**MacMix** şemasını seçip **Run**’a basın. Xcode, Swift paketlerini (Sparkle ve Swift Atomics) otomatik olarak çözer.
+**MacMix** şemasını seçip **Run**’a basın. Xcode, Swift paketlerini (MenuBarExtraAccess ve Swift Atomics) otomatik olarak çözer. Derlemenizde tüm Studio özellikleri açıktır.
+
+Bir geliştirici ekibi olmadan Xcode uygulamayı yalnızca yerel çalıştırma için imzalar ve macOS her yeni derlemeden sonra **Sistem Sesi Kaydı** iznini yeniden isteyebilir. İzni korumak için `Config/Local.example.xcconfig` dosyasını `Config/Local.xcconfig` olarak kopyalayın ve kendi `DEVELOPMENT_TEAM` değerinizi girin. Git bu dosyayı yok sayar.
+
+Kaynaktan yapılan derlemeler kendini güncellemez. Güncellemek için en son kaynak kodunu alıp yeniden derleyin.
 
 Regresyon testleri yalnızca Xcode komut satırı araçlarını gerektiren basit betiklerdir:
 
@@ -138,14 +144,18 @@ for test in tests/run-*.sh; do bash "$test"; done
 
 ## MacMix’i destekleyin
 
-MacMix gününüzün bir parçasıysa **MacMix Studio**’ya yükseltmeyi düşünün. Tek seferlik bir satın alma ile yukarıdaki özelliklerin kilidini açar ve ücretsiz, açık kaynak çekirdeği destekler.
+Kaynaktan derlemek ücretsizdir ve öyle kalacak. MacMix gününüzün bir parçasıysa **MacMix Studio** satın almayı düşünün: Distribution’da — imzalı, noter onaylı ve kendini güncel tutan uygulamada — Studio özelliklerinin kilidini açan ve MacMix’in geliştirilmesini doğrudan destekleyen tek seferlik bir satın alım.
 
 <p align="center">
   <a href="https://checkout.dodopayments.com/buy/pdt_0NmJ2vOqulR07tfZqwKtU?quantity=1"><img src="https://img.shields.io/badge/Edinin-MacMix_Studio-7A5CFA?style=for-the-badge&labelColor=241A3D" alt="MacMix Studio’yu edinin"></a>
 </p>
 
-Hata bildirimleri ve fikirler [Issues](https://github.com/ljmng7/MacMix/issues) bölümünde memnuniyetle karşılanır.
+Hata bildirimleri ve fikirler [Issues](https://github.com/ljmng7/MacMix/issues) bölümünde memnuniyetle karşılanır. Kod katkısı için [katkı rehberine](../../CONTRIBUTING.md) bakın; pull request’ler için imzalı bir Katkıda Bulunan Lisans Sözleşmesi (CLA) gerekir.
 
-## Lisans
+## Lisans ve marka
 
-Kaynak kodu [MIT Lisansı](../../LICENSE) ile yayımlanır. Uygulama simgesi, ekran görüntüleri ve diğer marka öğeleri MIT Lisansı kapsamında **değildir** ve izin alınmadan yeniden kullanılamaz. Bkz. [Marka öğeleri](../../BRAND-ASSETS.md).
+MacMix özgür yazılımdır: [GNU Genel Kamu Lisansı, sürüm 3](../../LICENSE) (GPL-3.0) koşulları altında yeniden dağıtabilir ve/veya değiştirebilirsiniz. 2.3.2 dahil önceki sürümler MIT Lisansı ile yayımlandı; bu koşullarla edindiğiniz kod bu koşullarla kullanılabilir olmaya devam eder.
+
+**Marka.** “MacMix” adı ve MacMix uygulama simgesi resmî uygulamayı tanımlar ve resmî derlemelere ayrılmıştır. GPL kodu kapsar, adı veya markayı kapsamaz. Bir fork ya da değiştirilmiş bir derleme dağıtıyorsanız ona farklı bir ad, farklı bir simge ve farklı bir paket kimliği verin ve onu resmî MacMix olarak sunmayın. MacMix’i kendiniz için derleyip kullanmanız her zaman serbesttir.
+
+Uygulama simgesi, ekran görüntüleri ve diğer marka öğeleri GPL kapsamında **değildir** ve izin alınmadan yeniden kullanılamaz. Bkz. [Marka öğeleri](../../BRAND-ASSETS.md).

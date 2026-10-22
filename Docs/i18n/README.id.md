@@ -1,7 +1,5 @@
 <p align="center">
   <img src="../images/og-image.webp" alt="MacMix — Semua suara Mac Anda, ada di MacMix. Mixer bawaan untuk bar menu macOS: volume sistem, perangkat output dan input, serta suara setiap app." width="100%">
-  <br>
-  <sub>Tangkapan layar menampilkan Distribution. Beberapa fitur memerlukan MacMix Studio.</sub>
 </p>
 
 <p align="center">
@@ -10,7 +8,7 @@
   <a href="https://github.com/ljmng7/MacMix/releases"><img src="https://img.shields.io/github/downloads/ljmng7/MacMix/total?color=2F80ED" alt="Downloads"></a>
   <img src="https://img.shields.io/badge/macOS-14.4%2B-111111?logo=apple&logoColor=white" alt="macOS 14.4+">
   <img src="https://img.shields.io/badge/Swift-SwiftUI-F05138?logo=swift&logoColor=white" alt="Swift, SwiftUI">
-  <a href="../../LICENSE"><img src="https://img.shields.io/badge/code-MIT-3DA639" alt="MIT License"></a>
+  <a href="../../LICENSE"><img src="https://img.shields.io/badge/license-GPL--3.0-3DA639" alt="GPL-3.0"></a>
 </p>
 
 <p align="center">
@@ -33,7 +31,8 @@
   <a href="#instalasi">Instalasi</a> ·
   <a href="#privasi">Privasi</a> ·
   <a href="#build-dari-kode-sumber">Build dari kode sumber</a> ·
-  <a href="#dukung-macmix">Dukung</a>
+  <a href="#dukung-macmix">Dukung</a> ·
+  <a href="#lisensi-dan-merek-dagang">Lisensi</a>
 </p>
 
 ---
@@ -67,32 +66,35 @@ macOS memberi Anda satu penggeser volume. MacMix memberi sisanya: kecilkan app y
 
 - Berjalan tenang di bar menu, dengan jendela pengaturan opsional.
 - SwiftUI bawaan, audio diproses secara lokal dan real time, tanpa akun.
-- Pembaruan otomatis melalui Sparkle.
+- App resmi memperbarui dirinya sendiri melalui Sparkle.
 
 ## Sumber terbuka dan Distribution
 
-Repositori ini berisi **inti MacMix yang gratis dan bersumber terbuka**. Unduhan di halaman Releases adalah **Distribution**: satu app yang gratis digunakan, dengan **MacMix Studio** sebagai peningkatan opsional sekali beli. Tidak ada “app Studio” terpisah; lisensi hanya membuka fitur tambahan di app yang sama, dan pengaturan Anda tetap utuh.
+**Semua fitur MacMix bersumber terbuka, termasuk MacMix Studio.** Bangun repositori ini sendiri dan Anda mendapatkan app lengkap dengan semua fitur terbuka: tanpa lisensi, tanpa akun, tanpa ada yang ditahan.
 
-| Fitur yang disertakan | <div align="center">Sumber<br>terbuka<br><sub>(repositori ini)</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> | <div align="center">Distribution<br><sub>(gratis)</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> | <div align="center">Distribution<br><sub>(Studio)</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> |
+Unduhan di halaman Releases adalah **Distribution**: build resmi dari app yang sama. App ini gratis digunakan, dengan **MacMix Studio** sebagai pembelian opsional sekali bayar yang membuka fitur Studio di build tersebut. Tidak ada “app Studio” terpisah; lisensi membuka fitur di app yang sama, dan pengaturan Anda tetap utuh.
+
+| Fitur yang disertakan | <div align="center">Dibangun dari kode sumber<br>terbuka<br><sub>(repositori ini)</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> | <div align="center">Distribution<br><sub>(gratis)</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> | <div align="center">Distribution<br><sub>(Studio)</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> |
 | --- | :---: | :---: | :---: |
 | Volume sistem, layar, dan per app | ✅ | ✅ | ✅ |
 | Peralihan perangkat output, AirPlay, dan input | ✅ | ✅ | ✅ |
 | Penguatan 200% per app | ✅ | ✅ | ✅ |
+| Laporan masukan dengan log diagnostik anonim | ✅ | ✅ | ✅ |
+| **EQ Kustom** — setel suara setiap app dan simpan preset Anda | ✅ | — | ✅ |
+| **Output Multi-Perangkat** — satu app di beberapa perangkat sekaligus, masing-masing dengan volumenya sendiri | ✅ | — | ✅ |
+| **Kontrol Pro** — level baterai perangkat Bluetooth, Mode Mendengarkan, dan Audio Spasial | ✅ | — | ✅ |
+| **Sedang Diputar** — lihat dan kontrol media yang sedang diputar | ✅ | — | ✅ |
+| **Preset Adegan** — simpan perangkat dan volume app, lalu beralih dengan satu klik | ✅ | — | ✅ |
+| **Kontrol Volume Sistem** — ambil alih tombol volume untuk kontrol yang lebih halus | ✅ | — | ✅ |
+| **Kunci Perangkat Input** — cegah macOS mengganti mikrofon Anda | ✅ | — | ✅ |
+| **Daftar Blokir** — keluarkan app tertentu dari mixing | ✅ | — | ✅ |
+| **Personalisasi** — tema kustom | ✅ | — | ✅ |
 | Ditandatangani dan dinotarisasi oleh pengembang | — | ✅ | ✅ |
-| Laporan masukan dengan log diagnostik anonim | — | ✅ | ✅ |
-| **EQ Kustom** — setel suara setiap app dan simpan preset Anda | — | — | ✅ |
-| **Output Multi-Perangkat** — satu app di beberapa perangkat sekaligus, masing-masing dengan volumenya sendiri | — | — | ✅ |
-| **Kontrol Pro** — level baterai perangkat Bluetooth, Mode Mendengarkan, dan Audio Spasial | — | — | ✅ |
-| **Sedang Diputar** — lihat dan kontrol media yang sedang diputar | — | — | ✅ |
-| **Preset Adegan** — simpan perangkat dan volume app, lalu beralih dengan satu klik | — | — | ✅ |
-| **Kontrol Volume Sistem** — ambil alih tombol volume untuk kontrol yang lebih halus | — | — | ✅ |
-| **Kunci Perangkat Input** — cegah macOS mengganti mikrofon Anda | — | — | ✅ |
-| **Daftar Blokir** — keluarkan app tertentu dari mixing | — | — | ✅ |
-| **Personalisasi** — tema kustom | — | — | ✅ |
+| Pembaruan otomatis | — | ✅ | ✅ |
 | **Akses Awal Beta** — coba fitur baru lebih dulu | — | — | ✅ |
 
 > [!NOTE]
-> Fitur Studio dikembangkan secara privat dan tidak termasuk dalam repositori ini. Semua yang sudah gratis, termasuk mixing per app dan semua fitur sebelum versi 2.0, akan tetap gratis dan bersumber terbuka. Perbaikan pada inti bersama masuk ke repositori ini setelah divalidasi di Distribution, sehingga kode di sini bisa sedikit tertinggal dari rilis terbaru.
+> Hanya bagian yang ada khusus untuk Distribution yang tetap privat: aktivasi lisensi, alur pembelian, pengenalan awal, dan pembaru. Tidak satu pun diperlukan untuk membangun atau menjalankan MacMix, dan build dari repositori ini tidak berisi satu pun di antaranya.
 
 ## Instalasi
 
@@ -116,7 +118,11 @@ cd MacMix
 open MacMix.xcodeproj
 ```
 
-Pilih skema **MacMix** lalu tekan **Run**. Xcode akan mengambil paket Swift (Sparkle dan Swift Atomics) secara otomatis.
+Pilih skema **MacMix** lalu tekan **Run**. Xcode akan mengambil paket Swift (MenuBarExtraAccess dan Swift Atomics) secara otomatis. Semua fitur Studio terbuka di build Anda.
+
+Tanpa tim pengembang, Xcode menandatangani app hanya untuk dijalankan secara lokal, dan macOS mungkin meminta izin **Perekaman Audio Sistem** lagi setiap kali Anda membangun ulang. Agar izin tetap tersimpan, salin `Config/Local.example.xcconfig` menjadi `Config/Local.xcconfig` dan isi `DEVELOPMENT_TEAM` Anda sendiri. File ini diabaikan oleh Git.
+
+Build dari kode sumber tidak memperbarui dirinya sendiri. Untuk memperbarui, ambil kode sumber terbaru lalu bangun ulang.
 
 Tes regresi adalah skrip biasa yang hanya memerlukan alat baris perintah Xcode:
 
@@ -138,14 +144,18 @@ for test in tests/run-*.sh; do bash "$test"; done
 
 ## Dukung MacMix
 
-Jika MacMix sudah menjadi bagian dari hari Anda, pertimbangkan untuk meningkatkan ke **MacMix Studio**. Sekali beli untuk membuka fitur di atas, sekaligus mendanai inti yang gratis dan bersumber terbuka.
+Membangun dari kode sumber gratis dan akan tetap gratis. Jika MacMix sudah menjadi bagian dari hari Anda, pertimbangkan untuk membeli **MacMix Studio**: pembelian sekali bayar yang membuka fitur Studio di Distribution — app yang ditandatangani, dinotarisasi, dan selalu memperbarui dirinya — serta langsung mendanai pengembangan MacMix.
 
 <p align="center">
   <a href="https://checkout.dodopayments.com/buy/pdt_0NmJ2vOqulR07tfZqwKtU?quantity=1"><img src="https://img.shields.io/badge/Dapatkan-MacMix_Studio-7A5CFA?style=for-the-badge&labelColor=241A3D" alt="Dapatkan MacMix Studio"></a>
 </p>
 
-Laporan bug dan ide sangat diterima di [Issues](https://github.com/ljmng7/MacMix/issues).
+Laporan bug dan ide sangat diterima di [Issues](https://github.com/ljmng7/MacMix/issues). Untuk berkontribusi kode, lihat [panduan kontribusi](../../CONTRIBUTING.md); pull request memerlukan Perjanjian Lisensi Kontributor (CLA) yang sudah ditandatangani.
 
-## Lisensi
+## Lisensi dan merek dagang
 
-Kode sumber dirilis di bawah [Lisensi MIT](../../LICENSE). Ikon app, tangkapan layar, dan aset merek lainnya **tidak** tercakup dalam Lisensi MIT dan tidak boleh digunakan ulang tanpa izin. Lihat [Aset merek](../../BRAND-ASSETS.md).
+MacMix adalah perangkat lunak bebas: Anda boleh mendistribusikan ulang dan/atau mengubahnya sesuai ketentuan [GNU General Public License versi 3](../../LICENSE) (GPL-3.0). Versi hingga dan termasuk 2.3.2 dirilis di bawah Lisensi MIT; kode yang Anda terima dengan ketentuan tersebut tetap tersedia di bawahnya.
+
+**Merek dagang.** Nama “MacMix” dan ikon app MacMix menandai app resmi dan hanya untuk build resmi. GPL mencakup kode, bukan nama atau merek. Jika Anda mendistribusikan fork atau build yang dimodifikasi, beri nama lain, ikon lain, dan bundle identifier lain, dan jangan menampilkannya sebagai MacMix resmi. Membangun dan memakai MacMix untuk diri sendiri selalu diperbolehkan.
+
+Ikon app, tangkapan layar, dan aset merek lainnya **tidak** tercakup dalam GPL dan tidak boleh digunakan ulang tanpa izin. Lihat [Aset merek](../../BRAND-ASSETS.md).

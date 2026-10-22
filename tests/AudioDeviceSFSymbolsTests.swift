@@ -16,6 +16,7 @@ struct AudioDeviceSFSymbolsTests {
             "airpodspro", "airpodsmax", "airpods.gen3", "airpods",
             "beats.powerbeatspro", "beats.studiobuds", "beats.fitpro",
             "beats.headphones", "homepodmini", "hifispeaker.fill", "headphones",
+            "airpodspro.chargingcase.wireless", "beats.powerbeatspro.chargingcase",
         ]
         let macOS14Fallbacks = [
             "airpods.pro": "airpodspro",
@@ -34,6 +35,10 @@ struct AudioDeviceSFSymbolsTests {
         for (preferred, expected) in macOS14Fallbacks {
             expect(AudioDeviceSFSymbols.deviceSymbol(preferredName: preferred), expected)
         }
+        expect(AudioDeviceSFSymbols.caseSymbol(deviceSymbolName: "airpodspro"), "airpodspro.chargingcase.wireless")
+        expect(AudioDeviceSFSymbols.caseSymbol(deviceSymbolName: "beats.powerbeatspro"), "beats.powerbeatspro.chargingcase")
+        precondition(!AudioDeviceSFSymbols.usesEarbudsPresentation(deviceSymbolName: "airpodsmax"))
+        precondition(!AudioDeviceSFSymbols.usesEarbudsPresentation(deviceSymbolName: "airpods.max"))
 
         NSImage.availableNames.formUnion(["beats.pill.fill", "beats.solobuds"])
         expect(AudioDeviceSFSymbols.deviceSymbol(preferredName: "beats.pill"), "beats.pill.fill")
@@ -52,6 +57,34 @@ struct AudioDeviceSFSymbolsTests {
         expect(AudioDeviceSFSymbols.deviceSymbol(preferredName: "airpods.pro.gen3"), "airpods.pro.gen3")
         expect(AudioDeviceSFSymbols.deviceSymbol(preferredName: "unknown.device"), "headphones")
 
+        NSImage.availableNames = [
+            "airpodpro.left", "airpodpro.right", "airpod.gen3.left", "airpod.gen3.right",
+            "beats.powerbeatspro.left", "beats.powerbeatspro.right",
+            "beats.studiobud.left", "beats.studiobud.right",
+            "beats.studiobudsplus.left", "beats.studiobudsplus.right",
+            "beats.fitpro.left", "beats.fitpro.right", "l.circle", "r.circle",
+        ]
+        let sideFallbacks = [
+            "airpods.pro.gen3": "airpodpro",
+            "airpods.gen4": "airpod.gen3",
+            "beats.powerbeats.pro.2": "beats.powerbeatspro",
+            "beats.studiobuds": "beats.studiobud",
+            "beats.studiobuds.plus": "beats.studiobudsplus",
+            "beats.solobuds": "beats.studiobud",
+            "beats.fitpro": "beats.fitpro",
+        ]
+        for (preferred, expectedBase) in sideFallbacks {
+            for side in [AudioDeviceSFSymbols.EarbudSide.left, .right] {
+                expect(AudioDeviceSFSymbols.earbudSymbol(deviceSymbolName: preferred, side: side), "\(expectedBase).\(side.rawValue)")
+            }
+        }
+        expect(AudioDeviceSFSymbols.earbudSymbol(deviceSymbolName: "unknown.device", side: .left), "l.circle")
+        expect(AudioDeviceSFSymbols.earbudSymbol(deviceSymbolName: "unknown.device", side: .right), "r.circle")
+        for side in [AudioDeviceSFSymbols.EarbudSide.left, .right] {
+            let modern = "airpods.pro.gen3.\(side.rawValue)"
+            NSImage.availableNames.insert(modern)
+            expect(AudioDeviceSFSymbols.earbudSymbol(deviceSymbolName: "airpods.pro.gen3", side: side), modern)
+        }
         print("Audio device symbol compatibility tests passed.")
     }
 

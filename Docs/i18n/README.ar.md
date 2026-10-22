@@ -2,8 +2,6 @@
 
 <p align="center">
   <img src="../images/og-image.webp" alt="MacMix — كل أصوات جهاز Mac، في MacMix. خلاط أصلي لشريط القائمة في macOS: مستوى صوت النظام وأجهزة الإخراج والإدخال وصوت كل تطبيق." width="100%">
-  <br>
-  <sub>لقطة الشاشة من Distribution. تتطلب بعض الميزات MacMix Studio.</sub>
 </p>
 
 <p align="center">
@@ -12,7 +10,7 @@
   <a href="https://github.com/ljmng7/MacMix/releases"><img src="https://img.shields.io/github/downloads/ljmng7/MacMix/total?color=2F80ED" alt="Downloads"></a>
   <img src="https://img.shields.io/badge/macOS-14.4%2B-111111?logo=apple&logoColor=white" alt="macOS 14.4+">
   <img src="https://img.shields.io/badge/Swift-SwiftUI-F05138?logo=swift&logoColor=white" alt="Swift, SwiftUI">
-  <a href="../../LICENSE"><img src="https://img.shields.io/badge/code-MIT-3DA639" alt="MIT License"></a>
+  <a href="../../LICENSE"><img src="https://img.shields.io/badge/license-GPL--3.0-3DA639" alt="GPL-3.0"></a>
 </p>
 
 <p align="center">
@@ -35,7 +33,8 @@
   <a href="#التثبيت">التثبيت</a> ·
   <a href="#الخصوصية">الخصوصية</a> ·
   <a href="#البناء-من-المصدر">البناء من المصدر</a> ·
-  <a href="#ادعم-macmix">الدعم</a>
+  <a href="#ادعم-macmix">الدعم</a> ·
+  <a href="#الترخيص-والعلامة-التجارية">الترخيص</a>
 </p>
 
 ---
@@ -69,36 +68,35 @@
 
 - يعمل بهدوء في شريط القائمة، مع نافذة إعدادات اختيارية.
 - SwiftUI أصلي، ويُعالَج الصوت محليًا في الوقت الفعلي، دون حاجة إلى حساب.
-- تحديثات تلقائية عبر Sparkle.
+- يحدّث التطبيق الرسمي نفسه تلقائيًا عبر Sparkle.
 
 ## نسخة المصدر المفتوح وDistribution
 
-يحتوي هذا المستودع على **النواة المجانية مفتوحة المصدر** لـ MacMix. أما التنزيل من صفحة Releases فهو **Distribution**: تطبيق واحد مجاني، مع **MacMix Studio** كترقية اختيارية بشراء لمرة واحدة. لا يوجد «تطبيق Studio» منفصل؛ فالترخيص يفتح ميزات إضافية في التطبيق نفسه، وتبقى إعداداتك كما هي.
+**كل ميزات MacMix مفتوحة المصدر، بما فيها MacMix Studio.** ابنِ هذا المستودع بنفسك وستحصل على التطبيق كاملًا بكل ميزاته مفتوحة: دون ترخيص، ودون حساب، ودون أي شيء محجوب.
 
-| الميزات المضمّنة | <div align="center">المصدر المفتوح<br><sub>(هذا المستودع)</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> | <div align="center">Distribution<br><sub>(مجانية)</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> | <div align="center">Distribution<br><sub>(Studio)</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> |
+التنزيل من صفحة Releases هو **Distribution**: البناء الرسمي للتطبيق نفسه. استخدامه مجاني، و**MacMix Studio** شراء اختياري لمرة واحدة يفتح ميزات Studio في هذا البناء. لا يوجد «تطبيق Studio» منفصل؛ فالترخيص يفتح الميزات في التطبيق نفسه، وتبقى إعداداتك كما هي.
+
+| الميزات المضمّنة | <div align="center">البناء من المصدر<br><sub>(هذا المستودع)</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> | <div align="center">Distribution<br><sub>(مجانية)</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> | <div align="center">Distribution<br><sub>(Studio)</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> |
 | --- | :---: | :---: | :---: |
 | مستوى صوت النظام والشاشة وكل تطبيق | ✅ | ✅ | ✅ |
 | التبديل بين أجهزة الإخراج وAirPlay والإدخال | ✅ | ✅ | ✅ |
 | تضخيم كل تطبيق حتى 200% | ✅ | ✅ | ✅ |
+| إرسال الملاحظات مع سجلات تشخيص مجهولة الهوية | ✅ | ✅ | ✅ |
+| **EQ مخصص** — اضبط صوت كل تطبيق واحفظ إعداداتك المسبقة | ✅ | — | ✅ |
+| **الإخراج إلى أجهزة متعددة** — تطبيق واحد على عدة أجهزة في آن واحد، لكلٍّ منها مستوى صوت خاص | ✅ | — | ✅ |
+| **عناصر تحكم احترافية** — مستوى بطارية أجهزة Bluetooth ووضع الاستماع والصوت المكاني | ✅ | — | ✅ |
+| **قيد التشغيل** — اعرض الوسائط الحالية وتحكّم فيها | ✅ | — | ✅ |
+| **إعدادات المشاهد** — احفظ الأجهزة ومستويات صوت التطبيقات وبدّل بنقرة واحدة | ✅ | — | ✅ |
+| **عناصر التحكم في مستوى صوت النظام** — تولَّ مفاتيح الصوت لتحكم أكثر سلاسة | ✅ | — | ✅ |
+| **قفل جهاز الإدخال** — امنع macOS من تبديل الميكروفون | ✅ | — | ✅ |
+| **القائمة السوداء** — استبعد تطبيقات محددة من المزج | ✅ | — | ✅ |
+| **تخصيص** — سمات مخصصة | ✅ | — | ✅ |
 | موقّعة وموثّقة من المطوّر | — | ✅ | ✅ |
-| إرسال الملاحظات مع سجلات تشخيص مجهولة الهوية | — | ✅ | ✅ |
-| **EQ مخصص** — اضبط صوت كل تطبيق واحفظ إعداداتك المسبقة | — | — | ✅ |
-| **الإخراج إلى أجهزة متعددة** — تطبيق واحد على عدة أجهزة في آن واحد، لكلٍّ منها مستوى صوت خاص | — | — | ✅ |
-| **عناصر تحكم احترافية** — مستوى بطارية أجهزة Bluetooth ووضع الاستماع والصوت المكاني | — | — | ✅ |
-| **قيد التشغيل** — اعرض الوسائط الحالية وتحكّم فيها | — | — | ✅ |
-| **إعدادات المشاهد** — احفظ الأجهزة ومستويات صوت التطبيقات وبدّل بنقرة واحدة | — | — | ✅ |
-| **عناصر التحكم في مستوى صوت النظام** — تولَّ مفاتيح الصوت لتحكم أكثر سلاسة | — | — | ✅ |
-| **قفل جهاز الإدخال** — امنع macOS من تبديل الميكروفون | — | — | ✅ |
-| **القائمة السوداء** — استبعد تطبيقات محددة من المزج | — | — | ✅ |
-| **تخصيص** — سمات مخصصة | — | — | ✅ |
+| التحديثات التلقائية | — | ✅ | ✅ |
 | **تجربة إصدارات Beta مبكرًا** — جرّب الميزات الجديدة أولًا | — | — | ✅ |
 
-</div>
-
 > [!NOTE]
-> تُطوَّر ميزات Studio بشكل خاص وليست جزءًا من هذا المستودع. كل ما هو مجاني الآن، بما في ذلك مزج كل تطبيق وجميع الميزات السابقة للإصدار 2.0، سيبقى مجانيًا ومفتوح المصدر. تصل إصلاحات النواة المشتركة إلى هذا المستودع بعد التحقق منها في Distribution، لذا قد تتأخر الشيفرة هنا قليلًا عن أحدث إصدار.
-
-<div dir="rtl">
+> الأجزاء الوحيدة التي تبقى خاصة هي تلك الموجودة من أجل Distribution فقط: تفعيل الترخيص، ومسار الشراء، وشاشة التعريف الأولى، والمحدِّث. لا يلزم أيٌّ منها لبناء MacMix أو تشغيله، ولا تحتوي الإصدارات المبنية من هذا المستودع على أيٍّ منها.
 
 ## التثبيت
 
@@ -122,7 +120,11 @@ cd MacMix
 open MacMix.xcodeproj
 ```
 
-اختر المخطط **MacMix** واضغط **Run**. يجلب Xcode حزم Swift (Sparkle وSwift Atomics) تلقائيًا.
+اختر المخطط **MacMix** واضغط **Run**. يجلب Xcode حزم Swift (MenuBarExtraAccess وSwift Atomics) تلقائيًا. تكون كل ميزات Studio مفتوحة في البناء الخاص بك.
+
+دون فريق تطوير، يوقّع Xcode التطبيق للتشغيل المحلي فقط، وقد يطلب macOS إذن **تسجيل صوت النظام** من جديد بعد كل بناء. للاحتفاظ بالإذن، انسخ `Config/Local.example.xcconfig` إلى `Config/Local.xcconfig` واضبط `DEVELOPMENT_TEAM` الخاص بك. يتجاهل Git هذا الملف.
+
+لا تُحدّث الإصدارات المبنية من المصدر نفسها. للتحديث، اجلب أحدث شيفرة مصدرية وأعد البناء.
 
 اختبارات الانحدار سكربتات بسيطة لا تحتاج إلا إلى أدوات سطر الأوامر في Xcode:
 
@@ -144,16 +146,18 @@ for test in tests/run-*.sh; do bash "$test"; done
 
 ## ادعم MacMix
 
-إذا أصبح MacMix جزءًا من يومك، ففكّر في الترقية إلى **MacMix Studio**. إنه شراء لمرة واحدة يفتح الميزات أعلاه ويموّل النواة المجانية مفتوحة المصدر.
+البناء من المصدر مجاني وسيبقى كذلك. إذا أصبح MacMix جزءًا من يومك، ففكّر في شراء **MacMix Studio**: شراء لمرة واحدة يفتح ميزات Studio في Distribution — التطبيق الموقّع والموثّق الذي يحدّث نفسه — ويموّل تطوير MacMix مباشرة.
 
 <p align="center">
   <a href="https://checkout.dodopayments.com/buy/pdt_0NmJ2vOqulR07tfZqwKtU?quantity=1"><img src="https://img.shields.io/badge/%D8%A7%D8%AD%D8%B5%D9%84_%D8%B9%D9%84%D9%89-MacMix_Studio-7A5CFA?style=for-the-badge&labelColor=241A3D" alt="احصل على MacMix Studio"></a>
 </p>
 
-نرحّب ببلاغات الأخطاء والأفكار في [Issues](https://github.com/ljmng7/MacMix/issues).
+نرحّب ببلاغات الأخطاء والأفكار في [Issues](https://github.com/ljmng7/MacMix/issues). للمساهمة بالشيفرة، راجع [دليل المساهمة](../../CONTRIBUTING.md)؛ تتطلب طلبات السحب توقيع اتفاقية ترخيص المساهم (CLA).
 
-## الترخيص
+## الترخيص والعلامة التجارية
 
-الشيفرة المصدرية منشورة بموجب [ترخيص MIT](../../LICENSE). أيقونة التطبيق ولقطات الشاشة وعناصر العلامة التجارية الأخرى **غير** مشمولة بترخيص MIT ولا يجوز إعادة استخدامها دون إذن. راجع [عناصر العلامة التجارية](../../BRAND-ASSETS.md).
+MacMix برنامج حر: يمكنك إعادة توزيعه و/أو تعديله وفق شروط [رخصة جنو العمومية، الإصدار 3](../../LICENSE) (GPL-3.0). صدرت الإصدارات حتى 2.3.2 بما فيها بموجب ترخيص MIT؛ وتبقى الشيفرة التي حصلت عليها وفق تلك الشروط متاحة بموجبها.
 
-</div>
+**العلامة التجارية.** يدل اسم «MacMix» وأيقونة تطبيق MacMix على التطبيق الرسمي، وهما مخصصان للإصدارات الرسمية فقط. تغطي رخصة GPL الشيفرة، لا الاسم ولا العلامة. إذا وزّعت نسخة متفرعة أو بناءً معدّلًا، فامنحه اسمًا مختلفًا وأيقونة مختلفة ومعرّف حزمة مختلفًا، ولا تقدّمه على أنه MacMix الرسمي. بناء MacMix وتشغيله لنفسك مسموح دائمًا.
+
+أيقونة التطبيق ولقطات الشاشة وغيرها من عناصر العلامة التجارية **غير** مشمولة برخصة GPL، ولا يجوز إعادة استخدامها دون إذن — راجع [عناصر العلامة التجارية](../../BRAND-ASSETS.md).

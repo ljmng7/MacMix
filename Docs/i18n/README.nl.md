@@ -1,7 +1,5 @@
 <p align="center">
   <img src="../images/og-image.webp" alt="MacMix — Al het geluid van je Mac. Allemaal in MacMix. Een native mixer voor de macOS-menubalk: systeemvolume, uitvoer- en invoerapparaten en het geluid van elke app." width="100%">
-  <br>
-  <sub>De schermafbeelding toont Distribution. Sommige functies vereisen MacMix Studio.</sub>
 </p>
 
 <p align="center">
@@ -10,7 +8,7 @@
   <a href="https://github.com/ljmng7/MacMix/releases"><img src="https://img.shields.io/github/downloads/ljmng7/MacMix/total?color=2F80ED" alt="Downloads"></a>
   <img src="https://img.shields.io/badge/macOS-14.4%2B-111111?logo=apple&logoColor=white" alt="macOS 14.4+">
   <img src="https://img.shields.io/badge/Swift-SwiftUI-F05138?logo=swift&logoColor=white" alt="Swift, SwiftUI">
-  <a href="../../LICENSE"><img src="https://img.shields.io/badge/code-MIT-3DA639" alt="MIT License"></a>
+  <a href="../../LICENSE"><img src="https://img.shields.io/badge/license-GPL--3.0-3DA639" alt="GPL-3.0"></a>
 </p>
 
 <p align="center">
@@ -33,7 +31,8 @@
   <a href="#installeren">Installeren</a> ·
   <a href="#privacy">Privacy</a> ·
   <a href="#bouwen-vanuit-de-broncode">Bouwen vanuit de broncode</a> ·
-  <a href="#macmix-steunen">Steunen</a>
+  <a href="#macmix-steunen">Steunen</a> ·
+  <a href="#licentie-en-merk">Licentie</a>
 </p>
 
 ---
@@ -67,32 +66,35 @@ macOS geeft je één volumeschuifknop. MacMix geeft je de rest: zet een luidruch
 
 - Werkt rustig vanuit de menubalk, met een optioneel venster voor instellingen.
 - Native SwiftUI, audio wordt lokaal en realtime verwerkt, geen account nodig.
-- Automatische updates via Sparkle.
+- De officiële app werkt zichzelf bij via Sparkle.
 
 ## Open source en Distribution
 
-Deze repository bevat de **gratis, opensource kern** van MacMix. De download op de Releases-pagina is **Distribution**: één gratis app, met **MacMix Studio** als optionele eenmalige upgrade. Er is geen aparte ‘Studio-app’: een licentie ontgrendelt extra functies in dezelfde app, en je instellingen blijven waar ze zijn.
+**Alle functies van MacMix zijn open source, MacMix Studio inbegrepen.** Bouw je deze repository zelf, dan krijg je de volledige app met alle functies ontgrendeld: geen licentie, geen account, niets achtergehouden.
 
-| Inbegrepen functies | <div align="center">Open source<br><sub>(deze repository)</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> | <div align="center">Distribution<br><sub>(gratis)</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> | <div align="center">Distribution<br><sub>(Studio)</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> |
+De download op de Releases-pagina is **Distribution**: de officiële build van dezelfde app. Die is gratis te gebruiken, en **MacMix Studio** is een optionele eenmalige aankoop die de Studio-functies in die build ontgrendelt. Er is geen aparte ‘Studio-app’: een licentie ontgrendelt functies in dezelfde app, en je instellingen blijven waar ze zijn.
+
+| Inbegrepen functies | <div align="center">Zelf gebouwd<br><sub>(deze repository)</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> | <div align="center">Distribution<br><sub>(gratis)</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> | <div align="center">Distribution<br><sub>(Studio)</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> |
 | --- | :---: | :---: | :---: |
 | Systeem-, beeldscherm- en app-volume | ✅ | ✅ | ✅ |
 | Wisselen van uitvoer-, AirPlay- en invoerapparaten | ✅ | ✅ | ✅ |
 | 200% versterking per app | ✅ | ✅ | ✅ |
+| Feedback met geanonimiseerde diagnoselogboeken | ✅ | ✅ | ✅ |
+| **Aangepaste EQ** — stem het geluid van elke app af en bewaar je voorinstellingen | ✅ | — | ✅ |
+| **Uitvoer naar meerdere apparaten** — één app op meerdere apparaten tegelijk, elk met een eigen volume | ✅ | — | ✅ |
+| **Pro-bediening** — batterijniveau van Bluetooth-apparaten, luistermodus en ruimtelijke audio | ✅ | — | ✅ |
+| **Speelt nu** — bekijk en bedien wat er nu speelt | ✅ | — | ✅ |
+| **Scènevoorinstellingen** — bewaar apparaten en app-volumes en wissel met één klik | ✅ | — | ✅ |
+| **Systeemvolume regelen** — neem de volumetoetsen over voor soepelere regeling | ✅ | — | ✅ |
+| **Invoerapparaat vergrendelen** — voorkom dat macOS van microfoon wisselt | ✅ | — | ✅ |
+| **Blokkeerlijst** — laat geselecteerde apps buiten het mixen | ✅ | — | ✅ |
+| **Personalisatie** — eigen thema’s | ✅ | — | ✅ |
 | Ondertekend en genotariseerd door de ontwikkelaar | — | ✅ | ✅ |
-| Feedback met geanonimiseerde diagnoselogboeken | — | ✅ | ✅ |
-| **Aangepaste EQ** — stem het geluid van elke app af en bewaar je voorinstellingen | — | — | ✅ |
-| **Uitvoer naar meerdere apparaten** — één app op meerdere apparaten tegelijk, elk met een eigen volume | — | — | ✅ |
-| **Pro-bediening** — batterijniveau van Bluetooth-apparaten, luistermodus en ruimtelijke audio | — | — | ✅ |
-| **Speelt nu** — bekijk en bedien wat er nu speelt | — | — | ✅ |
-| **Scènevoorinstellingen** — bewaar apparaten en app-volumes en wissel met één klik | — | — | ✅ |
-| **Systeemvolume regelen** — neem de volumetoetsen over voor soepelere regeling | — | — | ✅ |
-| **Invoerapparaat vergrendelen** — voorkom dat macOS van microfoon wisselt | — | — | ✅ |
-| **Blokkeerlijst** — laat geselecteerde apps buiten het mixen | — | — | ✅ |
-| **Personalisatie** — eigen thema’s | — | — | ✅ |
+| Automatische updates | — | ✅ | ✅ |
 | **Vroege toegang tot bèta’s** — probeer nieuwe functies als eerste | — | — | ✅ |
 
 > [!NOTE]
-> Studio-functies worden privé ontwikkeld en maken geen deel uit van deze repository. Alles wat al gratis is, waaronder mixen per app en alle functies van vóór versie 2.0, blijft gratis en open source. Oplossingen in de gedeelde kern komen in deze repository nadat ze in Distribution zijn gevalideerd, dus de broncode hier kan iets achterlopen op de nieuwste release.
+> Alleen de onderdelen die uitsluitend voor Distribution bestaan blijven privé: licentieactivering, het aankoopproces, de introductie en de updater. Geen daarvan is nodig om MacMix te bouwen of uit te voeren, en builds uit deze repository bevatten er geen van.
 
 ## Installeren
 
@@ -116,7 +118,11 @@ cd MacMix
 open MacMix.xcodeproj
 ```
 
-Kies het schema **MacMix** en klik op **Run**. Xcode haalt de Swift-pakketten (Sparkle en Swift Atomics) automatisch op.
+Kies het schema **MacMix** en klik op **Run**. Xcode haalt de Swift-pakketten (MenuBarExtraAccess en Swift Atomics) automatisch op. In je build zijn alle Studio-functies ontgrendeld.
+
+Zonder ontwikkelteam ondertekent Xcode de app alleen om lokaal te draaien, en macOS kan na elke nieuwe build opnieuw om toestemming voor **Systeemaudio-opname** vragen. Om de toestemming te behouden kopieer je `Config/Local.example.xcconfig` naar `Config/Local.xcconfig` en vul je je eigen `DEVELOPMENT_TEAM` in. Git negeert dit bestand.
+
+Zelf gebouwde versies werken zichzelf niet bij. Om bij te werken haal je de nieuwste broncode op en bouw je opnieuw.
 
 De regressietests zijn eenvoudige scripts die alleen de Xcode-opdrachtregeltools nodig hebben:
 
@@ -138,14 +144,18 @@ for test in tests/run-*.sh; do bash "$test"; done
 
 ## MacMix steunen
 
-Hoort MacMix bij je dag? Overweeg dan een upgrade naar **MacMix Studio**. Een eenmalige aankoop ontgrendelt de functies hierboven en financiert de gratis, opensource kern.
+Zelf bouwen is en blijft gratis. Hoort MacMix bij je dag, overweeg dan **MacMix Studio** te kopen: een eenmalige aankoop die de Studio-functies in Distribution ontgrendelt — de ondertekende, genotariseerde app die zichzelf up-to-date houdt — en de ontwikkeling van MacMix rechtstreeks financiert.
 
 <p align="center">
   <a href="https://checkout.dodopayments.com/buy/pdt_0NmJ2vOqulR07tfZqwKtU?quantity=1"><img src="https://img.shields.io/badge/Nu_kopen-MacMix_Studio-7A5CFA?style=for-the-badge&labelColor=241A3D" alt="MacMix Studio kopen"></a>
 </p>
 
-Bugmeldingen en ideeën zijn welkom in [Issues](https://github.com/ljmng7/MacMix/issues).
+Bugmeldingen en ideeën zijn welkom in [Issues](https://github.com/ljmng7/MacMix/issues). Wil je code bijdragen, lees dan de [richtlijnen voor bijdragen](../../CONTRIBUTING.md); pull requests vereisen een ondertekende Contributor License Agreement (CLA).
 
-## Licentie
+## Licentie en merk
 
-De broncode wordt uitgebracht onder de [MIT-licentie](../../LICENSE). Het app-symbool, schermafbeeldingen en andere merkelementen vallen **niet** onder de MIT-licentie en mogen niet zonder toestemming worden hergebruikt. Zie [Merkelementen](../../BRAND-ASSETS.md).
+MacMix is vrije software: je mag het verspreiden en/of aanpassen onder de voorwaarden van de [GNU General Public License, versie 3](../../LICENSE) (GPL-3.0). Versies tot en met 2.3.2 zijn uitgebracht onder de MIT-licentie; code die je onder die voorwaarden hebt ontvangen, blijft daaronder beschikbaar.
+
+**Merk.** De naam ‘MacMix’ en het MacMix-app-symbool identificeren de officiële app en zijn voorbehouden aan officiële builds. De GPL dekt de code, niet de naam of het merk. Verspreid je een fork of een aangepaste build, geef die dan een andere naam, een ander symbool en een andere bundle-ID, en presenteer hem niet als de officiële MacMix. MacMix voor jezelf bouwen en gebruiken mag altijd.
+
+Het app-symbool, schermafbeeldingen en andere merkelementen vallen **niet** onder de GPL en mogen niet zonder toestemming worden hergebruikt. Zie [Merkelementen](../../BRAND-ASSETS.md).

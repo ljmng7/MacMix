@@ -40,8 +40,22 @@ playground.xcworkspace
 *.tmp
 *.bak
 
+# Python tooling environments and caches
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+
+# Generated logs and Instruments recordings
+*.log
+*.trace/
+
 # Local release launcher (contains the machine-specific release workflow)
 /release_dmg.command
 
 .codex
 AGENTS.md
+CLAUDE.md
+
+# Local build settings (signing team)
+/Config/Local.xcconfig

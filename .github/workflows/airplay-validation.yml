@@ -1,0 +1,35 @@
+name: Validate AirPlay receiver routes
+
+on:
+  pull_request:
+    paths:
+      - 'MacMix/Devices/AirPlayAudioRoutes.swift'
+      - 'MacMix/Audio/AudioModels.swift'
+      - 'MacMix/Audio/AudioModel.swift'
+      - 'MacMix/Audio/CoreAudioHardware.swift'
+      - 'MacMix/App/MacMixPanel.swift'
+      - 'MacMix/Audio/AppAudioMixer.swift'
+      - 'MacMix/Features/OutputRouting/**'
+      - 'Packages/MacMixStudio/Sources/MacMixStudio/AppOutputRouting.swift'
+      - 'Packages/MacMixStudio/Tests/MacMixStudioTests/AppOutputRoutingTests.swift'
+      - 'tests/*airplay*'
+      - 'tests/AirPlayAudioRoutesTests.swift'
+      - '.github/workflows/airplay-validation.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: macos-15
+    timeout-minutes: 20
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_26.3.app/Contents/Developer
+    steps:
+      - uses: actions/checkout@v6
+      - name: Run AirPlay route regression tests
+        run: bash tests/run-airplay-route-tests.sh
+      - name: Run app output routing persistence tests
+        run: swift test --package-path Packages/MacMixStudio --filter AppOutputRoutingTests
+      - name: Run DSP and destination fade regression tests
+        run: bash tests/run-equalizer-dsp-tests.sh

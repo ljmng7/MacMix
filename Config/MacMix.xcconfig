@@ -1,0 +1,13 @@
+// Build settings for the MacMix app target.
+
+// Builds without a development team are signed to run locally. macOS may ask
+// for System Audio Recording permission again after each ad-hoc signed build;
+// set your own team in Config/Local.xcconfig to keep the permission.
+CODE_SIGN_IDENTITY = -
+INFOPLIST_FILE = Config/MacMix-Info.plist
+
+// Present only in official builds.
+#include? "Official/Official.xcconfig"
+
+// Your machine's settings. Copy Local.example.xcconfig to Local.xcconfig.
+#include? "Local.xcconfig"

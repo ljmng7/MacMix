@@ -1,7 +1,5 @@
 <p align="center">
   <img src="../images/og-image.webp" alt="MacMix — Macのサウンドを、すべてMacMixで。システム音量、出力・入力デバイス、アプリごとの音量をまとめて扱える、ネイティブなmacOSメニューバーミキサー。" width="100%">
-  <br>
-  <sub>スクリーンショットは配布版です。一部の機能には MacMix Studio が必要です。</sub>
 </p>
 
 <p align="center">
@@ -10,7 +8,7 @@
   <a href="https://github.com/ljmng7/MacMix/releases"><img src="https://img.shields.io/github/downloads/ljmng7/MacMix/total?color=2F80ED" alt="Downloads"></a>
   <img src="https://img.shields.io/badge/macOS-14.4%2B-111111?logo=apple&logoColor=white" alt="macOS 14.4+">
   <img src="https://img.shields.io/badge/Swift-SwiftUI-F05138?logo=swift&logoColor=white" alt="Swift, SwiftUI">
-  <a href="../../LICENSE"><img src="https://img.shields.io/badge/code-MIT-3DA639" alt="MIT License"></a>
+  <a href="../../LICENSE"><img src="https://img.shields.io/badge/license-GPL--3.0-3DA639" alt="GPL-3.0"></a>
 </p>
 
 <p align="center">
@@ -33,7 +31,8 @@
   <a href="#インストール">インストール</a> ·
   <a href="#プライバシー">プライバシー</a> ·
   <a href="#ソースからビルド">ソースからビルド</a> ·
-  <a href="#macmix-を応援する">サポート</a>
+  <a href="#macmix-を応援する">サポート</a> ·
+  <a href="#ライセンスと商標">ライセンス</a>
 </p>
 
 ---
@@ -67,32 +66,35 @@ macOS の音量スライダーはひとつだけ。MacMix はその先を補い�
 
 - メニューバーで静かに動作し、必要に応じて設定ウインドウも使えます。
 - ネイティブ SwiftUI。オーディオはローカルでリアルタイムに処理され、アカウントは不要です。
-- Sparkle による自動アップデート。
+- 公式アプリは Sparkle で自動アップデートされます。
 
 ## オープンソース版と配布版
 
-このリポジトリには MacMix の**無料でオープンソースのコア**が含まれています。Releases ページからダウンロードできるのは**配布版**です。無料で使える同じひとつのアプリで、**MacMix Studio** は任意の買い切りアップグレードです。別の「Studio アプリ」はなく、ライセンスは同じアプリで追加機能をアンロックするだけなので、設定もそのまま引き継がれます。
+**MacMix の全機能は、MacMix Studio も含めてオープンソースです。** このリポジトリを自分でビルドすれば、すべての機能が解放された完全なアプリが手に入ります。ライセンスもアカウントも不要で、出し惜しみはありません。
 
-| 含まれる機能 | <div align="center">オープンソース版<br><sub>（このリポジトリ）</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> | <div align="center">配布版<br><sub>（無料）</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> | <div align="center">配布版<br><sub>（Studio）</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> |
+Releases ページからダウンロードできるのは**配布版**、つまり同じアプリの公式ビルドです。無料で使え、**MacMix Studio** はそのビルドで Studio の機能を解放する任意の買い切り購入です。別の「Studio アプリ」はなく、ライセンスは同じアプリで機能を解放するだけなので、設定はそのまま残ります。
+
+| 含まれる機能 | <div align="center">ソースからビルド<br><sub>（このリポジトリ）</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> | <div align="center">配布版<br><sub>（無料）</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> | <div align="center">配布版<br><sub>（Studio）</sub><br><sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sub></div> |
 | --- | :---: | :---: | :---: |
 | システム・ディスプレイ・アプリごとの音量 | ✅ | ✅ | ✅ |
 | 出力・AirPlay・入力デバイスの切り替え | ✅ | ✅ | ✅ |
 | アプリごとの 200% ブースト | ✅ | ✅ | ✅ |
+| 匿名化された診断ログ付きのフィードバック | ✅ | ✅ | ✅ |
+| **カスタムEQ** — アプリごとに音を調整し、プリセットとして保存 | ✅ | — | ✅ |
+| **複数デバイス出力** — ひとつのアプリを複数のデバイスで同時に再生し、デバイスごとに音量を調整 | ✅ | — | ✅ |
+| **Proコントロール** — Bluetooth デバイスのバッテリー残量の表示、リスニングモードと空間オーディオの操作 | ✅ | — | ✅ |
+| **再生中** — 再生中のメディアを表示して操作 | ✅ | — | ✅ |
+| **シーンプリセット** — デバイスとアプリの音量を保存し、ワンクリックで切り替え | ✅ | — | ✅ |
+| **システム音量調節** — 音量キーを引き継ぎ、より滑らかに調整 | ✅ | — | ✅ |
+| **入力デバイスを固定** — macOS によるマイクの自動切り替えを防止 | ✅ | — | ✅ |
+| **ブラックリスト** — 指定したアプリをミックスの対象外に | ✅ | — | ✅ |
+| **パーソナライズ** — カスタムテーマ | ✅ | — | ✅ |
 | 開発者による署名と公証 | — | ✅ | ✅ |
-| 匿名化された診断ログ付きのフィードバック | — | ✅ | ✅ |
-| **カスタムEQ** — アプリごとに音を調整し、プリセットとして保存 | — | — | ✅ |
-| **複数デバイス出力** — ひとつのアプリを複数のデバイスで同時に再生し、デバイスごとに音量を調整 | — | — | ✅ |
-| **Proコントロール** — Bluetooth デバイスのバッテリー残量の表示、リスニングモードと空間オーディオの操作 | — | — | ✅ |
-| **再生中** — 再生中のメディアを表示して操作 | — | — | ✅ |
-| **シーンプリセット** — デバイスとアプリの音量を保存し、ワンクリックで切り替え | — | — | ✅ |
-| **システム音量調節** — 音量キーを引き継ぎ、より滑らかに調整 | — | — | ✅ |
-| **入力デバイスを固定** — macOS によるマイクの自動切り替えを防止 | — | — | ✅ |
-| **ブラックリスト** — 指定したアプリをミックスの対象外に | — | — | ✅ |
-| **パーソナライズ** — カスタムテーマ | — | — | ✅ |
+| 自動アップデート | — | ✅ | ✅ |
 | **ベータ版を先行体験** — 新機能をいち早く試す | — | — | ✅ |
 
 > [!NOTE]
-> Studio の機能は非公開で開発されており、このリポジトリには含まれていません。これまで無料で提供してきた機能（アプリごとのミックスや、バージョン 2.0 より前のすべての機能）は、今後も無料かつオープンソースのままです。共通コアの修正は配布版で検証したあとにこのリポジトリへ反映されるため、ここのソースコードは最新リリースより少し遅れることがあります。
+> 非公開なのは配布版のためだけに存在する部分、つまりライセンス認証、購入フロー、初回ガイド、アップデーターだけです。MacMix のビルドや実行にはどれも不要で、このリポジトリからのビルドには含まれていません。
 
 ## インストール
 
@@ -116,7 +118,11 @@ cd MacMix
 open MacMix.xcodeproj
 ```
 
-**MacMix** スキームを選んで **Run** を押します。Swift パッケージ（Sparkle と Swift Atomics）は Xcode が自動で解決します。
+**MacMix** スキームを選んで **Run** を押します。Swift パッケージ（MenuBarExtraAccess と Swift Atomics）は Xcode が自動で解決します。ビルドしたアプリでは Studio のすべての機能が解放されています。
+
+開発チームを設定していない場合、Xcode はローカル実行用にのみ署名するため、ビルドし直すたびに macOS が**システムオーディオ録音**の許可を再度求めることがあります。許可を維持するには、`Config/Local.example.xcconfig` を `Config/Local.xcconfig` にコピーし、自分の `DEVELOPMENT_TEAM` を設定してください。このファイルは Git に無視されます。
+
+ソースからのビルドは自動アップデートされません。更新するには、最新のソースを取得してビルドし直してください。
 
 回帰テストは Xcode コマンドラインツールだけで動く通常のスクリプトです：
 
@@ -138,14 +144,18 @@ for test in tests/run-*.sh; do bash "$test"; done
 
 ## MacMix を応援する
 
-MacMix が日々の一部になっているなら、**MacMix Studio** へのアップグレードをご検討ください。買い切りで上記の機能がすべて使えるようになり、無料のオープンソースコアの開発を直接支えます。
+ソースからのビルドは、これからもずっと無料です。MacMix が毎日の一部になっているなら、**MacMix Studio** の購入をご検討ください。買い切りで、配布版（署名・公証済みで自動的に最新に保たれる公式アプリ）の Studio 機能が解放され、MacMix の開発を直接支えることになります。
 
 <p align="center">
   <a href="https://checkout.dodopayments.com/buy/pdt_0NmJ2vOqulR07tfZqwKtU?quantity=1"><img src="https://img.shields.io/badge/%E5%85%A5%E6%89%8B%E3%81%99%E3%82%8B-MacMix_Studio-7A5CFA?style=for-the-badge&labelColor=241A3D" alt="MacMix Studio を入手"></a>
 </p>
 
-不具合の報告やアイデアは [Issues](https://github.com/ljmng7/MacMix/issues) へどうぞ。
+不具合の報告やアイデアは [Issues](https://github.com/ljmng7/MacMix/issues) へどうぞ。コードで貢献する場合は[コントリビューションガイド](../../CONTRIBUTING.md)をご覧ください。プルリクエストにはコントリビューターライセンス契約（CLA）への署名が必要です。
 
-## ライセンス
+## ライセンスと商標
 
-ソースコードは [MIT License](../../LICENSE) で公開しています。アプリアイコン、スクリーンショット、その他のブランド素材は MIT License の対象**外**で、許可なく再利用することはできません。詳しくは[ブランド素材](../../BRAND-ASSETS.md)をご覧ください。
+MacMix はフリーソフトウェアです。[GNU 一般公衆利用許諾書 第 3 版](../../LICENSE)（GPL-3.0）の条件のもとで、再配布や改変ができます。2.3.2 以前のバージョンは MIT License で公開されており、その条件で受け取ったコードは引き続きその条件で利用できます。
+
+**商標。**「MacMix」という名前と MacMix のアプリアイコンは公式アプリを示すもので、公式ビルド専用です。GPL が対象とするのはコードであり、名前やブランドではありません。フォークや改変したビルドを配布する場合は、別の名前、別のアイコン、別のバンドル ID を使い、公式の MacMix として扱わないでください。自分で使うために MacMix をビルドして実行するのは、いつでも問題ありません。
+
+アプリアイコン、スクリーンショット、その他のブランド素材は GPL の対象**外**で、許可なく再利用することはできません。詳しくは[ブランド素材](../../BRAND-ASSETS.md)をご覧ください。

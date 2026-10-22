@@ -1,0 +1,5 @@
+// Copy this file to Config/Local.xcconfig (ignored by Git) and fill in your values.
+
+// Your Apple Developer Team ID, so macOS keeps granted permissions between builds.
+DEVELOPMENT_TEAM =
+CODE_SIGN_IDENTITY = Apple Development

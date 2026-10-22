@@ -7,8 +7,8 @@ python3 - "$ROOT" "$ZERO_TEST_DIR" <<'PY'
 from pathlib import Path
 import sys
 root, out = map(Path, sys.argv[1:])
-models = (root / 'MacMix/AudioModels.swift').read_text().split('struct NowPlayingItem')[0]
-hardware = (root / 'MacMix/CoreAudioHardware.swift').read_text()
+models = (root / 'MacMix/Audio/AudioModels.swift').read_text().split('struct NowPlayingItem')[0]
+hardware = (root / 'MacMix/Audio/CoreAudioHardware.swift').read_text()
 controller = hardware[hardware.index('nonisolated struct OutputVolumeSnapshot:'):]
 (out / 'Tests.swift').write_text(models + '\n' + controller + '\n' + (root / 'tests/ZeroVolumeTests.swift').read_text())
 PY

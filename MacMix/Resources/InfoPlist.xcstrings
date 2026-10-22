@@ -1,0 +1,365 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "CFBundleName" : {
+      "comment" : "Bundle name",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MacMix"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MacMix"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MacMix"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MacMix"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MacMix"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MacMix"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MacMix"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MacMix"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MacMix"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MacMix"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MacMix"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MacMix"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MacMix"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MacMix"
+          }
+        },
+        "th" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MacMix"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MacMix"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MacMix"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MacMix"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MacMix"
+          }
+        }
+      }
+    },
+    "NSAudioCaptureUsageDescription" : {
+      "comment" : "Privacy usage description for system audio capture permission.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يلتقط MacMix صوت التطبيق فقط عند ضبط مستوى صوت تطبيق فردي للمزج المحلي في الوقت الفعلي. ولا يسجل الصوت أو يحفظه أو يرفعه."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MacMix erfasst App-Audio nur, wenn du die Lautstärke einzelner Apps für lokales Echtzeit-Mixing anpasst. Audio wird nicht aufgenommen, gespeichert oder hochgeladen."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MacMix only captures app audio when you adjust individual app volume for local real-time mixing. It does not record, save, or upload audio."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MacMix solo captura audio de apps cuando ajustas el volumen de una app individual para mezclar localmente en tiempo real. No graba, guarda ni sube audio."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MacMix capture l’audio d’une app uniquement lorsque vous réglez le volume d’une app individuelle pour le mixage local en temps réel. Il n’enregistre, ne sauvegarde et ne téléverse aucun audio."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MacMix स्थानीय रियल-टाइम मिक्सिंग के लिए केवल तब ऐप ऑडियो कैप्चर करता है जब आप किसी अलग ऐप का वॉल्यूम समायोजित करते हैं। यह ऑडियो रिकॉर्ड, सेव या अपलोड नहीं करता।"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MacMix hanya menangkap audio app saat Anda menyesuaikan volume app individual untuk mixing lokal real-time. MacMix tidak merekam, menyimpan, atau mengunggah audio."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MacMix acquisisce l'audio delle app solo quando regoli il volume di singole app per il mixaggio locale in tempo reale. Non registra, salva o carica audio."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MacMixは、ローカルでリアルタイムにミックスするために個別のアプリ音量を調整するときだけアプリ音声をキャプチャします。音声を録音、保存、アップロードすることはありません。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MacMix는 로컬 실시간 믹싱을 위해 개별 앱 음량을 조절할 때만 앱 오디오를 캡처합니다. 오디오를 녹음, 저장 또는 업로드하지 않습니다."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MacMix legt app-audio alleen vast wanneer je het volume van afzonderlijke apps aanpast voor lokale realtime mixing. Audio wordt niet opgenomen, opgeslagen of geüpload."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MacMix przechwytuje dźwięk aplikacji tylko podczas regulacji głośności pojedynczej aplikacji na potrzeby lokalnego miksowania w czasie rzeczywistym. Nie nagrywa, nie zapisuje ani nie przesyła dźwięku."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O MacMix só captura áudio de apps quando você ajusta o volume de apps individuais para mixagem local em tempo real. Ele não grava, salva nem envia áudio."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MacMix захватывает звук приложения только при настройке громкости отдельного приложения для локального микширования в реальном времени. Он не записывает, не сохраняет и не отправляет звук."
+          }
+        },
+        "th" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MacMix จะจับเสียงของแอปเฉพาะเมื่อคุณปรับระดับเสียงของแต่ละแอปเพื่อมิกซ์แบบเรียลไทม์บนเครื่องเท่านั้น และจะไม่บันทึก จัดเก็บ หรืออัปโหลดเสียง"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MacMix, yerel gerçek zamanlı miks için yalnızca tek tek uygulama ses düzeylerini ayarladığınızda uygulama sesini yakalar. Sesi kaydetmez, saklamaz veya yüklemez."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MacMix chỉ thu âm thanh của ứng dụng khi bạn điều chỉnh âm lượng từng ứng dụng để trộn âm cục bộ theo thời gian thực. Ứng dụng không ghi, lưu hoặc tải âm thanh lên."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MacMix 只在你调节单个 App 音量时捕获该 App 的音频，用于本机实时混音，不会录制、保存或上传音频。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MacMix 只會在你調整單個 App 音量時擷取該 App 的音訊，用於本機即時混音，不會錄製、儲存或上傳音訊。"
+          }
+        }
+      }
+    },
+    "NSBluetoothAlwaysUsageDescription" : {
+      "comment" : "Privacy usage description for reading the battery levels of connected Bluetooth audio devices.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يستخدم MacMix البلوتوث لقراءة مستويات بطارية أجهزة الصوت المتصلة."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MacMix verwendet Bluetooth, um den Batteriestand verbundener Audiogeräte auszulesen."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MacMix uses Bluetooth to read battery levels for connected audio devices."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MacMix usa Bluetooth para consultar el nivel de batería de los dispositivos de audio conectados."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MacMix utilise le Bluetooth pour lire le niveau de batterie des appareils audio connectés."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MacMix कनेक्ट किए गए ऑडियो डिवाइस का बैटरी स्तर पढ़ने के लिए Bluetooth का उपयोग करता है।"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MacMix menggunakan Bluetooth untuk membaca tingkat baterai perangkat audio yang terhubung."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MacMix usa il Bluetooth per leggere il livello della batteria dei dispositivi audio connessi."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MacMixは、接続されているオーディオデバイスのバッテリー残量を読み取るためにBluetoothを使用します。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MacMix는 연결된 오디오 기기의 배터리 잔량을 읽기 위해 Bluetooth를 사용합니다."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MacMix gebruikt Bluetooth om het batterijniveau van verbonden audioapparaten uit te lezen."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MacMix używa Bluetooth do odczytywania poziomu baterii podłączonych urządzeń audio."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O MacMix usa Bluetooth para ler o nível da bateria de dispositivos de áudio conectados."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MacMix использует Bluetooth для чтения уровня заряда подключённых аудиоустройств."
+          }
+        },
+        "th" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MacMix ใช้บลูทูธเพื่ออ่านระดับแบตเตอรี่ของอุปกรณ์เสียงที่เชื่อมต่ออยู่"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MacMix, bağlı ses aygıtlarının pil düzeylerini okumak için Bluetooth'u kullanır."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MacMix sử dụng Bluetooth để đọc mức pin của các thiết bị âm thanh được kết nối."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MacMix 使用蓝牙读取已连接音频设备的电量。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MacMix 使用藍牙讀取已連接音訊裝置的電量。"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}
