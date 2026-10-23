@@ -1725,6 +1725,29 @@ nonisolated private final class SharedProcessTapGainEngine: AppGainEngine {
             return nil
         }
 
+        if !usesOutputRouting {
+            // An output device that also records (most USB interfaces) contributes
+            // its input streams ahead of the taps; reading from buffer 0 would mix
+            // the interface's inputs in place of the app.
+            var tapInputBase: Int?
+            for attempt in 0..<6 {
+                tapInputBase = Self.tapInputBufferBase(aggregateID: aggregateID, tapRuntimes: tapRuntimes)
+                if tapInputBase != nil { break }
+                if attempt < 5 { Thread.sleep(forTimeInterval: 0.05) }
+            }
+            guard let tapInputBase else {
+                DiagnosticLog.shared.record("mixer", "tap_input_layout_unavailable", level: "error", fields: [
+                    "aggregate": String(aggregateID),
+                    "inputs": Self.streamDescriptions(deviceID: aggregateID, scope: kAudioDevicePropertyScopeInput)])
+                Self.diagnosticsLogger.error("Tap input streams missing from the aggregate input layout")
+                stopAfterInitializationFailure()
+                return nil
+            }
+            for index in tapRuntimes.indices {
+                tapRuntimes[index].inputBufferOffset += tapInputBase
+            }
+        }
+
         Self.logGraphDiagnostics(
             aggregateID: aggregateID,
             outputDeviceUID: outputDeviceUID,
@@ -2239,6 +2262,45 @@ nonisolated private final class SharedProcessTapGainEngine: AppGainEngine {
                 return offset + (isNonInterleaved ? Int(candidate.format.mChannelsPerFrame) : 1)
             }
         return .stream(index: selected.index, outputBufferOffset: outputBufferOffset)
+    }
+
+    /// Buffer index of the first tap stream. The HAL lists the subdevice's own
+    /// input streams first, then the taps in tap-list order.
+    private static func tapInputBufferBase(aggregateID: AudioObjectID, tapRuntimes: [TapRuntime]) -> Int? {
+        guard let streamIDs = audioObjectIDs(
+            objectID: aggregateID,
+            selector: kAudioDevicePropertyStreams,
+            scope: kAudioDevicePropertyScopeInput
+        ) else {
+            return nil
+        }
+        var streams: [InputStreamShape] = []
+        streams.reserveCapacity(streamIDs.count)
+        for streamID in streamIDs {
+            guard let format = streamFormat(streamID: streamID) else {
+                return nil
+            }
+            streams.append(InputStreamShape(channels: Int(format.mChannelsPerFrame), buffers: bufferCount(for: format)))
+        }
+        return tapInputBufferBase(
+            streams: streams,
+            taps: tapRuntimes.map {
+                InputStreamShape(channels: Int($0.format.mChannelsPerFrame), buffers: $0.inputBufferCount)
+            }
+        )
+    }
+
+    struct InputStreamShape: Equatable {
+        let channels: Int
+        let buffers: Int
+    }
+
+    static func tapInputBufferBase(streams: [InputStreamShape], taps: [InputStreamShape]) -> Int? {
+        let physicalStreamCount = streams.count - taps.count
+        guard physicalStreamCount >= 0, Array(streams.suffix(taps.count)) == taps else {
+            return nil
+        }
+        return streams.prefix(physicalStreamCount).reduce(0) { $0 + $1.buffers }
     }
 
     private static func outputStreamCandidates(deviceID: AudioObjectID) -> [OutputStreamCandidate]? {
