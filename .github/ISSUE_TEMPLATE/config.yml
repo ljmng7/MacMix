@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Questions and discussion / 使用问题与讨论
+    url: https://github.com/ljmng7/MacMix/discussions
+    about: Ask how to use MacMix or talk about ideas. / 询问使用方法，或讨论想法。
+  - name: Report a security vulnerability / 报告安全漏洞
+    url: https://github.com/ljmng7/MacMix/security/advisories/new
+    about: Please report security issues privately. / 请通过私密渠道报告安全问题。

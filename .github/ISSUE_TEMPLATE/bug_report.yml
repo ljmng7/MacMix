@@ -1,0 +1,66 @@
+name: Bug report / 问题反馈
+description: Something in MacMix doesn't work as expected. / MacMix 出现了不符合预期的行为。
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a problem. If you can, also use **Send Feedback** in MacMix: it creates an email with anonymized diagnostic logs, which makes audio issues much easier to track down.
+
+        感谢反馈问题。如果方便，也可以在 MacMix 里使用 **发送反馈**：它会生成一封附带匿名诊断日志的邮件，能更快定位音频问题。
+  - type: input
+    id: macmix-version
+    attributes:
+      label: MacMix version / MacMix 版本
+      description: Shown in About. / 可以在“关于”中查看。
+      placeholder: "2.3.2"
+    validations:
+      required: true
+  - type: dropdown
+    id: build
+    attributes:
+      label: Build / 安装来源
+      options:
+        - Official download (Releases) / 官方下载版
+        - Built from source / 自行编译
+    validations:
+      required: true
+  - type: input
+    id: macos-version
+    attributes:
+      label: macOS version / macOS 版本
+      placeholder: "macOS 26.1"
+    validations:
+      required: true
+  - type: input
+    id: mac-model
+    attributes:
+      label: Mac model / Mac 机型
+      placeholder: "MacBook Air (M2, 2022)"
+  - type: textarea
+    id: devices
+    attributes:
+      label: Audio devices involved / 相关音频设备
+      description: Output and input devices, such as AirPods, displays, AirPlay speakers or audio interfaces. / 涉及的输出和输入设备，例如 AirPods、显示器、AirPlay 音箱或声卡。
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened? / 发生了什么？
+      description: What you saw, and what you expected instead. / 你看到了什么，原本期望是什么。
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce / 复现步骤
+      placeholder: |
+        1.
+        2.
+        3.
+    validations:
+      required: true
+  - type: textarea
+    id: attachments
+    attributes:
+      label: Screenshots or logs / 截图或日志
+      description: Optional. Please remove anything private before attaching. / 可选。附上前请先去掉隐私信息。
