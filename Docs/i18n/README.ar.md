@@ -149,7 +149,7 @@ for test in tests/run-*.sh; do bash "$test"; done
 البناء من المصدر مجاني وسيبقى كذلك. إذا أصبح MacMix جزءًا من يومك، ففكّر في شراء **MacMix Studio**: شراء لمرة واحدة يفتح ميزات Studio في Distribution — التطبيق الموقّع والموثّق الذي يحدّث نفسه — ويموّل تطوير MacMix مباشرة.
 
 <p align="center">
-  <a href="https://checkout.dodopayments.com/buy/pdt_0NmJ2vOqulR07tfZqwKtU?quantity=1"><img src="https://img.shields.io/badge/%D8%A7%D8%AD%D8%B5%D9%84_%D8%B9%D9%84%D9%89-MacMix_Studio-7A5CFA?style=for-the-badge&labelColor=241A3D" alt="احصل على MacMix Studio"></a>
+  <a href="https://macmix.jazminli.com/studio"><img src="https://img.shields.io/badge/%D8%A7%D8%AD%D8%B5%D9%84_%D8%B9%D9%84%D9%89-MacMix_Studio-7A5CFA?style=for-the-badge&labelColor=241A3D" alt="احصل على MacMix Studio"></a>
 </p>
 
 نرحّب ببلاغات الأخطاء والأفكار في [Issues](https://github.com/ljmng7/MacMix/issues). للمساهمة بالشيفرة، راجع [دليل المساهمة](../../CONTRIBUTING.md)؛ تتطلب طلبات السحب توقيع اتفاقية ترخيص المساهم (CLA).

@@ -147,7 +147,7 @@ for test in tests/run-*.sh; do bash "$test"; done
 從原始碼建置始終免費。如果 MacMix 已經是你日常的一部分，歡迎購買 **MacMix Studio**：一次性購買，在分發版（經過簽署與公證、可自動更新的官方 App）中解鎖 Studio 功能，並直接支持 MacMix 的開發。
 
 <p align="center">
-  <a href="https://checkout.dodopayments.com/buy/pdt_0NmJ2vOqulR07tfZqwKtU?quantity=1"><img src="https://img.shields.io/badge/%E5%8F%96%E5%BE%97-MacMix_Studio-7A5CFA?style=for-the-badge&labelColor=241A3D" alt="取得 MacMix Studio"></a>
+  <a href="https://macmix.jazminli.com/studio"><img src="https://img.shields.io/badge/%E5%8F%96%E5%BE%97-MacMix_Studio-7A5CFA?style=for-the-badge&labelColor=241A3D" alt="取得 MacMix Studio"></a>
 </p>
 
 歡迎在 [Issues](https://github.com/ljmng7/MacMix/issues) 中回報問題或提出建議。貢獻程式碼請參閱[貢獻指南](../../CONTRIBUTING.md)；提交 Pull Request 前需要簽署貢獻者授權協議（CLA）。

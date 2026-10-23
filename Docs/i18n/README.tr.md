@@ -147,7 +147,7 @@ for test in tests/run-*.sh; do bash "$test"; done
 Kaynaktan derlemek ücretsizdir ve öyle kalacak. MacMix gününüzün bir parçasıysa **MacMix Studio** satın almayı düşünün: Distribution’da — imzalı, noter onaylı ve kendini güncel tutan uygulamada — Studio özelliklerinin kilidini açan ve MacMix’in geliştirilmesini doğrudan destekleyen tek seferlik bir satın alım.
 
 <p align="center">
-  <a href="https://checkout.dodopayments.com/buy/pdt_0NmJ2vOqulR07tfZqwKtU?quantity=1"><img src="https://img.shields.io/badge/Edinin-MacMix_Studio-7A5CFA?style=for-the-badge&labelColor=241A3D" alt="MacMix Studio’yu edinin"></a>
+  <a href="https://macmix.jazminli.com/studio"><img src="https://img.shields.io/badge/Edinin-MacMix_Studio-7A5CFA?style=for-the-badge&labelColor=241A3D" alt="MacMix Studio’yu edinin"></a>
 </p>
 
 Hata bildirimleri ve fikirler [Issues](https://github.com/ljmng7/MacMix/issues) bölümünde memnuniyetle karşılanır. Kod katkısı için [katkı rehberine](../../CONTRIBUTING.md) bakın; pull request’ler için imzalı bir Katkıda Bulunan Lisans Sözleşmesi (CLA) gerekir.

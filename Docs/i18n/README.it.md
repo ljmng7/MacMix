@@ -147,7 +147,7 @@ for test in tests/run-*.sh; do bash "$test"; done
 Compilare dal sorgente è gratuito e lo resterà. Se MacMix fa parte della tua giornata, valuta l’acquisto di **MacMix Studio**: un pagamento una tantum che sblocca le funzionalità Studio in Distribution — l’app firmata, notarizzata e sempre aggiornata — e finanzia direttamente lo sviluppo di MacMix.
 
 <p align="center">
-  <a href="https://checkout.dodopayments.com/buy/pdt_0NmJ2vOqulR07tfZqwKtU?quantity=1"><img src="https://img.shields.io/badge/Ottieni-MacMix_Studio-7A5CFA?style=for-the-badge&labelColor=241A3D" alt="Ottieni MacMix Studio"></a>
+  <a href="https://macmix.jazminli.com/studio"><img src="https://img.shields.io/badge/Ottieni-MacMix_Studio-7A5CFA?style=for-the-badge&labelColor=241A3D" alt="Ottieni MacMix Studio"></a>
 </p>
 
 Segnalazioni di bug e idee sono benvenute nelle [Issues](https://github.com/ljmng7/MacMix/issues). Per contribuire con del codice, consulta la [guida per i contributi](../../CONTRIBUTING.md); le pull request richiedono la firma di un Contributor License Agreement (CLA).

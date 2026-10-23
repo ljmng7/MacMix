@@ -147,7 +147,7 @@ for test in tests/run-*.sh; do bash "$test"; done
 ソースからのビルドは、これからもずっと無料です。MacMix が毎日の一部になっているなら、**MacMix Studio** の購入をご検討ください。買い切りで、配布版（署名・公証済みで自動的に最新に保たれる公式アプリ）の Studio 機能が解放され、MacMix の開発を直接支えることになります。
 
 <p align="center">
-  <a href="https://checkout.dodopayments.com/buy/pdt_0NmJ2vOqulR07tfZqwKtU?quantity=1"><img src="https://img.shields.io/badge/%E5%85%A5%E6%89%8B%E3%81%99%E3%82%8B-MacMix_Studio-7A5CFA?style=for-the-badge&labelColor=241A3D" alt="MacMix Studio を入手"></a>
+  <a href="https://macmix.jazminli.com/studio"><img src="https://img.shields.io/badge/%E5%85%A5%E6%89%8B%E3%81%99%E3%82%8B-MacMix_Studio-7A5CFA?style=for-the-badge&labelColor=241A3D" alt="MacMix Studio を入手"></a>
 </p>
 
 不具合の報告やアイデアは [Issues](https://github.com/ljmng7/MacMix/issues) へどうぞ。コードで貢献する場合は[コントリビューションガイド](../../CONTRIBUTING.md)をご覧ください。プルリクエストにはコントリビューターライセンス契約（CLA）への署名が必要です。

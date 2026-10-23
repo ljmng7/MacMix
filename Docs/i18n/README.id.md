@@ -147,7 +147,7 @@ for test in tests/run-*.sh; do bash "$test"; done
 Membangun dari kode sumber gratis dan akan tetap gratis. Jika MacMix sudah menjadi bagian dari hari Anda, pertimbangkan untuk membeli **MacMix Studio**: pembelian sekali bayar yang membuka fitur Studio di Distribution — app yang ditandatangani, dinotarisasi, dan selalu memperbarui dirinya — serta langsung mendanai pengembangan MacMix.
 
 <p align="center">
-  <a href="https://checkout.dodopayments.com/buy/pdt_0NmJ2vOqulR07tfZqwKtU?quantity=1"><img src="https://img.shields.io/badge/Dapatkan-MacMix_Studio-7A5CFA?style=for-the-badge&labelColor=241A3D" alt="Dapatkan MacMix Studio"></a>
+  <a href="https://macmix.jazminli.com/studio"><img src="https://img.shields.io/badge/Dapatkan-MacMix_Studio-7A5CFA?style=for-the-badge&labelColor=241A3D" alt="Dapatkan MacMix Studio"></a>
 </p>
 
 Laporan bug dan ide sangat diterima di [Issues](https://github.com/ljmng7/MacMix/issues). Untuk berkontribusi kode, lihat [panduan kontribusi](../../CONTRIBUTING.md); pull request memerlukan Perjanjian Lisensi Kontributor (CLA) yang sudah ditandatangani.

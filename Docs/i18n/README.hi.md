@@ -147,7 +147,7 @@ for test in tests/run-*.sh; do bash "$test"; done
 सोर्स से बिल्ड करना मुफ़्त है और मुफ़्त ही रहेगा। अगर MacMix आपके दिन का हिस्सा बन गया है, तो **MacMix Studio** ख़रीदने पर विचार करें: एक बार की ख़रीद जो Distribution — साइन किया हुआ, नोटराइज़्ड और खुद अपडेट होने वाला आधिकारिक ऐप — में Studio सुविधाएँ अनलॉक करती है और MacMix के विकास को सीधे सहयोग देती है।
 
 <p align="center">
-  <a href="https://checkout.dodopayments.com/buy/pdt_0NmJ2vOqulR07tfZqwKtU?quantity=1"><img src="https://img.shields.io/badge/%E0%A4%AA%E0%A4%BE%E0%A4%8F%E0%A4%81-MacMix_Studio-7A5CFA?style=for-the-badge&labelColor=241A3D" alt="MacMix Studio पाएँ"></a>
+  <a href="https://macmix.jazminli.com/studio"><img src="https://img.shields.io/badge/%E0%A4%AA%E0%A4%BE%E0%A4%8F%E0%A4%81-MacMix_Studio-7A5CFA?style=for-the-badge&labelColor=241A3D" alt="MacMix Studio पाएँ"></a>
 </p>
 
 बग रिपोर्ट और सुझाव [Issues](https://github.com/ljmng7/MacMix/issues) में स्वागत योग्य हैं। कोड में योगदान देने के लिए [योगदान गाइड](../../CONTRIBUTING.md) देखें; पुल रिक्वेस्ट के लिए हस्ताक्षरित कॉन्ट्रिब्यूटर लाइसेंस एग्रीमेंट (CLA) ज़रूरी है।

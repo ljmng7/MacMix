@@ -147,7 +147,7 @@ for test in tests/run-*.sh; do bash "$test"; done
 Build từ mã nguồn luôn miễn phí và sẽ tiếp tục như vậy. Nếu MacMix đã là một phần trong ngày của bạn, hãy cân nhắc mua **MacMix Studio**: khoản mua một lần giúp mở khóa các tính năng Studio trong Distribution — ứng dụng đã ký, đã notarize và tự cập nhật — đồng thời trực tiếp hỗ trợ việc phát triển MacMix.
 
 <p align="center">
-  <a href="https://checkout.dodopayments.com/buy/pdt_0NmJ2vOqulR07tfZqwKtU?quantity=1"><img src="https://img.shields.io/badge/Mua_ngay-MacMix_Studio-7A5CFA?style=for-the-badge&labelColor=241A3D" alt="Mua MacMix Studio"></a>
+  <a href="https://macmix.jazminli.com/studio"><img src="https://img.shields.io/badge/Mua_ngay-MacMix_Studio-7A5CFA?style=for-the-badge&labelColor=241A3D" alt="Mua MacMix Studio"></a>
 </p>
 
 Báo lỗi và ý tưởng luôn được chào đón tại [Issues](https://github.com/ljmng7/MacMix/issues). Để đóng góp mã, hãy xem [hướng dẫn đóng góp](../../CONTRIBUTING.md); pull request cần ký Thỏa thuận cấp phép cho người đóng góp (CLA).

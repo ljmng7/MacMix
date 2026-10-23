@@ -147,7 +147,7 @@ for test in tests/run-*.sh; do bash "$test"; done
 Zelf bouwen is en blijft gratis. Hoort MacMix bij je dag, overweeg dan **MacMix Studio** te kopen: een eenmalige aankoop die de Studio-functies in Distribution ontgrendelt — de ondertekende, genotariseerde app die zichzelf up-to-date houdt — en de ontwikkeling van MacMix rechtstreeks financiert.
 
 <p align="center">
-  <a href="https://checkout.dodopayments.com/buy/pdt_0NmJ2vOqulR07tfZqwKtU?quantity=1"><img src="https://img.shields.io/badge/Nu_kopen-MacMix_Studio-7A5CFA?style=for-the-badge&labelColor=241A3D" alt="MacMix Studio kopen"></a>
+  <a href="https://macmix.jazminli.com/studio"><img src="https://img.shields.io/badge/Nu_kopen-MacMix_Studio-7A5CFA?style=for-the-badge&labelColor=241A3D" alt="MacMix Studio kopen"></a>
 </p>
 
 Bugmeldingen en ideeën zijn welkom in [Issues](https://github.com/ljmng7/MacMix/issues). Wil je code bijdragen, lees dan de [richtlijnen voor bijdragen](../../CONTRIBUTING.md); pull requests vereisen een ondertekende Contributor License Agreement (CLA).
