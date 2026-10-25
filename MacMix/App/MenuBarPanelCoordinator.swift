@@ -52,6 +52,7 @@ final class MenuBarPanelCoordinator {
     @ObservationIgnored private var dismissalCleanupTask: Task<Void, Never>?
     @ObservationIgnored private var isPointerInside = false
     @ObservationIgnored private weak var panelWindow: NSWindow?
+    @ObservationIgnored let iconAnimator = MenuBarIconAnimator()
     @ObservationIgnored private weak var statusItemWindow: NSWindow?
     @ObservationIgnored private var panelWindowObservers: [NSObjectProtocol] = []
     @ObservationIgnored private var statusItemObservers: [NSObjectProtocol] = []
@@ -125,6 +126,7 @@ final class MenuBarPanelCoordinator {
 
     func attachStatusItem(_ statusItem: NSStatusItem) {
         keepStatusItemWidthStable(statusItem)
+        if let button = statusItem.button { iconAnimator.attach(to: button) }
         guard let window = statusItem.button?.window else { return }
         attachStatusItemWindow(window)
     }

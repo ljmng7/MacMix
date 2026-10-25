@@ -55,7 +55,8 @@ struct MacMixApp: App {
             }
         } label: {
             if let runtime {
-                MenuBarVolumeIcon(state: runtime.audioModel.outputState, sceneSymbol: menuBarSceneSymbol)
+                MenuBarVolumeIcon(state: runtime.audioModel.outputState, sceneSymbol: menuBarSceneSymbol,
+                                  animator: runtime.menuBarPanelCoordinator.iconAnimator)
                     .accessibilityLabel(Text(verbatim: "MacMix"))
                     .onChange(of: entitlements.hasStudioAccess, initial: true) { previous, enabled in
                         edition.entitlementDidChange(from: previous, to: enabled)
@@ -471,26 +472,25 @@ private final class MacMixApplicationDelegate: NSObject, NSApplicationDelegate {
 private struct MenuBarVolumeIcon: View {
     let state: OutputAudioState
     var sceneSymbol: String?
+    let animator: MenuBarIconAnimator
 
     var body: some View {
-        if let image = symbolImage {
-            Image(nsImage: image)
-        } else {
-            Image(systemName: sceneSymbol ?? state.menuBarSymbolName)
-        }
+        // The visible symbol is drawn by the animator over the status item;
+        // the label only reserves its space.
+        Image(nsImage: MenuBarIconMetrics.placeholder(width: MenuBarIconAnimator.image(for: icon)?.size.width ?? 0))
+            .onChange(of: icon, initial: true) { animator.show(icon) }
     }
 
     /// Like the system volume item, every audible level draws the same
     /// speaker.wave.3.fill and dims waves through its variable value.
-    private var symbolImage: NSImage? {
-        let image = if let sceneSymbol {
-            NSImage(systemSymbolName: sceneSymbol, accessibilityDescription: nil)
+    private var icon: MenuBarIcon {
+        if let sceneSymbol {
+            MenuBarIcon(symbolName: sceneSymbol)
         } else if let level = state.menuBarVolumeLevel {
-            NSImage(systemSymbolName: "speaker.wave.3.fill", variableValue: level, accessibilityDescription: nil)
+            MenuBarIcon(symbolName: "speaker.wave.3.fill", variableValue: level)
         } else {
-            NSImage(systemSymbolName: "speaker.slash.fill", accessibilityDescription: nil)
+            MenuBarIcon(symbolName: "speaker.slash.fill")
         }
-        return image?.withSymbolConfiguration(MenuBarIconMetrics.symbolConfiguration)
     }
 }
 
@@ -506,4 +506,18 @@ enum MenuBarIconMetrics {
         NSImage(systemSymbolName: "speaker.wave.3.fill", accessibilityDescription: nil)?
             .withSymbolConfiguration(symbolConfiguration)?.size.width ?? 24
     )
+
+    private static var placeholders: [CGFloat: NSImage] = [:]
+
+    /// A transparent label image at least as wide as the volume symbol, so the
+    /// label only changes when a wider scene symbol needs more room.
+    @MainActor
+    static func placeholder(width: CGFloat) -> NSImage {
+        let width = max(statusItemLength, ceil(width))
+        if let image = placeholders[width] { return image }
+        let image = NSImage(size: NSSize(width: width, height: 16))
+        image.isTemplate = true
+        placeholders[width] = image
+        return image
+    }
 }
