@@ -219,7 +219,7 @@ private struct TemporaryAppVolumeContent: View {
                     .lineLimit(1)
             }
             VolumeSliderRow(
-                leadingIcon: app.isMuted || app.volume <= 0.001 ? "speaker.slash.fill" : "speaker.fill",
+                leadingIcon: app.isMuted ? "speaker.slash.fill" : "speaker.fill",
                 trailingIcon: "speaker.wave.3.fill",
                 percentage: app.volume,
                 value: Binding(get: { app.volume }, set: { audioModel.setAppVolume($0, for: app) }),
@@ -1129,11 +1129,13 @@ private struct AudioAppBlacklistSelectionButton: View {
 
     var body: some View {
         Button(action: action) {
-            Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
-                .font(.title3)
-                .foregroundStyle(
-                    isSelected ? Color.accentColor : Color.secondary
-                )
+            DrawSwapSymbol(name: isSelected ? "checkmark.circle.fill" : "circle") {
+                Image(systemName: $0)
+                    .font(.title3)
+                    .foregroundStyle(
+                        isSelected ? Color.accentColor : Color.secondary
+                    )
+            }
         }
         .buttonStyle(.plain)
         .accessibilityLabel("Toggle Selection")
@@ -1935,8 +1937,12 @@ private struct SystemVolumeSection: View {
         VStack(alignment: .leading, spacing: 12) {
             switch title {
             case .systemVolume:
-                Text("System Volume")
-                    .font(.headline.weight(.semibold))
+                HStack {
+                    Text("System Volume")
+                        .font(.headline.weight(.semibold))
+                    Spacer()
+                    NotificationSoundMuteButton(controller: audioModel.notificationSound)
+                }
             case let .deviceName(name):
                 Text(name)
                     .font(.headline.weight(.semibold))
@@ -1948,6 +1954,25 @@ private struct SystemVolumeSection: View {
                 onToggleMute: audioModel.toggleSystemOutputMute
             )
         }
+    }
+}
+
+private struct NotificationSoundMuteButton: View {
+    let controller: NotificationSoundController
+
+    var body: some View {
+        let label = controller.isMuted
+            ? String(localized: "Unmute Notification Sounds")
+            : String(localized: "Mute Notification Sounds")
+        Button(action: controller.toggleMute) {
+            DrawSwapSymbol(name: controller.isMuted ? "bell.slash.fill" : "bell.fill") {
+                SliderSymbol(name: $0, isMuted: controller.isMuted)
+            }
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .help(label)
+        .accessibilityLabel(Text(label))
     }
 }
 
@@ -2003,9 +2028,7 @@ private struct SystemVolumeControl: View {
 
     var body: some View {
         VolumeSliderRow(
-            leadingIcon: state.isSystemMuted || (state.systemVolume ?? 1) <= 0.001
-                ? "speaker.slash.fill"
-                : "speaker.fill",
+            leadingIcon: state.isSystemMuted ? "speaker.slash.fill" : "speaker.fill",
             trailingIcon: "speaker.wave.3.fill",
             percentage: state.systemVolume,
             value: Binding(
@@ -2102,9 +2125,7 @@ private struct InputVolumeControl: View {
 
     var body: some View {
         VolumeSliderRow(
-            leadingIcon: state.isInputMuted || (state.inputVolume ?? 1) <= 0.001
-                ? "mic.slash.fill"
-                : "mic.fill",
+            leadingIcon: state.isInputMuted ? "mic.slash.fill" : "mic.fill",
             trailingIcon: "mic.and.signal.meter.fill",
             percentage: showsPercentage ? state.inputVolume : nil,
             value: Binding(
@@ -2851,7 +2872,7 @@ private struct VolumeSliderRow: View {
         HStack(spacing: 10) {
             if let onLeadingIconTap {
                 Button(action: onLeadingIconTap) {
-                    SliderSymbol(name: leadingIcon, isMuted: isMuted)
+                    DrawSwapSymbol(name: leadingIcon) { SliderSymbol(name: $0, isMuted: isMuted) }
                         .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
@@ -2901,6 +2922,32 @@ private struct SliderSymbol: View {
             .imageScale(.medium)
             .foregroundStyle(isMuted ? .red : .secondary)
             .frame(width: 24, height: 24, alignment: .center)
+    }
+}
+
+/// Swaps symbols by drawing the old one off and the new one on; systems
+/// before macOS 26 fall back to the replace effect.
+private struct DrawSwapSymbol<Content: View>: View {
+    let name: String
+    @ViewBuilder let content: (String) -> Content
+
+    var body: some View {
+        Group {
+            if #available(macOS 26.0, *) {
+                ZStack {
+                    content(name)
+                        .id(name)
+                        .transition(AsymmetricTransition(
+                            insertion: .symbolEffect(.drawOn),
+                            removal: .symbolEffect(.drawOff)
+                        ))
+                }
+            } else {
+                content(name)
+                    .contentTransition(.symbolEffect(.replace))
+            }
+        }
+        .animation(.default, value: name)
     }
 }
 
@@ -2962,13 +3009,28 @@ struct AppIcon: View {
             .saturation(isMuted ? 0 : 1)
             .opacity(isMuted ? 0.3 : 1)
 
-            Image(systemName: "speaker.slash.fill")
-                .font(.caption.weight(.bold))
-                .imageScale(.medium)
-                .foregroundStyle(.red)
-                .opacity(isMuted ? 1 : 0)
+            muteBadge
         }
         .frame(width: 24, height: 24)
+        .animation(.default, value: isMuted)
+    }
+
+    @ViewBuilder
+    private var muteBadge: some View {
+        let badge = Image(systemName: "speaker.slash.fill")
+            .font(.caption.weight(.bold))
+            .imageScale(.medium)
+            .foregroundStyle(.red)
+        if #available(macOS 26.0, *) {
+            if isMuted {
+                badge.transition(AsymmetricTransition(
+                    insertion: .symbolEffect(.drawOn),
+                    removal: .symbolEffect(.drawOff)
+                ))
+            }
+        } else {
+            badge.opacity(isMuted ? 1 : 0)
+        }
     }
 }
 

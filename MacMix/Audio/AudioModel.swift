@@ -368,6 +368,7 @@ final class AudioModel: NSObject {
 
     let outputState = OutputAudioState()
     let inputState = InputAudioState()
+    let notificationSound = NotificationSoundController()
     let outputAppsState = OutputAppsState()
     let audioAppBlacklistState: AudioAppBlacklistState
 
@@ -396,6 +397,7 @@ final class AudioModel: NSObject {
         guard visible != audioInterfaceIsVisible else { return }
         audioInterfaceIsVisible = visible
         if visible {
+            notificationSound.refresh()
             lastAccessoryRefresh = 0
             scheduleBluetoothBatteryRefresh(for: outputState.devices)
         }
