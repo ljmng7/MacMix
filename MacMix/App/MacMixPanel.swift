@@ -1810,15 +1810,29 @@ private struct AboutVersionRow: View {
             ?? Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String
         let build = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String
 
+        let text: String
         switch (version?.isEmpty == false ? version : nil, build?.isEmpty == false ? build : nil) {
         case let (.some(version), .some(build)):
-            return "\(version) (\(build))"
+            text = "\(version) (\(build))"
         case let (.some(version), .none):
-            return version
+            text = version
         case let (.none, .some(build)):
-            return build
+            text = build
         case (.none, .none):
             return "—"
+        }
+        return architectureName.map { "\(text) (\($0))" } ?? text
+    }
+
+    // Read from the executable itself, so it names the package that is actually installed.
+    private static var architectureName: String? {
+        let architectures = Set((Bundle.main.executableArchitectures ?? []).map(\.intValue))
+        switch (architectures.contains(NSBundleExecutableArchitectureARM64),
+                architectures.contains(NSBundleExecutableArchitectureX86_64)) {
+        case (true, true): return "Universal"
+        case (true, false): return "Apple Silicon"
+        case (false, true): return "Intel"
+        case (false, false): return nil
         }
     }
 }
