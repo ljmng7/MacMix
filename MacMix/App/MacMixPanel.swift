@@ -11,6 +11,7 @@ import MacMixStudio
 import MenuBarExtraAccess
 import ServiceManagement
 import SwiftUI
+import UniformTypeIdentifiers
 
 struct MacMixPanel: View {
     let audioModel: AudioModel
@@ -857,7 +858,8 @@ private struct ControlPanelBlacklistPage: View {
                     isEditing: isEditing,
                     selectedAppIDs: selectedBlacklistedAppIDs,
                     onToggleSelection: toggleBlacklistedAppSelection,
-                    onRemove: removeFromBlacklist
+                    onRemove: removeFromBlacklist,
+                    onChooseApps: chooseAppsForBlacklist
                 )
                 .disabled(!isStudioEnabled)
             }
@@ -959,6 +961,26 @@ private struct ControlPanelBlacklistPage: View {
             audioModel.removeAppFromBlacklist(app)
         }
     }
+
+    private func chooseAppsForBlacklist(in window: NSWindow?) {
+        guard isStudioEnabled else { return }
+        let panel = NSOpenPanel()
+        panel.allowedContentTypes = [.applicationBundle]
+        panel.allowsMultipleSelection = true
+        panel.canChooseDirectories = false
+        panel.directoryURL = URL(fileURLWithPath: "/Applications")
+        let completion: (NSApplication.ModalResponse) -> Void = { response in
+            guard response == .OK else { return }
+            withAnimation(Self.listTransitionAnimation) {
+                audioModel.addApplicationsToBlacklist(at: panel.urls)
+            }
+        }
+        if let window {
+            panel.beginSheetModal(for: window, completionHandler: completion)
+        } else {
+            panel.begin(completionHandler: completion)
+        }
+    }
 }
 
 private struct CurrentAudioAppsBlacklistSection: View {
@@ -1008,6 +1030,8 @@ private struct BlacklistedAudioAppsSection: View {
     let selectedAppIDs: Set<String>
     let onToggleSelection: (String) -> Void
     let onRemove: (AudioAppBlacklistEntry) -> Void
+    let onChooseApps: (NSWindow?) -> Void
+    @State private var pickerAnchor: NSView?
 
     var body: some View {
         Section {
@@ -1035,6 +1059,12 @@ private struct BlacklistedAudioAppsSection: View {
                     .transition(.opacity.combined(with: .scale(scale: 0.96)))
                 }
             }
+            Button("Choose Other App…") {
+                onChooseApps(pickerAnchor?.window)
+            }
+            .foregroundStyle(.primary)
+            .tint(.secondary)
+            .background(SceneWindowAnchor { pickerAnchor = $0 })
         } header: {
             Text("Blacklist")
         } footer: {

@@ -189,19 +189,25 @@ final class AudioAppBlacklistState {
 
     @discardableResult
     func add(_ newApps: [AudioApp]) -> Bool {
-        guard !newApps.isEmpty else {
-            return false
-        }
-
-        var appsByID = Dictionary(uniqueKeysWithValues: apps.map { ($0.id, $0) })
-        var didChange = false
-        for app in newApps {
-            let entry = AudioAppBlacklistEntry(
+        add(entries: newApps.map { app in
+            AudioAppBlacklistEntry(
                 id: app.id,
                 bundleID: app.bundleID,
                 name: app.name,
                 icon: app.icon
             )
+        })
+    }
+
+    @discardableResult
+    func add(entries newEntries: [AudioAppBlacklistEntry]) -> Bool {
+        guard !newEntries.isEmpty else {
+            return false
+        }
+
+        var appsByID = Dictionary(uniqueKeysWithValues: apps.map { ($0.id, $0) })
+        var didChange = false
+        for entry in newEntries {
             if appsByID[entry.id] != entry {
                 appsByID[entry.id] = entry
                 didChange = true
@@ -772,6 +778,31 @@ final class AudioModel: NSObject {
             return
         }
 
+        didAddAppsToBlacklist(appIDs: appIDs)
+    }
+
+    // App ids are bundle ids, so apps chosen on disk match once they play.
+    func addApplicationsToBlacklist(at urls: [URL]) {
+        let entries = urls.compactMap { url -> AudioAppBlacklistEntry? in
+            guard let bundleID = Bundle(url: url)?.bundleIdentifier,
+                  bundleID != Bundle.main.bundleIdentifier else {
+                return nil
+            }
+            return AudioAppBlacklistEntry(
+                id: bundleID,
+                bundleID: bundleID,
+                name: FileManager.default.displayName(atPath: url.path),
+                icon: NSWorkspace.shared.icon(forFile: url.path)
+            )
+        }
+        guard audioAppBlacklistState.add(entries: entries) else {
+            return
+        }
+
+        didAddAppsToBlacklist(appIDs: Set(entries.map(\.id)))
+    }
+
+    private func didAddAppsToBlacklist(appIDs: Set<String>) {
         persistAudioAppBlacklist()
         pendingOutputApps?.removeAll { appIDs.contains($0.id) }
         retainedOutputAppsDuringRoute.removeAll { appIDs.contains($0.id) }
