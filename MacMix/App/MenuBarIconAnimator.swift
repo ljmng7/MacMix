@@ -24,17 +24,10 @@ final class MenuBarIconAnimator {
         static let unmuting = Recentring(delay: 0.34, duration: 0.08)
     }
 
-    /// How long a mute transition runs; level updates that arrive meanwhile
-    /// wait for it so they do not cut it short.
-    private static let transitionDuration: Duration = .milliseconds(500)
-
     private let imageView = NSImageView()
     private var leadingConstraint: NSLayoutConstraint?
-    /// The latest requested icon, and the one currently on screen.
     private var current: MenuBarIcon?
-    private var displayed: MenuBarIcon?
-    private var transitionTask: Task<Void, Never>?
-    private var attachRetryTask: Task<Void, Never>?
+    private var recentringTask: Task<Void, Never>?
 
     init() {
         imageView.imageScaling = .scaleNone
@@ -53,10 +46,6 @@ final class MenuBarIconAnimator {
 
     func attach(to button: NSStatusBarButton) {
         guard imageView.superview !== button else { return }
-        attachRetryTask?.cancel()
-        attachRetryTask = nil
-        transitionTask?.cancel()
-        transitionTask = nil
         imageView.removeFromSuperview()
         button.addSubview(imageView)
         let leading = imageView.leadingAnchor.constraint(equalTo: button.leadingAnchor)
@@ -67,25 +56,24 @@ final class MenuBarIconAnimator {
             imageView.topAnchor.constraint(equalTo: button.topAnchor),
             imageView.bottomAnchor.constraint(equalTo: button.bottomAnchor)
         ])
-        displayed = nil
-        if let current { apply(current) }
+        if let current, let image = Self.image(for: current) {
+            imageView.image = image
+            leading.constant = centringOffset(for: image)
+        }
     }
 
     func show(_ icon: MenuBarIcon) {
         guard icon != current else { return }
-        current = icon
-        guard attachIfNeeded(), transitionTask == nil else {
-            // Applied once attached, or when the running transition ends.
-            return
+        if imageView.superview == nil, let button = Self.findStatusBarButton() {
+            // The status item introspection runs once at launch and can precede the runtime.
+            attach(to: button)
         }
-        apply(icon)
-    }
 
-    private func apply(_ icon: MenuBarIcon) {
-        let previous = displayed
-        displayed = icon
+        let previous = current
+        current = icon
         guard let image = Self.image(for: icon) else { return }
         let offset = centringOffset(for: image)
+        recentringTask?.cancel()
 
         // Only a symbol change animates; level changes just redraw the waves.
         guard let previous, previous.symbolName != icon.symbolName,
@@ -104,7 +92,7 @@ final class MenuBarIconAnimator {
         // the move hides inside the transition instead of sliding visibly.
         let timing: Recentring = image.size.width < (Self.image(for: previous)?.size.width ?? 0)
             ? .muting : .unmuting
-        transitionTask = Task { @MainActor [weak self] in
+        recentringTask = Task { @MainActor [weak self] in
             try? await Task.sleep(for: .seconds(timing.delay))
             guard !Task.isCancelled, let self else { return }
             NSAnimationContext.runAnimationGroup({ context in
@@ -114,34 +102,7 @@ final class MenuBarIconAnimator {
                 // stretch the layers of the running symbol transition.
                 self.leadingConstraint?.animator().constant = offset
             }, completionHandler: nil)
-
-            try? await Task.sleep(for: Self.transitionDuration - .seconds(timing.delay))
-            guard !Task.isCancelled else { return }
-            transitionTask = nil
-            if let current, current != displayed { apply(current) }
         }
-    }
-
-    /// The status item introspection runs once at launch and can precede the
-    /// runtime, so look the button up directly, retrying until it exists.
-    private func attachIfNeeded() -> Bool {
-        guard imageView.superview == nil else { return true }
-        if let button = Self.findStatusBarButton() {
-            attach(to: button)
-            return true
-        }
-        guard attachRetryTask == nil else { return false }
-        attachRetryTask = Task { @MainActor [weak self] in
-            for _ in 0..<20 {
-                try? await Task.sleep(for: .milliseconds(250))
-                guard !Task.isCancelled, let self else { return }
-                if let button = Self.findStatusBarButton() {
-                    attach(to: button)
-                    return
-                }
-            }
-        }
-        return false
     }
 
     /// Leading inset that centres `image` in the status item.
