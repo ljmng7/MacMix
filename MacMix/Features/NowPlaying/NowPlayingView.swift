@@ -835,9 +835,12 @@ private struct NowPlayingPlaybackButton: View {
             Image(systemName: isPlaying ? "pause.fill" : "play.fill")
                 .font(font)
                 .contentTransition(.symbolEffect(.replace.downUp))
+                .animation(.default, value: isPlaying)
+                // Let an in-flight replace travel with the expansion animation
+                // instead of jumping to the new position.
+                .geometryGroup()
                 .frame(minWidth: 24, minHeight: 24)
                 .contentShape(Rectangle())
-                .animation(.default, value: isPlaying)
         }
         .buttonStyle(NowPlayingPressHighlightStyle())
         .disabled(!isEnabled)
