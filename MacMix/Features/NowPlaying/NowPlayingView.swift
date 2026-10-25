@@ -832,35 +832,27 @@ private struct NowPlayingPlaybackButton: View {
 
     var body: some View {
         Button(action: action) {
-            ZStack {
-                if isPlaying {
-                    Image(systemName: "pause.fill")
-                        .transition(
-                            AsymmetricTransition(
-                                insertion: .symbolEffect(.appear),
-                                removal: .symbolEffect(.disappear)
-                            )
-                        )
-                } else {
-                    Image(systemName: "play.fill")
-                        .transition(
-                            AsymmetricTransition(
-                                insertion: .symbolEffect(.appear),
-                                removal: .symbolEffect(.disappear)
-                            )
-                        )
-                }
-            }
-            .font(font)
-            .frame(minWidth: 24, minHeight: 24)
-            .contentShape(Rectangle())
-            .animation(.default, value: isPlaying)
+            Image(systemName: isPlaying ? "pause.fill" : "play.fill")
+                .font(font)
+                .contentTransition(.symbolEffect(.replace.downUp))
+                .frame(minWidth: 24, minHeight: 24)
+                .contentShape(Rectangle())
+                .animation(.default, value: isPlaying)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(NowPlayingPressHighlightStyle())
         .disabled(!isEnabled)
-        .foregroundStyle(isEnabled ? .secondary : .primary)
         .opacity(isEnabled ? 1 : 0.35)
         .accessibilityLabel(isPlaying ? "Pause" : "Play")
+    }
+}
+
+/// Brightens the symbol while pressed, like the system Now Playing controls.
+private struct NowPlayingPressHighlightStyle: ButtonStyle {
+    @Environment(\.isEnabled) private var isEnabled
+
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .foregroundStyle(!isEnabled || configuration.isPressed ? .primary : .secondary)
     }
 }
 
