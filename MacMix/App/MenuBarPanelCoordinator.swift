@@ -22,6 +22,9 @@ final class MenuBarPanelCoordinator {
                 if !isTemporary {
                     mode = .fullPanel
                 }
+                // SwiftUI places the window during this presentation; check it
+                // against the status item once that placement has landed.
+                Task { @MainActor [weak self] in self?.alignPanelToStatusItem(trigger: "presented") }
             }
         }
     }
@@ -49,6 +52,9 @@ final class MenuBarPanelCoordinator {
     @ObservationIgnored private var dismissalCleanupTask: Task<Void, Never>?
     @ObservationIgnored private var isPointerInside = false
     @ObservationIgnored private weak var panelWindow: NSWindow?
+    @ObservationIgnored private weak var statusItemWindow: NSWindow?
+    @ObservationIgnored private var panelWindowObservers: [NSObjectProtocol] = []
+    @ObservationIgnored private var statusItemObservers: [NSObjectProtocol] = []
 
     func presentTemporary(mode: SystemVolumePanelMode) {
         sceneFeedback = nil
@@ -106,7 +112,82 @@ final class MenuBarPanelCoordinator {
     }
 
     func attachPanelWindow(_ window: NSWindow) {
+        guard panelWindow !== window else { return }
         panelWindow = window
+        panelWindowObservers = observeGeometry(of: window, trigger: "panel_geometry")
+        if statusItemWindow == nil,
+           let statusBarWindow = NSApp.windows.first(where: { $0.className.contains("NSStatusBarWindow") }) {
+            // The status item introspection runs once at launch and can precede the runtime.
+            attachStatusItemWindow(statusBarWindow)
+        }
+        alignPanelToStatusItem(trigger: "panel_attached")
+    }
+
+    func attachStatusItem(_ statusItem: NSStatusItem) {
+        keepStatusItemWidthStable(statusItem)
+        guard let window = statusItem.button?.window else { return }
+        attachStatusItemWindow(window)
+    }
+
+    /// The muted symbol is narrower than the audible one. With a variable
+    /// length the item would resize, and shift an open panel, on every mute
+    /// change; a fixed length keeps it steady while the button centres the
+    /// symbol. Wider scene symbols still get room.
+    private func keepStatusItemWidthStable(_ statusItem: NSStatusItem) {
+        let symbolWidth = statusItem.button?.image?.size.width ?? 0
+        statusItem.length = max(MenuBarIconMetrics.statusItemLength, ceil(symbolWidth))
+    }
+
+    private func attachStatusItemWindow(_ window: NSWindow) {
+        guard statusItemWindow !== window else { return }
+        statusItemWindow = window
+        statusItemObservers = observeGeometry(of: window, trigger: "status_item_moved")
+        DiagnosticLog.shared.record("interface", "menu_panel_anchor_attached", fields: [
+            "anchor_x": String(format: "%.1f", window.frame.minX),
+            "anchor_width": String(format: "%.1f", window.frame.width)
+        ])
+    }
+
+    private func observeGeometry(of window: NSWindow, trigger: String) -> [NSObjectProtocol] {
+        [NSWindow.didMoveNotification, NSWindow.didResizeNotification].map { name in
+            NotificationCenter.default.addObserver(forName: name, object: window, queue: .main) { [weak self] _ in
+                MainActor.assumeIsolated { self?.alignPanelToStatusItem(trigger: trigger) }
+            }
+        }
+    }
+
+    /// MenuBarExtra aligns the panel with the status item only when it shows
+    /// or resizes the window. If the status item moved in between (its own icon
+    /// or a neighbour changed width, which is common right after launch), the
+    /// panel stays misaligned until a large content change resizes it.
+    private func alignPanelToStatusItem(trigger: String) {
+        guard let panel = panelWindow, panel.isVisible,
+              let anchor = statusItemWindow?.frame, anchor.width > 0,
+              let screen = panel.screen ?? statusItemWindow?.screen else { return }
+
+        // MenuBarExtra aligns the panel's leading edge with the status item's.
+        let target = anchor.minX.rounded()
+        if trigger == "presented" {
+            DiagnosticLog.shared.record("interface", "menu_panel_geometry", fields: [
+                "panel_x": String(Int(panel.frame.minX)),
+                "panel_width": String(Int(panel.frame.width)),
+                "anchor_x": String(format: "%.1f", anchor.minX),
+                "anchor_width": String(format: "%.1f", anchor.width)
+            ])
+        }
+        // Leave edge-clamped placements to SwiftUI, and ignore 1 pt rounding
+        // differences so the two never correct each other back and forth.
+        guard target >= screen.frame.minX, target + panel.frame.width <= screen.frame.maxX,
+              abs(panel.frame.minX - target) >= 1.5 else { return }
+
+        DiagnosticLog.shared.record("interface", "menu_panel_realigned", fields: [
+            "trigger": trigger,
+            "from_x": String(Int(panel.frame.minX)),
+            "to_x": String(Int(target)),
+            "anchor_x": String(format: "%.1f", anchor.minX),
+            "panel_width": String(Int(panel.frame.width))
+        ])
+        panel.setFrameOrigin(NSPoint(x: target, y: panel.frame.minY))
     }
 
     func dismissTemporaryPanel() {

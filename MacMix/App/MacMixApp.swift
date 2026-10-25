@@ -75,7 +75,9 @@ struct MacMixApp: App {
         }
         .menuBarExtraAccess(
             isPresented: menuBarIsPresented
-        )
+        ) { statusItem in
+            runtime?.menuBarPanelCoordinator.attachStatusItem(statusItem)
+        }
         .menuBarExtraStyle(.window)
 
         Window("Control Panel", id: "control-panel") {
@@ -471,6 +473,37 @@ private struct MenuBarVolumeIcon: View {
     var sceneSymbol: String?
 
     var body: some View {
-        Image(systemName: sceneSymbol ?? state.menuBarSymbolName)
+        if let image = symbolImage {
+            Image(nsImage: image)
+        } else {
+            Image(systemName: sceneSymbol ?? state.menuBarSymbolName)
+        }
     }
+
+    /// Like the system volume item, every audible level draws the same
+    /// speaker.wave.3.fill and dims waves through its variable value.
+    private var symbolImage: NSImage? {
+        let image = if let sceneSymbol {
+            NSImage(systemSymbolName: sceneSymbol, accessibilityDescription: nil)
+        } else if let level = state.menuBarVolumeLevel {
+            NSImage(systemSymbolName: "speaker.wave.3.fill", variableValue: level, accessibilityDescription: nil)
+        } else {
+            NSImage(systemSymbolName: "speaker.slash.fill", accessibilityDescription: nil)
+        }
+        return image?.withSymbolConfiguration(MenuBarIconMetrics.symbolConfiguration)
+    }
+}
+
+enum MenuBarIconMetrics {
+    /// Matches the system volume item, which draws its symbol at 14 pt medium
+    /// rather than the 13 pt regular default.
+    static let symbolConfiguration = NSImage.SymbolConfiguration(pointSize: 14, weight: .medium)
+
+    /// Fixed status item length: the audible symbol's own width (the menu bar
+    /// adds the spacing between items), so mute changes never resize the item
+    /// and shift an open panel. The muted symbol centres within it.
+    static let statusItemLength: CGFloat = ceil(
+        NSImage(systemSymbolName: "speaker.wave.3.fill", accessibilityDescription: nil)?
+            .withSymbolConfiguration(symbolConfiguration)?.size.width ?? 24
+    )
 }

@@ -83,6 +83,33 @@ final class OutputAudioState {
         return "speaker.wave.3.fill"
     }
 
+    /// Level for the menu bar's speaker.wave.3.fill, snapped to the symbol's
+    /// three wave stages so the label only changes when a wave does. `nil`
+    /// means muted.
+    var menuBarVolumeLevel: Double? {
+        if isSystemMuted {
+            return nil
+        }
+
+        guard let systemVolume else {
+            return 1
+        }
+
+        if systemVolume <= 0.001 {
+            return nil
+        }
+
+        if systemVolume < 0.34 {
+            return 0.25
+        }
+
+        if systemVolume < 0.67 {
+            return 0.5
+        }
+
+        return 1
+    }
+
     func updateBatteryByDeviceUID(_ batteryByDeviceUID: [String: AudioDeviceBattery]) {
         guard self.batteryByDeviceUID != batteryByDeviceUID else {
             return
