@@ -5,6 +5,7 @@ import Observation
 @Observable
 final class MenuBarPanelCoordinator {
     private static let inactivityDuration = Duration.seconds(1)
+    private static let touchInactivityDuration = Duration.seconds(3)
     private static let presentationDelay = Duration.milliseconds(32)
     private static let dismissalCleanupDelay = Duration.milliseconds(500)
 
@@ -51,6 +52,9 @@ final class MenuBarPanelCoordinator {
     @ObservationIgnored private var presentationTask: Task<Void, Never>?
     @ObservationIgnored private var dismissalCleanupTask: Task<Void, Never>?
     @ObservationIgnored private var isPointerInside = false
+    @ObservationIgnored private var isPressedInside = false
+    @ObservationIgnored private var temporaryInactivityDuration = inactivityDuration
+    @ObservationIgnored private var panelPressMonitor: Any?
     @ObservationIgnored private weak var panelWindow: NSWindow?
     @ObservationIgnored let iconAnimator = MenuBarIconAnimator()
     @ObservationIgnored private weak var statusItemWindow: NSWindow?
@@ -116,6 +120,7 @@ final class MenuBarPanelCoordinator {
         guard panelWindow !== window else { return }
         panelWindow = window
         panelWindowObservers = observeGeometry(of: window, trigger: "panel_geometry")
+        installPanelPressMonitor()
         if statusItemWindow == nil,
            let statusBarWindow = NSApp.windows.first(where: { $0.className.contains("NSStatusBarWindow") }) {
             // The status item introspection runs once at launch and can precede the runtime.
@@ -215,14 +220,15 @@ final class MenuBarPanelCoordinator {
     func noteTemporaryActivity() {
         guard isPresented, isTemporary else { return }
         hideTask?.cancel()
-        guard !isPointerInside else {
+        guard !isPointerInside, !isPressedInside else {
             hideTask = nil
             return
         }
 
+        let duration = temporaryInactivityDuration
         hideTask = Task { @MainActor [weak self] in
             do {
-                try await Task.sleep(for: Self.inactivityDuration)
+                try await Task.sleep(for: duration)
             } catch {
                 return
             }
@@ -234,9 +240,37 @@ final class MenuBarPanelCoordinator {
         guard isTemporary else { return }
         isPointerInside = isInside
         if isInside {
+            temporaryInactivityDuration = Self.inactivityDuration
             hideTask?.cancel()
             hideTask = nil
         } else {
+            noteTemporaryActivity()
+        }
+    }
+
+    /// Touch never hovers, so a press inside the temporary panel keeps it open
+    /// until the finger lifts, and a press without hover leaves it up longer.
+    private func installPanelPressMonitor() {
+        guard panelPressMonitor == nil else { return }
+        var mask: NSEvent.EventTypeMask = [.leftMouseDown, .leftMouseUp]
+        if #available(macOS 26.0, *) { mask.insert(.mouseCancelled) }
+        panelPressMonitor = NSEvent.addLocalMonitorForEvents(matching: mask) { [weak self] event in
+            MainActor.assumeIsolated {
+                guard let self, event.window === self.panelWindow else { return }
+                self.setPressedInside(event.type == .leftMouseDown)
+            }
+            return event
+        }
+    }
+
+    private func setPressedInside(_ isPressed: Bool) {
+        guard isTemporary, isPressedInside != isPressed else { return }
+        isPressedInside = isPressed
+        if isPressed {
+            hideTask?.cancel()
+            hideTask = nil
+        } else {
+            if !isPointerInside { temporaryInactivityDuration = Self.touchInactivityDuration }
             noteTemporaryActivity()
         }
     }
@@ -245,6 +279,8 @@ final class MenuBarPanelCoordinator {
         hideTask?.cancel()
         hideTask = nil
         isPointerInside = false
+        isPressedInside = false
+        temporaryInactivityDuration = Self.inactivityDuration
 
         dismissalCleanupTask?.cancel()
         dismissalCleanupTask = Task { @MainActor [weak self] in

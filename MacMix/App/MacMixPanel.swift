@@ -68,7 +68,8 @@ struct MacMixPanel: View {
                 Divider()
             }
 
-            HStack {
+            // Keep Quit clear of the full-width Open Main Window target for touch.
+            HStack(spacing: 16) {
                 Button {
                     NSApp.setActivationPolicy(.regular)
                     openWindow(id: "control-panel")
@@ -78,6 +79,7 @@ struct MacMixPanel: View {
                     Label("Open Main Window", systemImage: "macwindow")
                         .font(.body.weight(.medium))
                         .frame(maxWidth: .infinity, alignment: .leading)
+                        .contentShape(Rectangle())
                 }
 
                 Button {
@@ -2812,6 +2814,27 @@ struct AppVolumeControls: View {
             minWidth: layout == .controlPanel ? 0 : nil,
             maxWidth: layout == .controlPanel ? .infinity : nil
         )
+        // Touch and hold reaches the row's small or hover-only controls.
+        .contextMenu {
+            Button(action: onToggleMute) {
+                Label {
+                    isMuted ? Text("Unmute") : Text("Mute")
+                } icon: {
+                    Image(systemName: isMuted ? "speaker.wave.2" : "speaker.slash")
+                }
+            }
+            Button {
+                updateVolume(1)
+            } label: {
+                Label(MixVolumeRestoreControl.restoreTitle, systemImage: "arrow.clockwise")
+            }
+            .disabled(abs(volume - 1) < 0.005)
+            if let audioControlsExpanded {
+                Toggle(isOn: audioControlsExpanded) {
+                    Text("Audio Controls", tableName: "AppOutputRouting")
+                }
+            }
+        }
         .sensoryFeedback(.alignment, trigger: isAtUnity) { _, isAtUnity in
             isAtUnity
         }
@@ -2870,29 +2893,48 @@ struct MixVolumeRestoreControl: View {
     let value: Double
     let onRestore: () -> Void
     @State private var isHovering = false
+    @State private var isRevealedByTap = false
+
+    private var showsRestore: Bool { isHovering || isRevealedByTap }
 
     var body: some View {
-        Button(action: onRestore) {
+        Button(action: activate) {
             ZStack {
                 PercentageText(value: value)
-                    .opacity(isHovering ? 0 : 1)
+                    .opacity(showsRestore ? 0 : 1)
 
                 Image(systemName: "arrow.clockwise")
                     .font(.caption.weight(.semibold))
                     .imageScale(.medium)
                     .foregroundStyle(.secondary)
-                    .opacity(isHovering ? 1 : 0)
+                    .opacity(showsRestore ? 1 : 0)
             }
             .frame(width: 34, alignment: .center)
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .onHover { isHovering = $0 }
-        .help(restoreTitle)
-        .accessibilityLabel(Text(restoreTitle))
+        .task(id: isRevealedByTap) {
+            guard isRevealedByTap, (try? await Task.sleep(for: .seconds(3))) != nil else { return }
+            isRevealedByTap = false
+        }
+        .help(Self.restoreTitle)
+        .accessibilityLabel(Text(Self.restoreTitle))
     }
 
-    private var restoreTitle: String {
+    /// A pointer always hovers before it clicks. A click without hover comes
+    /// from touch, which only reveals the hidden glyph; the next tap restores.
+    private func activate() {
+        let type = NSApp.currentEvent?.type
+        if !showsRestore, type == .leftMouseUp || type == .leftMouseDown {
+            isRevealedByTap = true
+            return
+        }
+        isRevealedByTap = false
+        onRestore()
+    }
+
+    static var restoreTitle: String {
         String(
             localized: "Restore to \(1.0, format: .percent.precision(.fractionLength(0)))",
             comment: "Tooltip and accessibility label for the per-app mix volume restore button."
