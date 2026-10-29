@@ -2883,7 +2883,7 @@ struct MixVolumeRestoreControl: View {
                     .foregroundStyle(.secondary)
                     .opacity(isHovering ? 1 : 0)
             }
-            .frame(width: 34, alignment: .trailing)
+            .frame(width: 34, alignment: .center)
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
@@ -2953,7 +2953,7 @@ private struct PercentageText: View {
         Text(value.formatted(.percent.precision(.fractionLength(0))))
             .font(.caption.monospacedDigit())
             .foregroundStyle(.secondary)
-            .frame(width: 34, alignment: .trailing)
+            .frame(width: 34, alignment: .center)
     }
 }
 

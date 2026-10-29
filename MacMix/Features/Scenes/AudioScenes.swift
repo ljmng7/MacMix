@@ -968,7 +968,7 @@ private struct SceneDeviceRow: View {
                 Text(supportsVolume ? volume.formatted(.percent.precision(.fractionLength(0))) : "—")
                     .font(.caption.monospacedDigit())
                     .foregroundStyle(.secondary)
-                    .frame(width: 34, alignment: .trailing)
+                    .frame(width: 34, alignment: .center)
                 if direction == .output && showsAccessoryDetails {
                     Group {
                         if isSelected, controls != nil {
