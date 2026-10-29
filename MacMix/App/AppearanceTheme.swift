@@ -93,7 +93,10 @@ enum ThemeAccentColor: String, CaseIterable, Identifiable {
     var id: Self { self }
 
     func resolvedColor(hasStudioAccess: Bool) -> Color {
-        hasStudioAccess ? color : Self.system.color
+        let effective = hasStudioAccess ? self : .system
+        // On macOS 15, a tint of Color(nsColor: .controlAccentColor) renders
+        // switch toggles red; Color.accentColor follows the same system accent.
+        return effective == .system ? .accentColor : effective.color
     }
 
     var color: Color {
