@@ -68,26 +68,30 @@ struct MacMixPanel: View {
                 Divider()
             }
 
-            Button {
-                NSApp.setActivationPolicy(.regular)
-                openWindow(id: "control-panel")
-                NSApp.activate(ignoringOtherApps: true)
-                dismiss()
-            } label: {
-                Label("Open Main Window", systemImage: "macwindow")
-                    .font(.body.weight(.medium))
-                    .frame(maxWidth: .infinity, alignment: .leading)
-            }
-            .buttonStyle(.plain)
-            .foregroundStyle(.primary)
-            .padding(.vertical, 4)
+            HStack {
+                Button {
+                    NSApp.setActivationPolicy(.regular)
+                    openWindow(id: "control-panel")
+                    NSApp.activate(ignoringOtherApps: true)
+                    dismiss()
+                } label: {
+                    Label("Open Main Window", systemImage: "macwindow")
+                        .font(.body.weight(.medium))
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
 
-            Button {
-                NSApplication.shared.terminate(nil)
-            } label: {
-                Label("Quit MacMix", systemImage: "power")
-                    .font(.body.weight(.medium))
-                    .frame(maxWidth: .infinity, alignment: .leading)
+                Button {
+                    NSApplication.shared.terminate(nil)
+                } label: {
+                    Label("Quit MacMix", systemImage: "power")
+                        .labelStyle(.iconOnly)
+                        .font(.body.weight(.medium))
+                        // Match the notification mute button's frame so both icons share a center line.
+                        .frame(width: 24, height: 24)
+                        .contentShape(Rectangle())
+                }
+                .fixedSize()
+                .help("Quit MacMix")
             }
             .buttonStyle(.plain)
             .foregroundStyle(.primary)
@@ -825,6 +829,19 @@ private struct ControlPanelPanelPage: View {
             alignment: .topLeading
         )
         .navigationTitle("Panel")
+        .toolbar {
+            ToolbarItem(id: "quit", placement: .primaryAction) {
+                Button {
+                    NSApplication.shared.terminate(nil)
+                } label: {
+                    Label("Quit MacMix", systemImage: "power")
+                }
+                .labelStyle(.iconOnly)
+                .help("Quit MacMix")
+                .tint(nil)
+                .foregroundStyle(.primary)
+            }
+        }
         .onChange(of: enables200PercentVolume) { _, isEnabled in
             if !isEnabled {
                 audioModel.clampAppVolumesToUnity()
