@@ -1367,22 +1367,6 @@ private struct MaterialSliderWithLegacyTicks: View {
                     comment: "Accessibility label for the main window material slider."
                 )
             )
-            .overlay {
-                HStack(spacing: 0) {
-                    ForEach(0..<6) { index in
-                        Capsule()
-                            .fill(.secondary.opacity(0.55))
-                            .frame(width: 1, height: 4)
-
-                        if index < 5 {
-                            Spacer()
-                        }
-                    }
-                }
-                .padding(.horizontal, 7)
-                .offset(y: 7)
-                .allowsHitTesting(false)
-            }
 
             HStack {
                 Text(
