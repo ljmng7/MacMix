@@ -482,6 +482,9 @@ final class AudioModel: NSObject {
     private let outputDeviceRouteReleaseGraceNanoseconds: UInt64 = 80_000_000
     private let outputDeviceWriteTimeoutNanoseconds: UInt64 = 12_000_000_000
     private let outputAppRouteRecoveryDuration: TimeInterval = 4
+    private let routingValidationInterval: TimeInterval = 2
+    // Just past the mixer's 0.3 s output stability wait.
+    private let deferredRouteRetryDelay: TimeInterval = 0.35
     private let bluetoothBatteryRefreshInterval: TimeInterval = 15
     private let requiredOutputRouteStableReads = 3
     private let maximumOutputRouteStableReadAttempts = 10
@@ -872,7 +875,7 @@ final class AudioModel: NSObject {
             lastAccessoryRefresh = now
             refreshOutputAccessoryControls()
         }
-        if !isMixerLifecycleBusy, Date().timeIntervalSince(lastRoutingValidation) >= 2 {
+        if !isMixerLifecycleBusy, Date().timeIntervalSince(lastRoutingValidation) >= routingValidationInterval {
             lastRoutingValidation = Date()
             scheduleMixerReconcile(requestAuthorizationIfDenied: false, validatesRouting: true)
         }
@@ -1962,6 +1965,7 @@ final class AudioModel: NSObject {
 
                 if result == .deferred {
                     outputRoutingStore.isApplying = false
+                    retrySoonAfterDeferredRouteRecovery()
                     return
                 }
                 guard result != .superseded else { return }
@@ -2053,6 +2057,7 @@ final class AudioModel: NSObject {
         let commandRevision = mixerCommandRevision
         lastSubmittedMixerSnapshot = nil
         appAudioMixer.noteLatestCommand(revision: commandRevision)
+        appAudioMixer.submitEarlyRetirement(revision: commandRevision, outputDeviceUID: outputDeviceUID)
 
         if isOutputRouteTransitioning, outputRouteRefreshTask != nil {
             DiagnosticLog.shared.record("route", "output_route_probe_superseded", fields: [
@@ -2189,6 +2194,7 @@ final class AudioModel: NSObject {
 
                     if result == .deferred {
                         outputRoutingStore.isApplying = false
+                        retrySoonAfterDeferredRouteRecovery()
                         return
                     }
                     guard result != .superseded else { return }
@@ -2500,6 +2506,18 @@ final class AudioModel: NSObject {
         )
         outputAppRouteRecoveryDeadline = Date().addingTimeInterval(
             outputAppRouteRecoveryDuration
+        )
+    }
+
+    // The mixer rebuilds on a new output only after it has stayed stable for a
+    // moment, so the first attempt after a switch is usually deferred. Retry as
+    // soon as that settles instead of waiting for the next routing validation,
+    // which left mixes and EQ off for up to two seconds after headphones returned.
+    private func retrySoonAfterDeferredRouteRecovery() {
+        guard let outputAppRouteRecoveryDeadline, Date() < outputAppRouteRecoveryDeadline else { return }
+        lastRoutingValidation = min(
+            lastRoutingValidation,
+            Date().addingTimeInterval(deferredRouteRetryDelay - routingValidationInterval)
         )
     }
 

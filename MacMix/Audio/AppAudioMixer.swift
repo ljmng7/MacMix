@@ -251,6 +251,27 @@ nonisolated final class AppAudioMixer: @unchecked Sendable {
         }
     }
 
+    /// Retires the graph on the previous output as soon as the system default
+    /// moves, instead of after the new route has settled. Releasing the tap's mute
+    /// while an app starts IO on the new output stalled that start: when AirPods
+    /// went back in, Music's resume hung until its play command timed out (about
+    /// 9 s) whenever the old speaker graph came down during Music's start, which
+    /// begins about 0.4 s after the buds reappear. Explicit app routes keep their
+    /// protected path through the regular transition.
+    func submitEarlyRetirement(revision: UInt64, outputDeviceUID: String?) {
+        lifecycleQueue.async { [self] in
+            guard isCurrent(revision: revision), let old = engine, old.outputDeviceUID != outputDeviceUID,
+                  latestRouteCommand?.targets.contains(where: { $0.outputDeviceUIDs != nil }) != true else {
+                return
+            }
+            DiagnosticLog.shared.record("mixer", "early_retirement", fields: ["revision": String(revision)])
+            engine = nil
+            prepareForUnityHandoff(old)
+            enqueueRetirement(old)
+            _ = waitForPendingAggregateRemoval()
+        }
+    }
+
     /// Releases every process tap, aggregate device, and IOProc before the system
     /// default output is changed. Keeping the old Bluetooth-backed aggregate alive
     /// during the write lets Bluetooth Smart Routing claim the route again.
