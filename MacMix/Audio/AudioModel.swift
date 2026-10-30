@@ -13,11 +13,74 @@ import MacMixStudio
 import Observation
 import OSLog
 
+enum OutputRow: Identifiable {
+    case device(AudioDevice)
+    case nearby(NearbyAudioAccessory)
+
+    var id: String {
+        switch self {
+        case let .device(device): "device:\(device.selectionID)"
+        case let .nearby(accessory): "nearby:\(accessory.address)"
+        }
+    }
+
+    var orderKey: String {
+        switch self {
+        case let .device(device): Self.orderKey(device)
+        case let .nearby(accessory): Self.orderKey(accessory)
+        }
+    }
+
+    static func orderKey(_ device: AudioDevice) -> String {
+        device.bluetoothAddress.map { "bt:\($0)" } ?? device.selectionID
+    }
+
+    static func orderKey(_ accessory: NearbyAudioAccessory) -> String {
+        "bt:\(NearbyAudioAccessoryMatcher.canonical(accessory.address))"
+    }
+}
+
+extension AudioDevice {
+    // Canonical Bluetooth address from the HAL UID ("30-7A-…:output").
+    var bluetoothAddress: String? {
+        guard transportType == kAudioDeviceTransportTypeBluetooth
+            || transportType == kAudioDeviceTransportTypeBluetoothLE else { return nil }
+        let address = NearbyAudioAccessoryMatcher.canonical(String(uid.split(separator: ":").first ?? ""))
+        return address.count == 12 ? address : nil
+    }
+}
+
 @MainActor
 @Observable
 final class OutputAudioState {
     var devices: [AudioDevice] = []
     var airPlayDestinations: [AudioDevice] = []
+    // Paired headphones advertising nearby that Core Audio does not list.
+    var nearbyAccessories: [NearbyAudioAccessory] = []
+    // Canonical (hex-only, uppercase) address of the accessory being connected.
+    var connectingAccessoryAddress: String?
+    // First-seen order of output rows. Headphones keep their place while they
+    // move between the device list and the nearby rows, or reconnect with a
+    // new Core Audio object that would otherwise sort last.
+    private(set) var rowOrder: [String] = []
+
+    func recordRowOrder() {
+        let keys = devices.map(OutputRow.orderKey) + nearbyAccessories.map(OutputRow.orderKey)
+        let known = Set(rowOrder)
+        let added = keys.filter { !known.contains($0) }
+        if !added.isEmpty {
+            rowOrder += NSOrderedSet(array: added).array.compactMap { $0 as? String }
+        }
+    }
+
+    func orderedRows(for devices: [AudioDevice]) -> [OutputRow] {
+        let index = Dictionary(rowOrder.enumerated().map { ($1, $0) }, uniquingKeysWith: min)
+        let rows = devices.map(OutputRow.device) + nearbyAccessories.map(OutputRow.nearby)
+        return rows.enumerated().sorted { lhs, rhs in
+            let l = index[lhs.element.orderKey] ?? Int.max, r = index[rhs.element.orderKey] ?? Int.max
+            return l != r ? l < r : lhs.offset < rhs.offset
+        }.map(\.element)
+    }
 
     var selectionDevices: [AudioDevice] {
         let destinations = Dictionary(grouping: airPlayDestinations, by: \.uid)
@@ -434,6 +497,7 @@ final class AudioModel: NSObject {
             lastAccessoryRefresh = 0
             scheduleBluetoothBatteryRefresh(for: outputState.devices)
         }
+        nearbyAccessoryScanner.setActive(visible)
     }
 
     private let appAudioMixer = AppAudioMixer.shared
@@ -446,6 +510,9 @@ final class AudioModel: NSObject {
     private let outputRouteProbe = DefaultOutputRouteProbe()
     private let outputDeviceWriter = DefaultOutputDeviceWriter()
     private let bluetoothBatteryReader = BluetoothBatteryReader()
+    private let nearbyAccessoryScanner = NearbyAudioAccessoryScanner()
+    private let bluetoothAccessoryConnector = BluetoothAccessoryConnector()
+    private var nearbyConnectionTimeoutTask: Task<Void, Never>?
     private let audioAccessoryController = AudioAccessoryController()
     private let defaults = UserDefaults.standard
     private var deviceObserver: CoreAudioDeviceObserver?
@@ -509,6 +576,7 @@ final class AudioModel: NSObject {
             })
         }
         restoreCachedSystemAudioPermissionRequirementState()
+        nearbyAccessoryScanner.onChange = { [weak self] in self?.refreshNearbyAccessories() }
 
         deviceObserver = CoreAudioDeviceObserver(
             onOutputVolumeChange: { [weak self] in self?.handleOutputVolumeChange() },
@@ -545,6 +613,7 @@ final class AudioModel: NSObject {
         displayVolumeActivationTask?.cancel()
         bluetoothBatteryRefreshTask?.cancel()
         spatialAudioConfirmationTask?.cancel()
+        nearbyConnectionTimeoutTask?.cancel()
         displayVolumeController.deactivate()
         appAudioMixer.stopAll()
     }
@@ -2377,6 +2446,82 @@ final class AudioModel: NSObject {
 
         recordDiagnosticDeviceChanges(from: outputState.devices, to: devices, direction: "output")
         outputState.devices = devices
+        selectConnectedNearbyAccessoryIfNeeded(in: devices)
+        refreshNearbyAccessories()
+    }
+
+    // MARK: Nearby Bluetooth headphones
+
+    func connectNearbyAccessory(_ accessory: NearbyAudioAccessory) {
+        guard outputState.connectingAccessoryAddress == nil else { return }
+        DiagnosticLog.shared.record("route", "nearby_connect_requested", fields: [
+            "device": DiagnosticLog.shared.anonymous(accessory.address),
+            "availability": accessory.availability.diagnosticName])
+        let address = NearbyAudioAccessoryMatcher.canonical(accessory.address)
+        outputState.connectingAccessoryAddress = address
+        bluetoothAccessoryConnector.connect(address: accessory.address) { [weak self] succeeded in
+            guard let self, outputState.connectingAccessoryAddress == address else { return }
+            guard succeeded else {
+                DiagnosticLog.shared.record("route", "nearby_connect_failed", level: "error")
+                finishNearbyConnection()
+                return
+            }
+            // The link is up; wait for Core Audio to publish the output.
+            refreshOutputState()
+            nearbyConnectionTimeoutTask?.cancel()
+            nearbyConnectionTimeoutTask = Task { @MainActor [weak self] in
+                try? await Task.sleep(nanoseconds: 10_000_000_000)
+                guard !Task.isCancelled, let self,
+                      outputState.connectingAccessoryAddress == address else { return }
+                DiagnosticLog.shared.record("route", "nearby_connect_timed_out", level: "error")
+                finishNearbyConnection()
+            }
+        }
+    }
+
+    private func selectConnectedNearbyAccessoryIfNeeded(in devices: [AudioDevice]) {
+        guard let address = outputState.connectingAccessoryAddress,
+              let device = devices.first(where: { $0.bluetoothAddress == address }) else { return }
+        finishNearbyConnection()
+        selectOutputDevice(device)
+    }
+
+    private func finishNearbyConnection() {
+        nearbyConnectionTimeoutTask?.cancel()
+        nearbyConnectionTimeoutTask = nil
+        outputState.connectingAccessoryAddress = nil
+        refreshNearbyAccessories()
+    }
+
+    private func refreshNearbyAccessories() {
+        let advertisements = nearbyAccessoryScanner.advertisements
+        var accessories: [NearbyAudioAccessory] = []
+        if !advertisements.isEmpty {
+            let paired = PairedBluetoothAccessories.read()
+            accessories = NearbyAudioAccessoryMatcher.nearbyAccessories(
+                advertisements: advertisements,
+                paired: paired.audio,
+                pairedDevices: paired.all,
+                localAddressSuffix: PairedBluetoothAccessories.localAddressSuffix,
+                connectedOutputAddresses: Set(outputState.devices.compactMap(\.bluetoothAddress))
+            )
+        }
+        if let connecting = outputState.connectingAccessoryAddress,
+           !accessories.contains(where: { NearbyAudioAccessoryMatcher.canonical($0.address) == connecting }),
+           let previous = outputState.nearbyAccessories.first(where: {
+               NearbyAudioAccessoryMatcher.canonical($0.address) == connecting
+           }) {
+            // Keep the row (and its progress) while the link comes up.
+            accessories.append(previous)
+        }
+        if outputState.nearbyAccessories != accessories {
+            DiagnosticLog.shared.record("bluetooth", "nearby_accessories_changed", fields: [
+                "advertised": String(advertisements.count),
+                "shown": accessories.map { "\(DiagnosticLog.shared.anonymous($0.address))=\($0.availability.diagnosticName)" }
+                    .joined(separator: ",")])
+            outputState.nearbyAccessories = accessories
+        }
+        outputState.recordRowOrder()
     }
 
     private func setInputDevicesIfChanged(_ devices: [AudioDevice]) {

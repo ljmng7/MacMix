@@ -733,19 +733,29 @@ private struct ControlPanelPanelPage: View {
                     .toggleStyle(.switch)
 
                 if showsOutputInPanel {
-                    if audioModel.outputState.devices.isEmpty {
+                    let state = audioModel.outputState
+                    if state.devices.isEmpty && state.nearbyAccessories.isEmpty {
                         EmptyRow(iconName: "questionmark.circle", title: "No available devices")
                     } else {
-                        ForEach(audioModel.outputState.devices) { device in
-                            AudioDeviceRow(
-                                device: device,
-                                battery: audioModel.outputState.batteryByDeviceUID[device.uid],
-                                accessoryControls: audioModel.outputState.accessoryControlsByDeviceUID[device.uid],
-                                reservesAccessoryControlSpace: true,
-                                onSelect: audioModel.selectOutputDevice,
-                                onSetListeningMode: audioModel.setListeningMode,
-                                onSetSpatialAudioMode: audioModel.setSpatialAudioMode
-                            )
+                        ForEach(state.orderedRows(for: state.devices)) { row in
+                            switch row {
+                            case let .device(device):
+                                AudioDeviceRow(
+                                    device: device,
+                                    battery: state.batteryByDeviceUID[device.uid],
+                                    accessoryControls: state.accessoryControlsByDeviceUID[device.uid],
+                                    reservesAccessoryControlSpace: true,
+                                    onSelect: audioModel.selectOutputDevice,
+                                    onSetListeningMode: audioModel.setListeningMode,
+                                    onSetSpatialAudioMode: audioModel.setSpatialAudioMode
+                                )
+                            case let .nearby(accessory):
+                                NearbyAccessoryRow(
+                                    accessory: accessory,
+                                    state: state,
+                                    onConnect: audioModel.connectNearbyAccessory
+                                )
+                            }
                         }
                     }
                 }
@@ -2036,7 +2046,8 @@ private struct OutputSection: View {
                     state: audioModel.outputState,
                     onSelect: audioModel.selectOutputDevice,
                     onSetListeningMode: audioModel.setListeningMode,
-                    onSetSpatialAudioMode: audioModel.setSpatialAudioMode
+                    onSetSpatialAudioMode: audioModel.setSpatialAudioMode,
+                    onConnectNearby: audioModel.connectNearbyAccessory
                 )
             }
         }
@@ -2095,19 +2106,100 @@ private struct OutputDeviceGroup: View {
     let onSelect: (AudioDevice) -> Void
     let onSetListeningMode: (ListeningMode, AudioDevice) -> Void
     let onSetSpatialAudioMode: (SpatialAudioMode, AudioDevice) -> Void
+    let onConnectNearby: (NearbyAudioAccessory) -> Void
 
     var body: some View {
-        DeviceGroup(
-            title: nil,
-            devices: state.selectionDevices,
-            batteryByDeviceUID: state.batteryByDeviceUID,
-            accessoryControlsByDeviceUID: state.accessoryControlsByDeviceUID,
-            reservesAccessoryControlSpace: true,
-            accessoryControlsPresentation: .menuBarPanel,
-            onSelect: onSelect,
-            onSetListeningMode: onSetListeningMode,
-            onSetSpatialAudioMode: onSetSpatialAudioMode
-        )
+        VStack(alignment: .leading, spacing: 8) {
+            if state.selectionDevices.isEmpty && state.nearbyAccessories.isEmpty {
+                EmptyRow(iconName: "questionmark.circle", title: "No available devices")
+            } else {
+                ForEach(state.orderedRows(for: state.selectionDevices)) { row in
+                    switch row {
+                    case let .device(device):
+                        AudioDeviceRow(
+                            device: device,
+                            battery: state.batteryByDeviceUID[device.uid],
+                            accessoryControls: state.accessoryControlsByDeviceUID[device.uid],
+                            reservesAccessoryControlSpace: true,
+                            accessoryControlsPresentation: .menuBarPanel,
+                            onSelect: onSelect,
+                            onSetListeningMode: onSetListeningMode,
+                            onSetSpatialAudioMode: onSetSpatialAudioMode
+                        )
+                    case let .nearby(accessory):
+                        NearbyAccessoryRow(accessory: accessory, state: state, onConnect: onConnectNearby)
+                    }
+                }
+            }
+        }
+    }
+}
+
+// Paired headphones that are advertising nearby but have no output on this Mac.
+private struct NearbyAccessoryRow: View {
+    let accessory: NearbyAudioAccessory
+    let state: OutputAudioState
+    let onConnect: (NearbyAudioAccessory) -> Void
+
+    private var isConnecting: Bool {
+        state.connectingAccessoryAddress == NearbyAudioAccessoryMatcher.canonical(accessory.address)
+    }
+
+    private var isDisabled: Bool {
+        state.connectingAccessoryAddress != nil
+    }
+
+    var body: some View {
+        Button {
+            onConnect(accessory)
+        } label: {
+            HStack(spacing: 12) {
+                DeviceIcon(
+                    symbolName: AudioDeviceCatalog.shared.symbolName(forModelUID: accessory.modelUID) ?? "headphones",
+                    systemIcon: nil,
+                    isCurrent: false
+                )
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(accessory.name)
+                        .font(.body.weight(.medium))
+                        .lineLimit(1)
+
+                    // Same line metrics as DeviceBatterySummary under connected devices.
+                    Text(statusText)
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+                if isConnecting {
+                    ProgressView()
+                        .controlSize(.small)
+                }
+            }
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .disabled(isDisabled)
+        .opacity(isDisabled && !isConnecting ? 0.5 : 1)
+        .help(Text("Connect to This Mac"))
+    }
+
+    private var statusText: String {
+        if isConnecting {
+            return String(localized: "Connecting…", comment: "Status of nearby Bluetooth headphones while this Mac connects to them.")
+        }
+        switch accessory.availability {
+        case .available:
+            return String(localized: "Nearby, not connected", comment: "Status of paired Bluetooth headphones that are nearby but connected to no device.")
+        case .linkedWithoutOutput:
+            return String(localized: "Connected, not used for audio", comment: "Status of Bluetooth headphones still linked to this Mac without an audio output, such as AirPods taken out of the ears.")
+        case let .inUse(byDeviceNamed: name?):
+            return String(localized: "In use by \(name)", comment: "Status of nearby Bluetooth headphones connected to another device; the placeholder is that device's name.")
+        case .inUse(byDeviceNamed: nil):
+            return String(localized: "In use by another device", comment: "Status of nearby Bluetooth headphones connected to a device this Mac does not know.")
+        }
     }
 }
 
