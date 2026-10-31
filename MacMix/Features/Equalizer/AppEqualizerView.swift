@@ -404,7 +404,7 @@ private struct EqualizerDragHandle: View {
                 .frame(width: 16, height: 16)
                 .opacity(isEnabled ? 1 : 0.45)
         }
-        .frame(width: 34, height: 34)
+        .frame(width: 36, height: 36)
         .contentShape(Circle())
     }
 }
@@ -600,9 +600,9 @@ private struct NativeEqualizerSlider: NSViewRepresentable {
         if slider.trackFillColor?.isEqual(fillColor) != true { slider.trackFillColor = fillColor }
         let accessibilityLabel = "\(label) Hz"
         if slider.accessibilityLabel() != accessibilityLabel { slider.setAccessibilityLabel(accessibilityLabel) }
-        // Native tracking owns the thumb until mouse-up. A delayed SwiftUI update
+        // Native tracking owns the thumb until it ends. A delayed SwiftUI update
         // must not pull it back to an earlier position during a held drag.
-        if !slider.isTrackingMouse {
+        if !slider.isTracking {
             if slider.doubleValue != gain { slider.doubleValue = gain }
             context.coordinator.previousValue = gain
         }
@@ -628,14 +628,14 @@ private struct NativeEqualizerSlider: NSViewRepresentable {
         @objc func valueChanged(_ slider: EqualizerSystemSlider) {
             let raw = max(-12, min(12, slider.doubleValue))
             let value = abs(raw) < 0.2 ? 0 : raw
-            if slider.isTrackingMouse,
+            if slider.isTracking,
                (previousValue < 0 && value >= 0) || (previousValue > 0 && value <= 0) {
                 NSHapticFeedbackManager.defaultPerformer.perform(.alignment, performanceTime: .now)
             }
             if slider.doubleValue != value { slider.doubleValue = value }
             guard value != previousValue else { return }
             previousValue = value
-            if slider.isTrackingMouse {
+            if slider.isTracking {
                 updates.submit { [weak self] in self?.onChange(value) }
             } else {
                 updates.cancel()
@@ -648,8 +648,23 @@ private struct NativeEqualizerSlider: NSViewRepresentable {
 /// Keep AppKit's complete tracking, keyboard, accessibility and drawing behavior.
 /// The flag only prevents stale model updates from interrupting native tracking.
 private final class EqualizerSystemSlider: NSSlider {
-    private(set) var isTrackingMouse = false
+    private(set) var isTracking = false
     var onTrackingEnded: (() -> Void)?
+
+    override init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        // Touch tracking need not pass through mouseDown; control events cover
+        // both pointer and touch. They fire after the first action, so mouseDown
+        // still marks pointer tracking first.
+        if #available(macOS 27.0, *) {
+            addTarget(self, action: #selector(trackingBegan), for: .trackingBegan)
+            addTarget(self, action: #selector(trackingEnded),
+                      for: [.trackingEndedInside, .trackingEndedOutside, .trackingCancelled])
+        }
+    }
+
+    required init?(coder: NSCoder) { nil }
+
     override func accessibilityValueDescription() -> String? {
         // Format only when accessibility asks, rather than for every mouse event.
         let rounded = (doubleValue * 10).rounded() / 10
@@ -657,12 +672,18 @@ private final class EqualizerSystemSlider: NSSlider {
         return "\(value.formatted(.number.precision(.fractionLength(1)))) dB"
     }
     override func mouseDown(with event: NSEvent) {
-        isTrackingMouse = true
-        defer {
-            isTrackingMouse = false
-            onTrackingEnded?()
-        }
+        setTracking(true)
+        defer { setTracking(false) }
         super.mouseDown(with: event)
+    }
+
+    @objc private func trackingBegan(_ sender: NSSlider) { setTracking(true) }
+    @objc private func trackingEnded(_ sender: NSSlider) { setTracking(false) }
+
+    private func setTracking(_ tracking: Bool) {
+        guard isTracking != tracking else { return }
+        isTracking = tracking
+        if !tracking { onTrackingEnded?() }
     }
 }
 

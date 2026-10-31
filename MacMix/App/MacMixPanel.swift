@@ -92,6 +92,7 @@ struct MacMixPanel: View {
                         .frame(width: 24, height: 24)
                         .contentShape(Rectangle())
                 }
+                .buttonStyle(TouchTargetButtonStyle())
                 .fixedSize()
                 .help("Quit MacMix")
             }
@@ -218,7 +219,7 @@ private struct TemporaryAppVolumeContent: View {
                 Button { audioModel.toggleAppMute(app) } label: {
                     AppIcon(image: app.icon, isMuted: app.isMuted)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(TouchTargetButtonStyle())
                 .accessibilityLabel(app.isMuted ? Text("Unmute") : Text("Mute"))
                 .help(app.isMuted ? String(localized: "Unmute") : String(localized: "Mute"))
                 Text(app.name)
@@ -1134,7 +1135,7 @@ private struct CurrentAudioAppBlacklistRow: View {
                     .frame(width: 20, height: 20)
                     .background(.red, in: Circle())
             }
-            .buttonStyle(.plain)
+            .buttonStyle(TouchTargetButtonStyle())
             .accessibilityLabel("Add to Blacklist")
             .help("Add to Blacklist")
         }
@@ -1174,7 +1175,7 @@ private struct BlacklistedAudioAppRow: View {
                     .frame(width: 20, height: 20)
                     .background(.green, in: Circle())
             }
-            .buttonStyle(.plain)
+            .buttonStyle(TouchTargetButtonStyle())
             .accessibilityLabel("Remove from Blacklist")
             .help("Remove from Blacklist")
         }
@@ -2027,7 +2028,7 @@ private struct NotificationSoundMuteButton: View {
             }
             .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(TouchTargetButtonStyle())
         .help(label)
         .accessibilityLabel(Text(label))
     }
@@ -2871,7 +2872,7 @@ struct AppVolumeControls: View {
                 AppIcon(image: icon, isMuted: isMuted)
                     .contentShape(Rectangle())
             }
-            .buttonStyle(.plain)
+            .buttonStyle(TouchTargetButtonStyle(insets: EdgeInsets(top: 4, leading: 6, bottom: 4, trailing: 5)))
             .help(isMuted ? String(localized: "Unmute") : String(localized: "Mute"))
             .accessibilityLabel(isMuted ? Text("Unmute") : Text("Mute"))
 
@@ -2899,7 +2900,7 @@ struct AppVolumeControls: View {
                         .frame(width: 18, height: 28)
                         .contentShape(Rectangle())
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(TouchTargetButtonStyle(insets: EdgeInsets(top: 0, leading: 5, bottom: 0, trailing: 8)))
                 .accessibilityLabel(Text("Audio Controls", tableName: "AppOutputRouting"))
                 .accessibilityValue(audioControlsExpanded.wrappedValue ? Text("Expanded") : Text("Collapsed"))
             }
@@ -3057,7 +3058,7 @@ private struct VolumeSliderRow: View {
                     DrawSwapSymbol(name: leadingIcon) { SliderSymbol(name: $0, isMuted: isMuted) }
                         .contentShape(Rectangle())
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(TouchTargetButtonStyle(insets: EdgeInsets(top: 6, leading: 6, bottom: 6, trailing: 5)))
                 .help(isMuted ? String(localized: "Unmute") : String(localized: "Mute"))
                 .accessibilityLabel(isMuted ? Text("Unmute") : Text("Mute"))
             } else {
@@ -3091,6 +3092,26 @@ private struct PercentageText: View {
             .font(.caption.monospacedDigit())
             .foregroundStyle(.secondary)
             .frame(width: 34, alignment: .center)
+    }
+}
+
+/// A plain button whose hit area reaches past its visual bounds, since touch
+/// on Mac tends to land slightly outside small controls. The label is padded
+/// inside the button and the padding is taken back outside, so layout and
+/// appearance stay those of `.plain`. A contentShape alone cannot do this:
+/// macOS clips a button's hit testing to its own frame.
+private struct TouchTargetButtonStyle: PrimitiveButtonStyle {
+    var insets = EdgeInsets(top: 6, leading: 6, bottom: 6, trailing: 6)
+
+    func makeBody(configuration: Configuration) -> some View {
+        Button(action: configuration.trigger) {
+            configuration.label
+                .padding(insets)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .padding(EdgeInsets(top: -insets.top, leading: -insets.leading,
+                            bottom: -insets.bottom, trailing: -insets.trailing))
     }
 }
 
