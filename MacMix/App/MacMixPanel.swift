@@ -483,9 +483,12 @@ private struct ControlPanelSearchResults: View {
             ]),
             (.about, "About", [
                 "Version", "System Audio Recording", "Go to Authorize",
+                "Bluetooth", "Accessibility", "Not Authorized",
                 "Privacy Information", "Feedback", "Logs and Feedback", "Show in Finder", "Clear Logs",
                 "Made with 🫶 by Jazmín",
-                "Mixing needs System Audio Recording permission because macOS requires this permission before an app can process another app's audio. MacMix uses it only for local real-time mixing when you adjust per-app volume, and does not record, save, or upload audio."
+                "Mixes app audio locally. Never recorded or uploaded.",
+                "Shows battery levels and finds nearby headphones.",
+                "Responds to the volume keys. Other keystrokes are never recorded."
             ])
         ]
 
@@ -684,7 +687,8 @@ private struct ControlPanelDetail: View {
             case .about:
                 ControlPanelAboutPage(
                     audioModel: audioModel,
-                    systemAudioPermissionStatus: systemAudioPermissionStatus
+                    systemAudioPermissionStatus: systemAudioPermissionStatus,
+                    systemVolumeTakeover: systemVolumeTakeover
                 )
             }
         }
@@ -1732,6 +1736,8 @@ private struct PanelVisibilityHeader: View {
 private struct ControlPanelAboutPage: View {
     let audioModel: AudioModel
     let systemAudioPermissionStatus: SystemAudioPermissionStatusModel
+    let systemVolumeTakeover: SystemVolumeTakeoverModel
+    @State private var bluetoothPermission = BluetoothPermissionModel()
     @Environment(\.openWindow) private var openWindow
 
     var body: some View {
@@ -1753,17 +1759,41 @@ private struct ControlPanelAboutPage: View {
 
             Section {
                 PermissionAccessRow(
+                    title: "System Audio Recording",
+                    description: "Mixes app audio locally. Never recorded or uploaded.",
                     isAuthorized: systemAudioPermissionStatus.isAuthorized,
+                    isRequired: true,
                     action: audioModel.openSystemAudioRecordingSettingsForAuthorization
                 )
 
-                Text("Mixing needs System Audio Recording permission because macOS requires this permission before an app can process another app's audio. MacMix uses it only for local real-time mixing when you adjust per-app volume, and does not record, save, or upload audio.")
-                    .font(.body)
-                    .foregroundStyle(.secondary)
-                    .lineSpacing(3)
-                    .fixedSize(horizontal: false, vertical: true)
+                PermissionAccessRow(
+                    title: "Bluetooth",
+                    description: "Shows battery levels and finds nearby headphones.",
+                    isAuthorized: bluetoothPermission.isAuthorized,
+                    isBusy: bluetoothPermission.isRequesting
+                ) {
+                    Task { await bluetoothPermission.requestOrOpenSettings() }
+                }
+
+                PermissionAccessRow(
+                    title: "Accessibility",
+                    description: "Responds to the volume keys. Other keystrokes are never recorded.",
+                    isAuthorized: systemVolumeTakeover.hasAccessibilityPermission,
+                    action: systemVolumeTakeover.requestAccessibilityPermission
+                )
             } header: {
                 Text("Privacy Information")
+            }
+            .onAppear {
+                bluetoothPermission.refresh()
+                systemVolumeTakeover.refreshAccessibilityPermission()
+            }
+            .onReceive(
+                NotificationCenter.default.publisher(
+                    for: NSApplication.didBecomeActiveNotification
+                )
+            ) { _ in
+                bluetoothPermission.refresh()
             }
 
             DiagnosticAboutSection()
@@ -1919,24 +1949,40 @@ private struct AboutMadeWithLoveFooter: View {
 }
 
 private struct PermissionAccessRow: View {
+    let title: LocalizedStringResource
+    let description: LocalizedStringResource
     let isAuthorized: Bool
+    // Missing required permissions are shown in red; optional ones stay quiet.
+    var isRequired = false
+    var isBusy = false
     let action: () -> Void
 
     var body: some View {
-        HStack(alignment: .firstTextBaseline, spacing: 12) {
-            Text("System Audio Recording")
+        HStack(alignment: .center, spacing: 12) {
+            VStack(alignment: .leading, spacing: 3) {
+                Text(title)
+                Text(description)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
 
-            Spacer(minLength: 16)
+            Spacer(minLength: 12)
 
             if isAuthorized {
                 Text("Authorized")
                     .foregroundStyle(.green)
             } else {
                 Button(action: action) {
-                    Text("Go to Authorize")
-                        .foregroundStyle(.red)
+                    if isRequired {
+                        Text("Go to Authorize")
+                            .foregroundStyle(.red)
+                    } else {
+                        Text("Not Authorized")
+                            .foregroundStyle(.secondary)
+                    }
                 }
                 .buttonStyle(.plain)
+                .disabled(isBusy)
             }
         }
         .accessibilityElement(children: .combine)

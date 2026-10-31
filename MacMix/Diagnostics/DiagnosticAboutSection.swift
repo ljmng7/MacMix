@@ -39,11 +39,6 @@ struct DiagnosticAboutSection: View {
             Text("Feedback")
         } footer: {
             Text("Logs and diagnostic recordings stay on this Mac for up to 7 days and contain no audio, media titles or license information.")
-                .font(.caption)
-                .foregroundStyle(.secondary)
-                .fixedSize(horizontal: false, vertical: true)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.top, 4)
         }
         .modifier(DiagnosticClearLogsConfirmation(isPresented: $confirmsClear, model: model))
         .task {

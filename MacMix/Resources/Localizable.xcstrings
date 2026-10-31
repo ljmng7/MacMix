@@ -939,6 +939,119 @@
         }
       }
     },
+    "Accessibility" : {
+      "comment" : "Permission name on the about page for macOS Accessibility access.",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تسهيلات الاستخدام"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bedienungshilfen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Accesibilidad"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Accessibilité"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "एक्सेसिबिलिटी"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aksesibilitas"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Accessibilità"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "アクセシビリティ"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "손쉬운 사용"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toegankelijkheid"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dostępność"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Acessibilidade"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Универсальный доступ"
+          }
+        },
+        "th" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "การช่วยการเข้าถึง"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erişilebilirlik"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trợ năng"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "辅助功能"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "輔助使用"
+          }
+        }
+      }
+    },
     "Accessibility Permission Required" : {
       "localizations" : {
         "ar" : {
@@ -3013,6 +3126,119 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "藍色"
+          }
+        }
+      }
+    },
+    "Bluetooth" : {
+      "comment" : "Permission name on the about page for Bluetooth access.",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "البلوتوث"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bluetooth"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bluetooth"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bluetooth"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ब्लूटूथ"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bluetooth"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bluetooth"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bluetooth"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bluetooth"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bluetooth"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bluetooth"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bluetooth"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bluetooth"
+          }
+        },
+        "th" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "บลูทูธ"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bluetooth"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bluetooth"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "蓝牙"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "藍牙"
           }
         }
       }
@@ -12203,115 +12429,115 @@
         }
       }
     },
-    "Mixing needs System Audio Recording permission because macOS requires this permission before an app can process another app's audio. MacMix uses it only for local real-time mixing when you adjust per-app volume, and does not record, save, or upload audio." : {
+    "Mixes app audio locally. Never recorded or uploaded." : {
       "comment" : "About page explanation for why MacMix requests System Audio Recording permission.",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "تحتاج ميزة المزج إلى إذن تسجيل صوت النظام لأن macOS يتطلب هذا الإذن قبل أن يتمكن أي تطبيق من معالجة صوت تطبيق آخر. يستخدمه MacMix فقط للمزج المحلي في الوقت الفعلي عند ضبط مستوى صوت كل تطبيق، ولا يسجل الصوت أو يحفظه أو يرفعه."
+            "value" : "يمزج صوت التطبيقات محليًا. لا يُسجَّل ولا يُرفع أبدًا."
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Die Mischfunktion benötigt die Berechtigung für Systemaudioaufnahme, weil macOS diese Berechtigung verlangt, bevor eine App Audio einer anderen App verarbeiten kann. MacMix nutzt sie nur für lokales Echtzeit-Mixing, wenn du die Lautstärke einzelner Apps anpasst, und zeichnet Audio nicht auf, speichert es nicht und lädt es nicht hoch."
+            "value" : "Mischt App-Audio lokal. Nie aufgenommen oder hochgeladen."
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "La mezcla necesita el permiso de grabación de audio del sistema porque macOS exige este permiso antes de que una app pueda procesar el audio de otra app. MacMix lo usa solo para mezclar localmente en tiempo real cuando ajustas el volumen por app, y no graba, guarda ni sube audio."
+            "value" : "Mezcla el audio de las apps en local. Nunca se graba ni se sube."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Le mixage nécessite l’autorisation d’enregistrement audio du système, car macOS exige cette autorisation avant qu’une app puisse traiter l’audio d’une autre app. MacMix l’utilise uniquement pour le mixage local en temps réel lorsque vous ajustez le volume par app, et n’enregistre, ne sauvegarde ni ne téléverse l’audio."
+            "value" : "Mixe l’audio des apps en local. Jamais enregistré ni envoyé."
           }
         },
         "hi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "मिक्सिंग के लिए सिस्टम ऑडियो रिकॉर्डिंग अनुमति चाहिए, क्योंकि macOS किसी ऐप को दूसरे ऐप का ऑडियो प्रोसेस करने से पहले यह अनुमति मांगता है। MacMix इसका उपयोग केवल तब स्थानीय रियल-टाइम मिक्सिंग के लिए करता है जब आप प्रति-ऐप वॉल्यूम समायोजित करते हैं, और ऑडियो को रिकॉर्ड, सेव या अपलोड नहीं करता।"
+            "value" : "ऐप ऑडियो को स्थानीय रूप से मिक्स करता है। कभी रिकॉर्ड या अपलोड नहीं होता।"
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Fitur mixing memerlukan izin Perekaman Audio Sistem karena macOS mewajibkan izin ini sebelum app dapat memproses audio dari app lain. MacMix menggunakannya hanya untuk mixing lokal real-time saat Anda menyesuaikan volume per app, dan tidak merekam, menyimpan, atau mengunggah audio."
+            "value" : "Mencampur audio app secara lokal. Tak pernah direkam atau diunggah."
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Il mixaggio richiede l’autorizzazione di registrazione audio di sistema perché macOS la richiede prima che un’app possa elaborare l’audio di un’altra app. MacMix la usa solo per il mixaggio locale in tempo reale quando regoli il volume per app, e non registra, salva o carica audio."
+            "value" : "Mixa l’audio delle app in locale. Mai registrato né caricato."
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "ミックス機能にはシステムオーディオ録音の権限が必要です。macOSでは、アプリが別のアプリのオーディオを処理する前にこの権限が求められるためです。MacMixは、アプリごとの音量を調整するときのローカルなリアルタイムミックスにのみ使用し、オーディオを録音、保存、アップロードしません。"
+            "value" : "App のオーディオをローカルでミックス。録音やアップロードはしません。"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "믹싱 기능에는 시스템 오디오 녹음 권한이 필요합니다. macOS가 앱이 다른 앱의 오디오를 처리하기 전에 이 권한을 요구하기 때문입니다. MacMix는 앱별 음량을 조절할 때 로컬 실시간 믹싱에만 이 권한을 사용하며, 오디오를 녹음, 저장 또는 업로드하지 않습니다."
+            "value" : "앱 오디오를 로컬에서 믹싱합니다. 녹음하거나 업로드하지 않습니다."
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Mixing heeft toestemming voor systeemaudio-opname nodig omdat macOS deze toestemming vereist voordat een app audio van een andere app kan verwerken. MacMix gebruikt dit alleen voor lokale realtime mixing wanneer je het volume per app aanpast, en neemt geen audio op, bewaart deze niet en uploadt deze niet."
+            "value" : "Mixt app-audio lokaal. Nooit opgenomen of geüpload."
           }
         },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Miksowanie wymaga uprawnienia do nagrywania dźwięku systemowego, ponieważ macOS wymaga go, zanim aplikacja będzie mogła przetwarzać dźwięk innej aplikacji. MacMix używa go tylko do lokalnego miksowania w czasie rzeczywistym podczas regulacji głośności poszczególnych aplikacji i nie nagrywa, nie zapisuje ani nie przesyła dźwięku."
+            "value" : "Miksuje dźwięk aplikacji lokalnie. Bez nagrywania i wysyłania."
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "A mixagem precisa da permissão Gravação de Áudio do Sistema porque o macOS exige essa permissão antes que um app possa processar o áudio de outro app. O MacMix a usa apenas para mixagem local em tempo real quando você ajusta o volume por app, e não grava, salva nem envia áudio."
+            "value" : "Mixa o áudio dos apps localmente. Nunca é gravado nem enviado."
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Для микширования требуется разрешение на запись системного звука, потому что macOS требует его, прежде чем приложение сможет обрабатывать звук другого приложения. MacMix использует его только для локального микширования в реальном времени при регулировке громкости отдельных приложений и не записывает, не сохраняет и не отправляет звук."
+            "value" : "Микширует звук локально. Без записи и загрузки."
           }
         },
         "th" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "ฟีเจอร์มิกซ์ต้องใช้สิทธิ์การบันทึกเสียงระบบ เพราะ macOS กำหนดให้แอปต้องได้รับสิทธิ์นี้ก่อนจึงจะประมวลผลเสียงจากแอปอื่นได้ MacMix ใช้สิทธิ์นี้เฉพาะสำหรับการมิกซ์แบบเรียลไทม์บนเครื่องเมื่อคุณปรับระดับเสียงแยกตามแอป และจะไม่บันทึก จัดเก็บ หรืออัปโหลดเสียง"
+            "value" : "มิกซ์เสียงของแอปภายในเครื่อง ไม่มีการบันทึกหรืออัปโหลด"
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Miksleme için Sistem Sesi Kaydı izni gerekir, çünkü macOS bir uygulamanın başka bir uygulamanın sesini işlemeden önce bu izni almasını zorunlu kılar. MacMix bu izni yalnızca uygulama bazında ses düzeyini ayarladığınızda yerel gerçek zamanlı miksleme için kullanır; sesi kaydetmez, saklamaz ya da yüklemez."
+            "value" : "Uygulama sesini yerel olarak karıştırır. Asla kaydedilmez veya yüklenmez."
           }
         },
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tính năng trộn âm cần quyền ghi âm âm thanh hệ thống vì macOS yêu cầu quyền này trước khi một ứng dụng có thể xử lý âm thanh của ứng dụng khác. MacMix chỉ dùng quyền này để trộn âm cục bộ theo thời gian thực khi bạn điều chỉnh âm lượng từng ứng dụng, và không ghi, lưu hoặc tải âm thanh lên."
+            "value" : "Trộn âm thanh ứng dụng cục bộ. Không bao giờ ghi hay tải lên."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "混音功能需要“系统录音”权限，因为 macOS 要求应用在处理其他 App 的音频前必须获得此权限。MacMix 只会在你调节单个 App 音量时用于本机实时混音，不会录制、保存或上传音频。"
+            "value" : "仅在本地实时混音，不会录制或上传音频。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "混音功能需要「系統錄音」權限，因為 macOS 要求 App 在處理其他 App 的音訊前必須取得此權限。MacMix 只會在你調整單個 App 音量時用於本機即時混音，不會錄製、儲存或上傳音訊。"
+            "value" : "僅在本機即時混音，不會錄製或上傳音訊。"
           }
         }
       }
@@ -14265,6 +14491,119 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "降噪"
+          }
+        }
+      }
+    },
+    "Not Authorized" : {
+      "comment" : "Status of an optional permission on the about page; clicking it requests the permission.",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "غير مصرح به"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nicht autorisiert"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No autorizado"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Non autorisé"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "अधिकृत नहीं"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Belum diizinkan"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Non autorizzato"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "未許可"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "허용 안 됨"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Niet geautoriseerd"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Brak autoryzacji"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Não autorizado"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не разрешено"
+          }
+        },
+        "th" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ยังไม่ได้อนุญาต"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yetkisiz"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chưa cấp quyền"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "未授权"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "未授權"
           }
         }
       }
@@ -18177,6 +18516,119 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "將所選 App 移出黑名單"
+          }
+        }
+      }
+    },
+    "Responds to the volume keys. Other keystrokes are never recorded." : {
+      "comment" : "About page explanation for why taking over system volume controls needs Accessibility permission.",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يستجيب لمفاتيح مستوى الصوت. لا تُسجَّل ضغطات المفاتيح الأخرى أبدًا."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reagiert auf Lautstärketasten. Andere Eingaben werden nie erfasst."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Responde a las teclas de volumen. Nunca registra otras pulsaciones."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Réagit aux touches de volume. Aucune autre frappe n’est enregistrée."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "वॉल्यूम कुंजियों पर प्रतिक्रिया देता है। अन्य कीस्ट्रोक कभी रिकॉर्ड नहीं होते।"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Merespons tombol volume. Penekanan tombol lain tidak pernah direkam."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Risponde ai tasti del volume. Nessun’altra battitura è registrata."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "音量キーに反応します。ほかのキー入力は記録しません。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "음량 키에 반응합니다. 다른 키 입력은 기록하지 않습니다."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reageert op volumetoetsen. Andere toetsen worden nooit vastgelegd."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reaguje na klawisze głośności. Inne klawisze nigdy nie są zapisywane."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Responde às teclas de volume. Outras teclas nunca são registradas."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Реагирует на клавиши громкости, другие нажатия не записывает."
+          }
+        },
+        "th" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ตอบสนองต่อปุ่มระดับเสียง ไม่มีการบันทึกการกดแป้นอื่น"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ses tuşlarına yanıt verir. Diğer tuş vuruşları asla kaydedilmez."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Phản hồi các phím âm lượng. Không ghi lại các phím khác."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "用于响应音量键，不会记录其他按键。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "用於回應音量鍵，不會記錄其他按鍵。"
           }
         }
       }
@@ -25436,6 +25888,119 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "在面板中顯示輸出"
+          }
+        }
+      }
+    },
+    "Shows battery levels and finds nearby headphones." : {
+      "comment" : "About page explanation for why MacMix asks for Bluetooth permission.",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يعرض مستوى البطارية ويكتشف سماعات الرأس القريبة."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zeigt Akkustände und findet Kopfhörer in der Nähe."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Muestra la batería y detecta auriculares cercanos."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Affiche la batterie et détecte les écouteurs à proximité."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "बैटरी स्तर दिखाता है और आसपास के हेडफ़ोन खोजता है।"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Menampilkan level baterai dan menemukan headphone di sekitar."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostra la batteria e trova le cuffie nelle vicinanze."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "バッテリー残量の表示と近くのヘッドフォンの検出に使用します。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "배터리 잔량을 표시하고 주변 헤드폰을 찾습니다."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toont batterijniveaus en vindt koptelefoons in de buurt."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pokazuje poziom baterii i wykrywa pobliskie słuchawki."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostra a bateria e encontra fones de ouvido próximos."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Показывает заряд и находит наушники поблизости."
+          }
+        },
+        "th" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "แสดงระดับแบตเตอรี่และค้นหาหูฟังที่อยู่ใกล้เคียง"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pil düzeyini gösterir ve yakındaki kulaklıkları bulur."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hiển thị mức pin và phát hiện tai nghe ở gần."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "用于显示设备电量和发现附近的耳机。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "用於顯示裝置電量和發現附近的耳機。"
           }
         }
       }
