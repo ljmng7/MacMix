@@ -774,8 +774,11 @@ private struct ControlPanelPanelPage: View {
                     .toggleStyle(.switch)
 
                 if showsMixInPanel {
-                    EqualizerAwareBoostToggle(isOn: $enables200PercentVolume,
-                                              isBlocked: audioModel.equalizerStore.isFeatureActive)
+                    Toggle(isOn: $enables200PercentVolume) {
+                        Text("Enable \(2.0, format: .percent.precision(.fractionLength(0))) Volume",
+                             comment: "Settings toggle that lets per-app mix volume sliders boost above 100 percent.")
+                    }
+                    .toggleStyle(.switch)
 
                     if audioModel.outputAppsState.needsSystemAudioPermission {
                         PermissionRequestRow(action: audioModel.requestSystemAudioPermission)

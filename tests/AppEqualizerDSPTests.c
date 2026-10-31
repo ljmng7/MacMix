@@ -134,6 +134,63 @@ static void volumeBeforeLimitingTest(void) {
     MacMixAudioIOContextDestroy(context);
 }
 
+// 200% volume and maximum EQ can coexist: the limiter follows the processed
+// peak, stays armed with EQ off or Flat, and releases fully once back at unity.
+static void boostedVolumeLimiterTest(void) {
+    for (unsigned mode = 0; mode < 3; ++mode) { // 0: no EQ, 1: every band +12 dB, 2: EQ turned off while boosted
+        float input[512], output[512];
+        AudioStreamBasicDescription format = {
+            .mSampleRate = 48000, .mFormatID = kAudioFormatLinearPCM,
+            .mFormatFlags = kAudioFormatFlagIsFloat | kAudioFormatFlagIsPacked,
+            .mBytesPerPacket = 8, .mFramesPerPacket = 1, .mBytesPerFrame = 8,
+            .mChannelsPerFrame = 2, .mBitsPerChannel = 32
+        };
+        MacMixAudioTapConfiguration configuration = {.format = format, .inputBufferCount = 1, .initialGain = 2, .targetGain = 2};
+        uint32_t index = 0;
+        void *context = MacMixAudioIOContextCreate(&configuration, 1, &index, 1);
+        void *eq = MacMixEQCreate(48000, 2);
+        double gains[10]; for (unsigned b = 0; b < 10; ++b) gains[b] = 12;
+        if (mode) MacMixEQSetGains(eq, gains, true);
+        MacMixAudioIOContextSetEffect(context, 0, eq, MacMixEQBeginBlock, NULL, MacMixEQDestroy);
+        MacMixAudioIOContextSetFrameEffect(context, 0, MacMixEQProcessFrame);
+        AudioBufferList in = {.mNumberBuffers = 1, .mBuffers = {{2, sizeof(input), input}}};
+        AudioBufferList out = {.mNumberBuffers = 1, .mBuffers = {{2, sizeof(output), output}}};
+        AudioTimeStamp timestamp = {0};
+        unsigned frame = 0;
+        double peak = 0;
+        for (unsigned block = 0; block < 200; ++block) {
+            if (mode == 2 && block == 100) MacMixEQSetGains(eq, NULL, false);
+            for (unsigned i = 0; i < 256; ++i, ++frame) {
+                float sample = (float)(sin(2 * M_PI * 60 * frame / 48000) * 0.7 + sin(2 * M_PI * 3000 * frame / 48000) * 0.3);
+                input[2 * i] = sample; input[2 * i + 1] = -sample;
+            }
+            memset(output, 0, sizeof(output));
+            MacMixAudioDeviceIOProc(0, &timestamp, &in, &timestamp, &out, &timestamp, context);
+            for (unsigned i = 0; i < 512; ++i) {
+                assert(isfinite(output[i]) && fabs(output[i]) <= 0.980001);
+                assert(output[i] == -output[i ^ 1u]); // Channels stay linked.
+                peak = fmax(peak, fabs(output[i]));
+            }
+        }
+        assert(peak > 0.95); // Boost reaches the ceiling instead of being pre-attenuated.
+        // Back to unity without EQ: the limiter settles quickly enough for the
+        // 120 ms unity handoff and then passes audio bit-exactly.
+        MacMixEQSetGains(eq, NULL, false);
+        MacMixAudioIOContextSetTargetGain(context, 0, 1);
+        for (unsigned i = 0; i < 512; ++i) input[i] = (float)(sin(i * 0.05) * 0.5);
+        unsigned blocks = 0;
+        do {
+            MacMixAudioDeviceIOProc(0, &timestamp, &in, &timestamp, &out, &timestamp, context);
+            ++blocks;
+        } while (!MacMixEQIsSettled(eq) && blocks < 200);
+        printf("Unity handoff after 200%% volume (case %u): limiter settled in %.0f ms\n", mode, blocks * 256 / 48.0);
+        assert(blocks * 256 < 48000 * 0.12);
+        memset(output, 0, sizeof(output));
+        MacMixAudioDeviceIOProc(0, &timestamp, &in, &timestamp, &out, &timestamp, context);
+        for (unsigned i = 0; i < 512; ++i) assert(output[i] == input[i]);
+        MacMixAudioIOContextDestroy(context);
+    }
+}
 static void spectrumTests(void) {
     void *eq = MacMixEQCreate(48000, 2);
     float bars[MacMixEQSpectrumBarCount];
@@ -531,7 +588,7 @@ int main(void) {
     toneAndConversionTests(); retuningContinuityTest();
     distortionTest(false, false); distortionTest(true, false); distortionTest(true, true);
     planarLinkedLimiterTest(); frameFormatRoundTripTests();
-    frequencyTests(); isolationAndBypassTests(); integrationTest(); volumeBeforeLimitingTest(); spectrumTests(); concurrencyTest();
+    frequencyTests(); isolationAndBypassTests(); integrationTest(); volumeBeforeLimitingTest(); boostedVolumeLimiterTest(); spectrumTests(); concurrencyTest();
     multiOutputRoutingTest();
     timedOutputHandoffTest();
     retainedDestinationTest();

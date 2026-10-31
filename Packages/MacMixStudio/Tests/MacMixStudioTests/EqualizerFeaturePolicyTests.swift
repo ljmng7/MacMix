@@ -2,42 +2,36 @@ import XCTest
 @testable import MacMixStudio
 
 final class EqualizerFeaturePolicyTests: XCTestCase {
-    @MainActor func testBoostRestoresBothOriginalStates() {
+    @MainActor func testCustomEQLeavesBoostPreferenceAlone() {
         for original in [false, true] {
             let domain = "MacMix.EQ.Policy.\(UUID().uuidString)"
             let defaults = UserDefaults(suiteName: domain)!
             defer { defaults.removePersistentDomain(forName: domain) }
             defaults.set(original, forKey: "MacMix.Enables200PercentVolume")
             let store = AppEqualizerStore(defaults: defaults)
-            XCTAssertFalse(store.isEnabled)
             store.updateAccess(true)
             store.setFeatureEnabled(true)
             XCTAssertTrue(store.isFeatureActive)
-            XCTAssertFalse(defaults.bool(forKey: "MacMix.Enables200PercentVolume"))
-            store.setFeatureEnabled(true) // Must not overwrite the saved preference with false.
+            XCTAssertEqual(defaults.bool(forKey: "MacMix.Enables200PercentVolume"), original)
+            store.updateAccess(false)
             store.setFeatureEnabled(false)
             XCTAssertEqual(defaults.bool(forKey: "MacMix.Enables200PercentVolume"), original)
         }
     }
-    @MainActor func testRestartAndAccessLossPreserveBoostPreference() {
-        let domain = "MacMix.EQ.Policy.\(UUID().uuidString)"
-        let defaults = UserDefaults(suiteName: domain)!
-        defer { defaults.removePersistentDomain(forName: domain) }
-        defaults.set(true, forKey: "MacMix.Enables200PercentVolume")
-        let original = AppEqualizerStore(defaults: defaults)
-        original.updateAccess(true)
-        original.setFeatureEnabled(true)
-        let restarted = AppEqualizerStore(defaults: defaults)
-        restarted.updateAccess(true)
-        XCTAssertTrue(restarted.isFeatureActive)
-        XCTAssertFalse(defaults.bool(forKey: "MacMix.Enables200PercentVolume"))
-        restarted.updateAccess(false)
-        XCTAssertFalse(restarted.isFeatureActive)
-        XCTAssertTrue(defaults.bool(forKey: "MacMix.Enables200PercentVolume"))
-        restarted.updateAccess(true)
-        XCTAssertFalse(defaults.bool(forKey: "MacMix.Enables200PercentVolume"))
-        restarted.setFeatureEnabled(false)
-        XCTAssertTrue(defaults.bool(forKey: "MacMix.Enables200PercentVolume"))
+    @MainActor func testLaunchRestoresBoostTurnedOffByOlderVersions() {
+        for saved in [false, true] {
+            let domain = "MacMix.EQ.Policy.\(UUID().uuidString)"
+            let defaults = UserDefaults(suiteName: domain)!
+            defer { defaults.removePersistentDomain(forName: domain) }
+            // Older versions turned boost off while Custom EQ was on and kept the choice here.
+            defaults.set(false, forKey: "MacMix.Enables200PercentVolume")
+            defaults.set(saved, forKey: "MacMix.CustomEqualizer.PreviousBoost")
+            defaults.set(true, forKey: "MacMix.CustomEqualizer.Enabled")
+            let store = AppEqualizerStore(defaults: defaults)
+            XCTAssertTrue(store.isEnabled)
+            XCTAssertEqual(defaults.bool(forKey: "MacMix.Enables200PercentVolume"), saved)
+            XCTAssertNil(defaults.object(forKey: "MacMix.CustomEqualizer.PreviousBoost"))
+        }
     }
     @MainActor func testFeatureGateDoesNotDeleteAppCurves() {
         let domain = "MacMix.EQ.Policy.\(UUID().uuidString)"

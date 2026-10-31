@@ -8,6 +8,7 @@
 #define BANDS 10
 #define CHANNELS 64
 #define DIRTY 4u
+#define CEILING 0.98
 #define FFT_LOG2 13
 #define FFT_SIZE (1u << FFT_LOG2)
 #define SPECTRUM_BARS MacMixEQSpectrumBarCount
@@ -15,7 +16,7 @@ _Static_assert(ATOMIC_INT_LOCK_FREE == 2, "EQ needs lock-free atomics");
 typedef struct { double b0, b1, b2, a1, a2; } Coefficients;
 typedef struct { Coefficients bands[BANDS]; bool active; } Parameters;
 typedef struct { double z1, z2, x1, x2, y1, y2; } EQDelay;
-typedef struct { double gain; uint32_t hold; } PeakEnvelope;
+typedef struct { double gain; uint32_t hold, quiet; } PeakEnvelope;
 typedef struct { Parameters parameters; EQDelay delays[CHANNELS][BANDS]; } Bank;
 typedef struct {
     double sampleRate;
@@ -29,8 +30,8 @@ typedef struct {
     bool transitioning;
     PeakEnvelope linkedPeak;
     PeakEnvelope scalarPeaks[CHANNELS];
-    double releaseStep;
-    uint32_t peakHoldFrames;
+    double releaseStep, slowReleaseStep;
+    uint32_t peakHoldFrames, quietFrames;
     _Atomic(bool) meterRequested;
     bool meterActive;
     float *meterRing, *meterSlots[3];
@@ -58,7 +59,9 @@ void *MacMixEQCreate(double sampleRate, uint32_t channels) {
     eq->linkedPeak.gain = 1;
     for (unsigned ch = 0; ch < channels; ++ch) eq->scalarPeaks[ch].gain = 1;
     eq->peakHoldFrames = (uint32_t)(sampleRate * 0.05);
+    eq->quietFrames = (uint32_t)(sampleRate * 0.03);
     eq->releaseStep = 1 - exp(-1 / (sampleRate * 0.20));
+    eq->slowReleaseStep = 1 - exp(-1 / (sampleRate * 0.60));
     eq->front = 0; eq->back = 2;
     atomic_init(&eq->middle, 1);
     atomic_init(&eq->settled, true);
@@ -247,24 +250,30 @@ static double filter(Bank *bank, double sample, uint32_t channel) {
 }
 // A held peak envelope scales the waveform; it does not reshape every peak like
 // tanh/clipping. Instant attack prevents overs, 50 ms hold spans low-frequency
-// cycles, and 200 ms release avoids audio-rate gain modulation.
-static double envelopeGain(Equalizer *eq, PeakEnvelope *envelope, double peak) {
-    double requested = peak > 0.98 ? 0.98 / peak : 1;
+// cycles, and release slows from 200 ms toward 600 ms as reduction deepens, so
+// sustained boost does not pump. The limiter stays armed without EQ to guard
+// boosted volume; there, 30 ms without overs (longer than a 20 Hz half cycle)
+// returns to unity within 20 ms, so a unity handoff can retire the graph
+// without a level jump.
+static double envelopeGain(Equalizer *eq, PeakEnvelope *envelope, double peak, bool effect) {
+    double requested = peak > CEILING ? CEILING / peak : 1;
+    if (requested < 1) envelope->quiet = 0;
+    else if (envelope->quiet < eq->quietFrames) envelope->quiet++;
     if (requested < envelope->gain) {
         envelope->gain = requested;
         envelope->hold = eq->peakHoldFrames;
+    } else if (!effect && envelope->quiet >= eq->quietFrames) {
+        envelope->hold = 0;
+        envelope->gain = fmin(1, envelope->gain + 2.0 / eq->fadeFrames);
     } else if (requested <= envelope->gain * 1.001 && requested < 1) {
         envelope->hold = eq->peakHoldFrames;
     } else if (envelope->hold > 0) {
         envelope->hold--;
     } else {
-        envelope->gain += (requested - envelope->gain) * eq->releaseStep;
+        double depth = fmin(1, (1 - envelope->gain) * 2);
+        envelope->gain += (requested - envelope->gain)
+            * (eq->releaseStep + (eq->slowReleaseStep - eq->releaseStep) * depth);
     }
-    return envelope->gain;
-}
-static double restoreUnity(Equalizer *eq, PeakEnvelope *envelope) {
-    envelope->hold = 0;
-    envelope->gain = fmin(1, envelope->gain + 1.0 / eq->fadeFrames);
     return envelope->gain;
 }
 static double filteredSample(Equalizer *eq, double sample, uint32_t channel) {
@@ -285,15 +294,20 @@ void MacMixEQProcessFrame(void *context, double *samples, uint32_t channels) {
     Equalizer *eq = context;
     if (!eq || !samples || channels != eq->channels) return;
     if (!eq->current.parameters.active && !eq->transitioning && eq->linkedPeak.gain == 1) {
-        for (unsigned ch = 0; ch < channels; ++ch) if (!isfinite(samples[ch])) samples[ch] = 0;
-        return;
+        double peak = 0;
+        for (unsigned ch = 0; ch < channels; ++ch) {
+            if (!isfinite(samples[ch])) samples[ch] = 0;
+            peak = fmax(peak, fabs(samples[ch]));
+        }
+        // Bit-transparent until boosted volume would exceed the ceiling.
+        if (peak <= CEILING) return;
     }
     double peak = 0;
     for (unsigned ch = 0; ch < channels; ++ch) {
         samples[ch] = filteredSample(eq, samples[ch], ch);
         peak = fmax(peak, fabs(samples[ch]));
     }
-    double gain = hasEffect(eq) ? envelopeGain(eq, &eq->linkedPeak, peak) : restoreUnity(eq, &eq->linkedPeak);
+    double gain = envelopeGain(eq, &eq->linkedPeak, peak, hasEffect(eq));
     for (unsigned ch = 0; ch < channels; ++ch) samples[ch] *= gain;
 }
 // Scalar helper for mono/offline consumers. The app always uses ProcessFrame so
@@ -302,8 +316,7 @@ double MacMixEQProcessSample(void *context, double sample, uint32_t channel) {
     Equalizer *eq = context;
     if (!eq || channel >= eq->channels) return sample;
     double value = filteredSample(eq, sample, channel);
-    double gain = hasEffect(eq) ? envelopeGain(eq, &eq->scalarPeaks[channel], fabs(value))
-        : restoreUnity(eq, &eq->scalarPeaks[channel]);
+    double gain = envelopeGain(eq, &eq->scalarPeaks[channel], fabs(value), hasEffect(eq));
     return value * gain;
 }
 bool MacMixEQIsSettled(void *context) {

@@ -428,24 +428,15 @@ final class AudioModel: NSObject {
         DiagnosticActions.shared.coalesce("audio", "equalizer_requested", target: app.bundleID,
             value: "enabled=\(current.isEnabled);bands=\(current.normalizedGains);tone=\(current.normalizedToneGains ?? [])")
         let changedEnablement = previous.isEnabled != current.isEnabled
-        let needsVolumeClamp = current.isEnabled && app.volume > 1
-        // Band drags do not change volume. Avoid UserDefaults notifications and
-        // synchronization work for the same volume on every slider event.
-        if changedEnablement || needsVolumeClamp {
-            defaults.set(current.isEnabled ? min(1, app.volume) : app.volume,
-                         forKey: defaultsKey(for: app.bundleID))
-        }
-        if needsVolumeClamp { app.updateControls(volume: 1, isMuted: app.isMuted) }
-        guard changedEnablement || needsVolumeClamp
+        guard changedEnablement
             || (current.isEnabled && (previous.normalizedGains != current.normalizedGains
                 || previous.normalizedToneGains != current.normalizedToneGains)) else { return }
         scheduleMixerReconcile(additionalTarget: app.snapshot, requestAuthorizationIfDenied: true,
-                               equalizerParametersOnly: !changedEnablement && !needsVolumeClamp)
+                               equalizerParametersOnly: !changedEnablement)
     }
 
     func setCustomEqualizerEnabled(_ enabled: Bool) {
         equalizerStore.setFeatureEnabled(enabled)
-        if equalizerStore.isFeatureActive { clampAppVolumesToUnity() }
         scheduleMixerReconcile(requestAuthorizationIfDenied: enabled)
     }
 
@@ -453,13 +444,11 @@ final class AudioModel: NSObject {
         let previouslyActive = equalizerStore.isFeatureActive
         equalizerStore.updateAccess(enabled)
         guard previouslyActive != equalizerStore.isFeatureActive else { return }
-        if equalizerStore.isFeatureActive { clampAppVolumesToUnity() }
         scheduleMixerReconcile(requestAuthorizationIfDenied: false)
     }
 
     func maximumVolume(for bundleID: String) -> Double {
-        if equalizerStore.isFeatureActive { return 1 }
-        return maximumAppVolume
+        maximumAppVolume
     }
 
     let outputState = OutputAudioState()
@@ -2806,8 +2795,7 @@ final class AudioModel: NSObject {
     }
 
     private var maximumAppVolume: Double {
-        if equalizerStore.isFeatureActive { return 1 }
-        return defaults.bool(forKey: MixVolumePreference.enables200PercentVolume) ? 2 : 1
+        defaults.bool(forKey: MixVolumePreference.enables200PercentVolume) ? 2 : 1
     }
 
 }

@@ -30,7 +30,7 @@ struct AppEqualizerRow: View {
         let sectionsCollapse = showsEqualizer && showsOutput
         VStack(spacing: 10) {
             AppVolumeControls(name: app.name, icon: app.icon, volume: app.volume, isMuted: app.isMuted,
-                maximumVolume: audioModel.equalizerStore.isFeatureActive ? 1 : maximumVolume,
+                maximumVolume: maximumVolume,
                 layout: layout, audioControlsExpanded: showsEqualizer || showsOutput ? $expanded : nil,
                 onToggleMute: onToggleMute, onVolumeChange: onVolumeChange)
             if (showsEqualizer || showsOutput) && expanded {

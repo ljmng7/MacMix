@@ -104,10 +104,9 @@ private final class EqualizerConfigurationEntry {
 public final class AppEqualizerStore {
     @ObservationIgnored public private(set) var configurations: [String: EqualizerConfiguration]
     public private(set) var presets: [EqualizerPreset]
-    public var hasAccess = false { didSet { reconcileBoostPreference() } }
+    public var hasAccess = false
     public private(set) var isEnabled: Bool
     public var isFeatureActive: Bool { hasAccess && isEnabled }
-    @ObservationIgnored private let boostPreferenceKey: String
     private static let enabledKey = "MacMix.CustomEqualizer.Enabled"
     private static let savedBoostKey = "MacMix.CustomEqualizer.PreviousBoost"
     @ObservationIgnored private let defaults: UserDefaults
@@ -120,7 +119,12 @@ public final class AppEqualizerStore {
     private static let presetsKey = "MacMix.AppEqualizer.Presets.v1"
     public init(defaults: UserDefaults = .standard, boostPreferenceKey: String = "MacMix.Enables200PercentVolume") {
         self.defaults = defaults
-        self.boostPreferenceKey = boostPreferenceKey
+        // Custom EQ used to turn off 200% volume and stash the previous choice.
+        // The limiter now covers both together, so give the choice back once.
+        if defaults.object(forKey: Self.savedBoostKey) != nil {
+            defaults.set(defaults.bool(forKey: Self.savedBoostKey), forKey: boostPreferenceKey)
+            defaults.removeObject(forKey: Self.savedBoostKey)
+        }
         isEnabled = defaults.bool(forKey: Self.enabledKey)
         configurations = defaults.data(forKey: Self.settingsKey).flatMap {
             try? JSONDecoder().decode([String: EqualizerConfiguration].self, from: $0)
@@ -145,25 +149,11 @@ public final class AppEqualizerStore {
     }
     public func updateAccess(_ enabled: Bool) {
         hasAccess = enabled
-        reconcileBoostPreference()
     }
     public func setFeatureEnabled(_ enabled: Bool) {
         guard !enabled || hasAccess else { return }
         isEnabled = enabled
         defaults.set(enabled, forKey: Self.enabledKey)
-        reconcileBoostPreference()
-    }
-    private func reconcileBoostPreference() {
-        if isFeatureActive {
-            if defaults.object(forKey: Self.savedBoostKey) == nil {
-                defaults.set(defaults.bool(forKey: boostPreferenceKey), forKey: Self.savedBoostKey)
-            }
-            if defaults.bool(forKey: boostPreferenceKey) { defaults.set(false, forKey: boostPreferenceKey) }
-        } else if defaults.object(forKey: Self.savedBoostKey) != nil {
-            let previous = defaults.bool(forKey: Self.savedBoostKey)
-            defaults.set(previous, forKey: boostPreferenceKey)
-            defaults.removeObject(forKey: Self.savedBoostKey)
-        }
     }
 
     private func entry(for bundleID: String) -> EqualizerConfigurationEntry {
