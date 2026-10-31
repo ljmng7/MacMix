@@ -2466,11 +2466,14 @@ final class AudioModel: NSObject {
                 finishNearbyConnection()
                 return
             }
-            // The link is up; wait for Core Audio to publish the output.
+            // The link is up; wait for Core Audio to publish the output. Headphones
+            // that were only taken off publish it when worn again, so allow longer.
             refreshOutputState()
+            let timeoutNanoseconds: UInt64 = accessory.availability == .linkedWithoutOutput
+                ? 30_000_000_000 : 10_000_000_000
             nearbyConnectionTimeoutTask?.cancel()
             nearbyConnectionTimeoutTask = Task { @MainActor [weak self] in
-                try? await Task.sleep(nanoseconds: 10_000_000_000)
+                try? await Task.sleep(nanoseconds: timeoutNanoseconds)
                 guard !Task.isCancelled, let self,
                       outputState.connectingAccessoryAddress == address else { return }
                 DiagnosticLog.shared.record("route", "nearby_connect_timed_out", level: "error")

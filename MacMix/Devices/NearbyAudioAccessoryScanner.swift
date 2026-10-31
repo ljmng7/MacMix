@@ -142,32 +142,23 @@ enum PairedBluetoothAccessories {
 
 // Opening the baseband link is what the Bluetooth menu does; the headphones then
 // bring up their audio profiles and appear in Core Audio. It also takes them
-// back from another device. A link that is up without an output has no audio
-// profile to reopen, so it is cycled first.
+// back from another device. A link that is already up is left alone: AirPods
+// out of the ears keep it and bring their output back once worn, while cycling
+// it made that reconnect slow or fail.
 @MainActor
 final class BluetoothAccessoryConnector: NSObject {
     private var completions: [String: (Bool) -> Void] = [:]
-    private let relinkDelayNanoseconds: UInt64 = 1_500_000_000
 
     func connect(address: String, completion: @escaping (Bool) -> Void) {
         guard let device = IOBluetoothDevice(addressString: address) else {
             completion(false)
             return
         }
-        completions[address] = completion
-        guard device.isConnected() else {
-            open(device, address: address)
+        guard !device.isConnected() else {
+            completion(true)
             return
         }
-        DiagnosticLog.shared.record("route", "nearby_relink_started")
-        device.closeConnection()
-        Task { @MainActor [weak self] in
-            try? await Task.sleep(nanoseconds: self?.relinkDelayNanoseconds ?? 0)
-            self?.open(device, address: address)
-        }
-    }
-
-    private func open(_ device: IOBluetoothDevice, address: String) {
+        completions[address] = completion
         if device.openConnection(self) != kIOReturnSuccess {
             completions.removeValue(forKey: address)?(false)
         }

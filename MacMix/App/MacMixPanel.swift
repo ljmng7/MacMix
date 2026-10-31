@@ -2187,6 +2187,9 @@ private struct NearbyAccessoryRow: View {
     }
 
     private var statusText: String {
+        if isConnecting, accessory.availability == .linkedWithoutOutput {
+            return String(localized: "Waiting for audio…", comment: "Status of Bluetooth headphones still linked to this Mac, such as AirPods taken out of the ears, while MacMix waits for their audio output to return.")
+        }
         if isConnecting {
             return String(localized: "Connecting…", comment: "Status of nearby Bluetooth headphones while this Mac connects to them.")
         }
