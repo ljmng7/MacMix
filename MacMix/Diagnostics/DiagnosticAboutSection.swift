@@ -58,27 +58,15 @@ struct DiagnosticAboutSection: View {
         model.storageBytes.map { ByteCountFormatter.string(fromByteCount: $0, countStyle: .file) } ?? "—"
     }
 
-    @ViewBuilder
     private func feedbackButton(fillsHeight: Bool) -> some View {
-        if #available(macOS 26.0, *), AppAppearanceFeatures.usesLiquidGlass {
-            Button { openWindow(id: DiagnosticFeedbackView.windowID) } label: {
-                Label("Feedback", systemImage: "exclamationmark.bubble")
-                    .frame(maxHeight: fillsHeight ? .infinity : nil)
-            }
-            .buttonStyle(.glass)
-            .buttonBorderShape(.capsule)
-            .tint(nil)
-            .foregroundStyle(.primary)
-        } else {
-            Button { openWindow(id: DiagnosticFeedbackView.windowID) } label: {
-                Label("Feedback", systemImage: "exclamationmark.bubble")
-                    .frame(maxHeight: fillsHeight ? .infinity : nil)
-            }
-            .buttonStyle(.bordered)
-            .buttonBorderShape(.capsule)
-            .tint(nil)
-            .foregroundStyle(.primary)
+        Button { openWindow(id: DiagnosticFeedbackView.windowID) } label: {
+            Label("Feedback", systemImage: "exclamationmark.bubble")
+                .frame(maxHeight: fillsHeight ? .infinity : nil)
         }
+        .buttonStyle(.bordered)
+        .buttonBorderShape(.capsule)
+        .tint(nil)
+        .foregroundStyle(.primary)
     }
 }
 
