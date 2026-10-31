@@ -879,6 +879,8 @@ private struct ControlPanelBlacklistPage: View {
                     apps: audioModel.outputAppsState.apps,
                     isStudioEnabled: isStudioEnabled,
                     isEditing: isEditing,
+                    // Selection stays within one section, so only one batch action applies.
+                    allowsSelection: selectedBlacklistedAppIDs.isEmpty,
                     selectedAppIDs: selectedCurrentAppIDs,
                     onToggleSelection: toggleCurrentAppSelection,
                     onAdd: addToBlacklist
@@ -886,6 +888,7 @@ private struct ControlPanelBlacklistPage: View {
                 BlacklistedAudioAppsSection(
                     apps: audioModel.audioAppBlacklistState.apps,
                     isEditing: isEditing,
+                    allowsSelection: selectedCurrentAppIDs.isEmpty,
                     selectedAppIDs: selectedBlacklistedAppIDs,
                     onToggleSelection: toggleBlacklistedAppSelection,
                     onRemove: removeFromBlacklist,
@@ -1017,6 +1020,7 @@ private struct CurrentAudioAppsBlacklistSection: View {
     let apps: [AudioAppState]
     let isStudioEnabled: Bool
     let isEditing: Bool
+    let allowsSelection: Bool
     let selectedAppIDs: Set<String>
     let onToggleSelection: (String) -> Void
     let onAdd: (AudioAppState) -> Void
@@ -1036,6 +1040,7 @@ private struct CurrentAudioAppsBlacklistSection: View {
                         name: app.name,
                         icon: app.icon,
                         isEditing: isEditing,
+                        allowsSelection: allowsSelection,
                         isSelected: selectedAppIDs.contains(app.id),
                         onToggleSelection: {
                             onToggleSelection(app.id)
@@ -1057,6 +1062,7 @@ private struct CurrentAudioAppsBlacklistSection: View {
 private struct BlacklistedAudioAppsSection: View {
     let apps: [AudioAppBlacklistEntry]
     let isEditing: Bool
+    let allowsSelection: Bool
     let selectedAppIDs: Set<String>
     let onToggleSelection: (String) -> Void
     let onRemove: (AudioAppBlacklistEntry) -> Void
@@ -1078,6 +1084,7 @@ private struct BlacklistedAudioAppsSection: View {
                         name: app.name,
                         icon: app.icon,
                         isEditing: isEditing,
+                        allowsSelection: allowsSelection,
                         isSelected: selectedAppIDs.contains(app.id),
                         onToggleSelection: {
                             onToggleSelection(app.id)
@@ -1107,6 +1114,7 @@ private struct CurrentAudioAppBlacklistRow: View {
     let name: String
     let icon: NSImage?
     let isEditing: Bool
+    let allowsSelection: Bool
     let isSelected: Bool
     let onToggleSelection: () -> Void
     let onAdd: () -> Void
@@ -1118,6 +1126,7 @@ private struct CurrentAudioAppBlacklistRow: View {
                     isSelected: isSelected,
                     action: onToggleSelection
                 )
+                .disabled(!allowsSelection)
             }
 
             AppIcon(image: icon, isMuted: false)
@@ -1140,6 +1149,7 @@ private struct CurrentAudioAppBlacklistRow: View {
             .help("Add to Blacklist")
         }
         .padding(.vertical, 3)
+        .modifier(BlacklistRowSelectionTap(isEditing: isEditing && allowsSelection, action: onToggleSelection))
     }
 }
 
@@ -1147,6 +1157,7 @@ private struct BlacklistedAudioAppRow: View {
     let name: String
     let icon: NSImage?
     let isEditing: Bool
+    let allowsSelection: Bool
     let isSelected: Bool
     let onToggleSelection: () -> Void
     let onRemove: () -> Void
@@ -1158,6 +1169,7 @@ private struct BlacklistedAudioAppRow: View {
                     isSelected: isSelected,
                     action: onToggleSelection
                 )
+                .disabled(!allowsSelection)
             }
 
             AppIcon(image: icon, isMuted: false)
@@ -1180,6 +1192,7 @@ private struct BlacklistedAudioAppRow: View {
             .help("Remove from Blacklist")
         }
         .padding(.vertical, 3)
+        .modifier(BlacklistRowSelectionTap(isEditing: isEditing && allowsSelection, action: onToggleSelection))
     }
 }
 
@@ -1197,8 +1210,21 @@ private struct AudioAppBlacklistSelectionButton: View {
                     )
             }
         }
-        .buttonStyle(.plain)
+        .buttonStyle(TouchTargetButtonStyle(insets: EdgeInsets(top: 6, leading: 8, bottom: 6, trailing: 5)))
         .accessibilityLabel("Toggle Selection")
+    }
+}
+
+/// While editing, a tap anywhere on the row toggles its selection, as in
+/// system lists; the row's own buttons still take their taps first.
+private struct BlacklistRowSelectionTap: ViewModifier {
+    let isEditing: Bool
+    let action: () -> Void
+
+    func body(content: Content) -> some View {
+        content
+            .contentShape(Rectangle())
+            .gesture(TapGesture().onEnded(action), including: isEditing ? .all : .subviews)
     }
 }
 
