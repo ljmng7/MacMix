@@ -66,12 +66,28 @@ struct AppOutputRoutingPicker: View {
                         isSelected: selected.contains { $0.matches(destination(for: device)) }, hasAccess: hasStudioAccess,
                         onSelection: { audioModel.setOutputDestination(destination(for: device), selected: $0, for: app) })
                 }
-                ForEach(selected.filter { saved in !available.contains { saved.matches($0) } }) { device in
+                ForEach(idleReceivers, id: \.selectionID) { receiver in
+                    let destination = idleDestination(for: receiver)
+                    let isSelected = selected.contains { $0.matches(destination) }
+                    RoutedOutputDeviceRow(device: receiver, volumeState: audioModel.routedDeviceVolumeState(for: receiver),
+                        audioModel: audioModel, layout: layout, isSelected: isSelected, hasAccess: hasStudioAccess,
+                        onSelection: { select in
+                            if select {
+                                audioModel.connectAirPlayReceiver(receiver, for: app)
+                            } else {
+                                audioModel.setOutputDestination(destination, selected: false, for: app)
+                            }
+                        })
+                }
+                ForEach(selected.filter { saved in
+                    !available.contains { saved.matches($0) } && !idleReceivers.contains { saved.matches(idleDestination(for: $0)) }
+                }) { device in
                     offlineDestinationRow(device)
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
-            if audioModel.outputState.devices.contains(where: { $0.transportType == kAudioDeviceTransportTypeAirPlay }) {
+            if idleReceivers.isEmpty,
+               audioModel.outputState.devices.contains(where: { $0.transportType == kAudioDeviceTransportTypeAirPlay }) {
                 Text("AirPlay uses the receivers connected in the system output selector.", tableName: "AppOutputRouting")
                     .font(.caption)
                     .foregroundStyle(.secondary)
@@ -88,6 +104,13 @@ struct AppOutputRoutingPicker: View {
 
     private func destination(for device: AudioDevice) -> AppOutputDestination {
         AppOutputDestination(uid: device.uid, name: device.name, dataSourceIDs: device.selectedDataSourceIDs)
+    }
+
+    private var idleReceivers: [AudioDevice] { audioModel.outputState.idleAirPlayReceivers }
+
+    // Selecting an idle receiver connects it, after which it is this exact route.
+    private func idleDestination(for receiver: AudioDevice) -> AppOutputDestination {
+        AppOutputDestination(uid: receiver.uid, name: receiver.name, dataSourceIDs: receiver.dataSourceID.map { [$0] })
     }
 
     private func offlineDestinationRow(_ device: AppOutputDestination) -> some View {

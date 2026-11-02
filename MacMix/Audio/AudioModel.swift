@@ -108,6 +108,13 @@ final class OutputAudioState {
         devices.filter { $0.selectedDataSourceIDs?.isEmpty != true }
     }
 
+    // Receivers of an AirPlay output that has no connected selection. Connecting
+    // one for an app takes no receiver away from the system or another route.
+    var idleAirPlayReceivers: [AudioDevice] {
+        let idle = Set(devices.filter { $0.selectedDataSourceIDs?.isEmpty == true }.map(\.uid))
+        return airPlayDestinations.filter { idle.contains($0.uid) && $0.dataSourceID != nil }
+    }
+
     var routingDestinations: [AppOutputDestination] {
         routingDevices.map {
             AppOutputDestination(uid: $0.uid, name: $0.name, dataSourceIDs: $0.selectedDataSourceIDs)
@@ -412,6 +419,30 @@ final class AudioModel: NSObject {
             "selected": String(selected)])
         outputRoutingStore.setSelected(selected, destination: destination, for: app.bundleID)
         scheduleMixerReconcile(additionalTarget: app.snapshot, requestAuthorizationIfDenied: true)
+    }
+
+    func connectAirPlayReceiver(_ receiver: AudioDevice, for app: AudioAppState) {
+        guard outputRoutingStore.isFeatureActive, let sourceID = receiver.dataSourceID,
+              outputState.idleAirPlayReceivers.contains(where: { $0.selectionID == receiver.selectionID }) else { return }
+        let deviceID = receiver.id
+        DiagnosticLog.shared.record("route", "airplay_receiver_connect_requested", fields: [
+            "app": DiagnosticLog.shared.anonymous(app.bundleID), "device": DiagnosticLog.shared.anonymous(receiver.uid)])
+        Task { @MainActor [weak self] in
+            let connected = await Task.detached {
+                // Another client may have connected a receiver since the panel refreshed.
+                guard AirPlayDataSources.read(deviceID: deviceID).selectedIDs.isEmpty else { return false }
+                return AirPlayDataSources.select(sourceID, deviceID: deviceID)
+            }.value
+            guard let self else { return }
+            refreshOutputState()
+            guard connected else {
+                DiagnosticLog.shared.record("route", "airplay_receiver_connect_failed", fields: [
+                    "device": DiagnosticLog.shared.anonymous(receiver.uid)])
+                return
+            }
+            setOutputDestination(AppOutputDestination(uid: receiver.uid, name: receiver.name, dataSourceIDs: [sourceID]),
+                selected: true, for: app)
+        }
     }
 
     func retryAppOutputRouting() {

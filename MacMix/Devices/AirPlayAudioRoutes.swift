@@ -16,6 +16,24 @@ nonisolated struct AirPlayOutputRoute: Equatable, Sendable {
     }
 }
 
+// Receivers share the HAL output's AirPlay icon. Their names are the only
+// per-receiver hint, so recognise common AirPlay products from them.
+nonisolated enum AirPlayReceiverIcon {
+    static func symbolName(for name: String) -> String? {
+        let text = name.folding(options: [.caseInsensitive, .diacriticInsensitive], locale: .current).lowercased()
+        func has(_ needles: [String]) -> Bool { needles.contains { text.contains($0) } }
+        if has(["homepod mini", "homepodmini"]) { return "homepod.mini" }
+        if has(["homepod"]) { return "homepod" }
+        if has(["apple tv", "appletv"]) { return "appletv" }
+        if has(["beats pill", "beatspill"]) { return "beats.pill" }
+        if has(["tv", "电视", "bravia", "vizio", "roku"]) { return "tv" }
+        if has(["sonos", "bose", "marshall", "denon", "speaker", "soundbar", "音箱", "音响", "回音壁"]) {
+            return "hifispeaker"
+        }
+        return nil
+    }
+}
+
 // AirPlay can expose one HAL device with multiple receiver data sources.
 // These are receiver choices, not independently routable HAL devices.
 nonisolated struct AirPlayDataSources {

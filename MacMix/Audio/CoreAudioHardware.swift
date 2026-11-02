@@ -65,7 +65,9 @@ struct CoreAudioHardware {
                 return nil
             }
 
-            let systemIconURL = urlProperty(deviceID, selector: kAudioDevicePropertyIcon)
+            // A connected receiver's own icon replaces the shared AirPlay icon.
+            let receiverSymbol = airPlaySources?.selectedName.flatMap(AirPlayReceiverIcon.symbolName)
+            let systemIconURL = receiverSymbol == nil ? urlProperty(deviceID, selector: kAudioDevicePropertyIcon) : nil
 
             return AudioDevice(
                 id: deviceID,
@@ -73,7 +75,7 @@ struct CoreAudioHardware {
                 name: name,
                 manufacturer: identity.manufacturer,
                 modelUID: identity.modelUID,
-                iconName: iconName(for: identity, direction: direction, connectedDisplayNames: displayNames),
+                iconName: receiverSymbol ?? iconName(for: identity, direction: direction, connectedDisplayNames: displayNames),
                 systemIconURL: systemIconURL,
                 systemIcon: systemIconURL.flatMap(NSImage.init(contentsOf:)),
                 transportType: identity.transportType,
@@ -96,10 +98,11 @@ struct CoreAudioHardware {
                   }) else { return [] }
             return snapshot.sources.map { source in
                 let isCurrent = device.isCurrent && snapshot.selectedIDs.contains(source.id)
+                let symbol = AirPlayReceiverIcon.symbolName(for: source.name)
                 return AudioDevice(id: device.id, uid: device.uid, name: source.name,
                     manufacturer: device.manufacturer, modelUID: device.modelUID,
-                    iconName: device.iconName, systemIconURL: device.systemIconURL,
-                    systemIcon: device.systemIcon, transportType: device.transportType,
+                    iconName: symbol ?? device.iconName, systemIconURL: symbol == nil ? device.systemIconURL : nil,
+                    systemIcon: symbol == nil ? device.systemIcon : nil, transportType: device.transportType,
                     isCurrent: isCurrent, volume: isCurrent ? device.volume : nil,
                     dataSourceID: source.id)
             }

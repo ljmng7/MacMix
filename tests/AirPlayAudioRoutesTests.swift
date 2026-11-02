@@ -175,6 +175,40 @@ nonisolated func MacMixAudioIOContextSetDestinationMask(_ context: Int, _ index:
         state.devices = [group]
         precondition(state.routingDevices.isEmpty, "Do not offer an unreadable or unconnected receiver")
 
+        // An AirPlay output nobody uses offers its receivers to connect for an app.
+        var idle = device(name: "AirPlay", current: false)
+        idle.selectedDataSourceIDs = []
+        state.devices = [idle]
+        FakeHAL.selected = []
+        state.airPlayDestinations = hardware.airPlayDestinations(in: state.devices)
+        precondition(state.idleAirPlayReceivers.map(\.dataSourceID) == [7, 9], "An unconnected HomePod can be chosen for an app")
+        precondition(state.idleAirPlayReceivers.allSatisfy { $0.iconName == "homepod" && $0.systemIconURL == nil },
+            "A recognised receiver shows its own icon, not the shared AirPlay image")
+        let icons: [String: String?] = [
+            "客厅 HomePod mini": "homepod.mini", "HomePod": "homepod", "卧室的 Apple TV": "appletv",
+            "Samsung TV": "tv", "书房电视": "tv", "Sonos Era 100": "hifispeaker", "客厅音箱": "hifispeaker",
+            "Kitchen": nil, "AirPlay": nil,
+        ]
+        for (name, symbol) in icons {
+            precondition(AirPlayReceiverIcon.symbolName(for: name) == symbol, "Icon for \(name)")
+        }
+        FakeHAL.selected = [7, 9]
+        FakeHAL.names = [7: "Living Room HomePod"]
+        state.airPlayDestinations = hardware.airPlayDestinations(in: state.devices)
+        precondition(state.idleAirPlayReceivers.isEmpty, "An unnamed active selection is not idle")
+        FakeHAL.names[9] = "Bedroom HomePod"
+        var connected = idle
+        connected.selectedDataSourceIDs = [7, 9]
+        state.devices = [connected]
+        state.airPlayDestinations = hardware.airPlayDestinations(in: state.devices)
+        precondition(state.idleAirPlayReceivers.isEmpty, "Never offer to replace a connected receiver selection")
+        var idleDefault = device(name: "AirPlay", current: true)
+        idleDefault.selectedDataSourceIDs = []
+        state.devices = [idleDefault]
+        FakeHAL.selected = []
+        state.airPlayDestinations = hardware.airPlayDestinations(in: state.devices)
+        precondition(state.idleAirPlayReceivers.isEmpty, "An unreadable default output keeps its HAL row only")
+
         FakeHAL.selected = [9, 7]
         let route = AirPlayOutputRoute(deviceID: 100, sourceIDs: [7, 9])
         precondition(route.isConnected, "Receiver group order is not significant")

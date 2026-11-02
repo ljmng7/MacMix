@@ -461,6 +461,10 @@ enum AudioDeviceSFSymbols {
             return ["homepod.mini", "homepodmini", "homepod", "hifispeaker", "speaker", "headphones"]
         }
 
+        if symbolName.hasPrefix("homepod") {
+            return ["homepod", "hifispeaker", "speaker", "headphones"]
+        }
+
         return ["headphones"]
     }
 
