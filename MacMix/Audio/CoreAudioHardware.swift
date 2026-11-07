@@ -50,6 +50,7 @@ struct CoreAudioHardware {
         .compactMap { deviceID in
             let transportType = uint32Property(deviceID, selector: kAudioDevicePropertyTransportType)
             let airPlaySources = direction == .output && transportType == kAudioDeviceTransportTypeAirPlay
+                && AirPlayDataSources.isSupported(deviceID: deviceID)
                 ? AirPlayDataSources.read(deviceID: deviceID) : nil
             let name = airPlaySources?.selectedName ?? stringProperty(deviceID, selector: kAudioObjectPropertyName)
                 ?? String(localized: "Unknown Device", comment: "Fallback audio device name when Core Audio does not provide one.")

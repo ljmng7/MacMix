@@ -16,11 +16,13 @@ import OSLog
 enum OutputRow: Identifiable {
     case device(AudioDevice)
     case nearby(NearbyAudioAccessory)
+    case airPlay(DiscoveredAirPlayReceiver)
 
     var id: String {
         switch self {
         case let .device(device): "device:\(device.selectionID)"
         case let .nearby(accessory): "nearby:\(accessory.address)"
+        case let .airPlay(receiver): "airplay:\(receiver.id)"
         }
     }
 
@@ -28,6 +30,7 @@ enum OutputRow: Identifiable {
         switch self {
         case let .device(device): Self.orderKey(device)
         case let .nearby(accessory): Self.orderKey(accessory)
+        case let .airPlay(receiver): Self.orderKey(receiver)
         }
     }
 
@@ -37,6 +40,10 @@ enum OutputRow: Identifiable {
 
     static func orderKey(_ accessory: NearbyAudioAccessory) -> String {
         "bt:\(NearbyAudioAccessoryMatcher.canonical(accessory.address))"
+    }
+
+    static func orderKey(_ receiver: DiscoveredAirPlayReceiver) -> String {
+        "airplay:\(receiver.id)"
     }
 }
 
@@ -57,6 +64,7 @@ final class OutputAudioState {
     var airPlayDestinations: [AudioDevice] = []
     // Paired headphones advertising nearby that Core Audio does not list.
     var nearbyAccessories: [NearbyAudioAccessory] = []
+    var discoveredAirPlayReceivers: [DiscoveredAirPlayReceiver] = []
     // Canonical (hex-only, uppercase) address of the accessory being connected.
     var connectingAccessoryAddress: String?
     // First-seen order of output rows. Headphones keep their place while they
@@ -66,6 +74,7 @@ final class OutputAudioState {
 
     func recordRowOrder() {
         let keys = devices.map(OutputRow.orderKey) + nearbyAccessories.map(OutputRow.orderKey)
+            + discoveredAirPlayReceivers.map(OutputRow.orderKey)
         let known = Set(rowOrder)
         let added = keys.filter { !known.contains($0) }
         if !added.isEmpty {
@@ -76,10 +85,17 @@ final class OutputAudioState {
     func orderedRows(for devices: [AudioDevice]) -> [OutputRow] {
         let index = Dictionary(rowOrder.enumerated().map { ($1, $0) }, uniquingKeysWith: min)
         let rows = devices.map(OutputRow.device) + nearbyAccessories.map(OutputRow.nearby)
+            + discoveredAirPlayReceivers.map(OutputRow.airPlay)
         return rows.enumerated().sorted { lhs, rhs in
             let l = index[lhs.element.orderKey] ?? Int.max, r = index[rhs.element.orderKey] ?? Int.max
             return l != r ? l < r : lhs.offset < rhs.offset
         }.map(\.element)
+    }
+
+    // A receiver already offered through Core Audio keeps that row.
+    func unlistedAirPlayReceivers(_ receivers: [DiscoveredAirPlayReceiver]) -> [DiscoveredAirPlayReceiver] {
+        let listed = Set((devices + airPlayDestinations).map(\.name))
+        return receivers.filter { !listed.contains($0.name) }
     }
 
     var selectionDevices: [AudioDevice] {
@@ -113,6 +129,22 @@ final class OutputAudioState {
     var idleAirPlayReceivers: [AudioDevice] {
         let idle = Set(devices.filter { $0.selectedDataSourceIDs?.isEmpty == true }.map(\.uid))
         return airPlayDestinations.filter { idle.contains($0.uid) && $0.dataSourceID != nil }
+    }
+
+    // Headphones an app already routes to show that saved route, which can deselect them.
+    func selectedDestination(for accessory: NearbyAudioAccessory,
+                             in selected: [AppOutputDestination]) -> AppOutputDestination? {
+        let address = NearbyAudioAccessoryMatcher.canonical(accessory.address)
+        return selected.first {
+            NearbyAudioAccessoryMatcher.canonical(String($0.uid.split(separator: ":").first ?? "")) == address
+        }
+    }
+
+    // Core Audio joins the names of a connected group into one device name.
+    func routingDestination(forAirPlayReceiverNamed name: String) -> AppOutputDestination? {
+        routingDevices.first {
+            $0.transportType == kAudioDeviceTransportTypeAirPlay && $0.name.components(separatedBy: ", ").contains(name)
+        }.map { AppOutputDestination(uid: $0.uid, name: $0.name, dataSourceIDs: $0.selectedDataSourceIDs) }
     }
 
     var routingDestinations: [AppOutputDestination] {
@@ -421,6 +453,26 @@ final class AudioModel: NSObject {
         scheduleMixerReconcile(additionalTarget: app.snapshot, requestAuthorizationIfDenied: true)
     }
 
+    // The system picker connects the receiver, so its output appears later, if at all.
+    func routeAirPlayReceiverOnceConnected(_ receiver: DiscoveredAirPlayReceiver, for app: AudioAppState) {
+        guard outputRoutingStore.isFeatureActive else { return }
+        DiagnosticLog.shared.record("route", "airplay_receiver_route_pending", fields: [
+            "app": DiagnosticLog.shared.anonymous(app.bundleID), "device": DiagnosticLog.shared.anonymous(receiver.id)])
+        pendingAirPlayRoute = PendingAirPlayRoute(receiverName: receiver.name, app: app,
+            expiry: Date().addingTimeInterval(120))
+    }
+
+    private func applyPendingAirPlayRoute() {
+        guard let pending = pendingAirPlayRoute else { return }
+        guard pending.expiry > Date() else {
+            pendingAirPlayRoute = nil
+            return
+        }
+        guard let destination = outputState.routingDestination(forAirPlayReceiverNamed: pending.receiverName) else { return }
+        pendingAirPlayRoute = nil
+        setOutputDestination(destination, selected: true, for: pending.app)
+    }
+
     func connectAirPlayReceiver(_ receiver: AudioDevice, for app: AudioAppState) {
         guard outputRoutingStore.isFeatureActive, let sourceID = receiver.dataSourceID,
               outputState.idleAirPlayReceivers.contains(where: { $0.selectionID == receiver.selectionID }) else { return }
@@ -518,6 +570,7 @@ final class AudioModel: NSObject {
             scheduleBluetoothBatteryRefresh(for: outputState.devices)
         }
         nearbyAccessoryScanner.setActive(visible)
+        airPlayReceiverBrowser.setActive(visible)
     }
 
     private let appAudioMixer = AppAudioMixer.shared
@@ -531,6 +584,14 @@ final class AudioModel: NSObject {
     private let outputDeviceWriter = DefaultOutputDeviceWriter()
     private let bluetoothBatteryReader = BluetoothBatteryReader()
     private let nearbyAccessoryScanner = NearbyAudioAccessoryScanner()
+    private let airPlayReceiverBrowser = AirPlayReceiverBrowser()
+    private struct PendingAirPlayRoute {
+        let receiverName: String
+        let app: AudioAppState
+        let expiry: Date
+    }
+    private var pendingAirPlayRoute: PendingAirPlayRoute?
+    private var nearbyConnectionApp: AudioAppState?
     private let bluetoothAccessoryConnector = BluetoothAccessoryConnector()
     private var nearbyConnectionTimeoutTask: Task<Void, Never>?
     private let audioAccessoryController = AudioAccessoryController()
@@ -597,6 +658,7 @@ final class AudioModel: NSObject {
         }
         restoreCachedSystemAudioPermissionRequirementState()
         nearbyAccessoryScanner.onChange = { [weak self] in self?.refreshNearbyAccessories() }
+        airPlayReceiverBrowser.onChange = { [weak self] in self?.refreshDiscoveredAirPlayReceivers() }
 
         deviceObserver = CoreAudioDeviceObserver(
             onOutputVolumeChange: { [weak self] in self?.handleOutputVolumeChange() },
@@ -2468,9 +2530,25 @@ final class AudioModel: NSObject {
         outputState.devices = devices
         selectConnectedNearbyAccessoryIfNeeded(in: devices)
         refreshNearbyAccessories()
+        refreshDiscoveredAirPlayReceivers()
+        applyPendingAirPlayRoute()
+    }
+
+    private func refreshDiscoveredAirPlayReceivers() {
+        let receivers = outputState.unlistedAirPlayReceivers(airPlayReceiverBrowser.receivers)
+        guard outputState.discoveredAirPlayReceivers != receivers else { return }
+        outputState.discoveredAirPlayReceivers = receivers
+        outputState.recordRowOrder()
     }
 
     // MARK: Nearby Bluetooth headphones
+
+    // Routes the app to the headphones once connected, leaving the system output alone.
+    func connectNearbyAccessory(_ accessory: NearbyAudioAccessory, for app: AudioAppState) {
+        guard outputRoutingStore.isFeatureActive, outputState.connectingAccessoryAddress == nil else { return }
+        nearbyConnectionApp = app
+        connectNearbyAccessory(accessory)
+    }
 
     func connectNearbyAccessory(_ accessory: NearbyAudioAccessory) {
         guard outputState.connectingAccessoryAddress == nil else { return }
@@ -2505,13 +2583,19 @@ final class AudioModel: NSObject {
     private func selectConnectedNearbyAccessoryIfNeeded(in devices: [AudioDevice]) {
         guard let address = outputState.connectingAccessoryAddress,
               let device = devices.first(where: { $0.bluetoothAddress == address }) else { return }
+        let app = nearbyConnectionApp
         finishNearbyConnection()
-        selectOutputDevice(device)
+        if let app {
+            setOutputDestination(AppOutputDestination(uid: device.uid, name: device.name), selected: true, for: app)
+        } else {
+            selectOutputDevice(device)
+        }
     }
 
     private func finishNearbyConnection() {
         nearbyConnectionTimeoutTask?.cancel()
         nearbyConnectionTimeoutTask = nil
+        nearbyConnectionApp = nil
         outputState.connectingAccessoryAddress = nil
         refreshNearbyAccessories()
     }

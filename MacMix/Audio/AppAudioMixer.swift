@@ -1665,12 +1665,8 @@ nonisolated private final class SharedProcessTapGainEngine: AppGainEngine {
             routes.merge(target.airPlayRoutes) { existing, _ in existing }
         }
         let clockUID = preferredClockUID ?? outputDeviceUID
-        let physicalUIDs = Set(outputRoutes.values.flatMap { $0 }).sorted { left, right in
-            if left == right { return false }
-            if left == clockUID { return true }
-            if right == clockUID { return false }
-            return left < right
-        }
+        let physicalUIDs = RoutedOutputClockOrder.ordered(outputRoutes.values.flatMap { $0 }, preferred: clockUID,
+                                                          isAirPlay: Self.isAirPlayDevice)
         var tapRuntimes: [TapRuntime] = []
         var nextInputBufferOffset = 0
         for target in targets {
@@ -2309,6 +2305,24 @@ nonisolated private final class SharedProcessTapGainEngine: AppGainEngine {
                 InputStreamShape(channels: Int($0.format.mChannelsPerFrame), buffers: $0.inputBufferCount)
             }
         )
+    }
+
+    private static func isAirPlayDevice(uid: String) -> Bool {
+        var address = AudioObjectPropertyAddress(mSelector: kAudioHardwarePropertyTranslateUIDToDevice,
+            mScope: kAudioObjectPropertyScopeGlobal, mElement: kAudioObjectPropertyElementMain)
+        var deviceID = AudioObjectID(kAudioObjectUnknown)
+        var size = UInt32(MemoryLayout<AudioObjectID>.size)
+        var cfUID = uid as CFString
+        let status = withUnsafeMutablePointer(to: &cfUID) { pointer in
+            AudioObjectGetPropertyData(AudioObjectID(kAudioObjectSystemObject), &address,
+                UInt32(MemoryLayout<CFString>.size), pointer, &size, &deviceID)
+        }
+        guard status == noErr, deviceID != kAudioObjectUnknown else { return false }
+        address.mSelector = kAudioDevicePropertyTransportType
+        var transport: UInt32 = 0
+        size = UInt32(MemoryLayout<UInt32>.size)
+        return AudioObjectGetPropertyData(deviceID, &address, 0, nil, &size, &transport) == noErr
+            && transport == kAudioDeviceTransportTypeAirPlay
     }
 
     struct InputStreamShape: Equatable {

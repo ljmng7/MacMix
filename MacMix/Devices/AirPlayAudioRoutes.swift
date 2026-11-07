@@ -34,6 +34,62 @@ nonisolated enum AirPlayReceiverIcon {
     }
 }
 
+// The first output clocks the mixer's aggregate. AirPlay's network clock starves
+// drift-compensated outputs, so it leads only when nothing else is routed.
+nonisolated enum RoutedOutputClockOrder {
+    static func ordered(_ uids: some Sequence<String>, preferred: String, isAirPlay: (String) -> Bool) -> [String] {
+        Set(uids).map { (uid: $0, rank: (isAirPlay($0) ? 2 : 0) + ($0 == preferred ? 0 : 1)) }
+            .sorted { ($0.rank, $0.uid) < ($1.rank, $1.uid) }
+            .map(\.uid)
+    }
+}
+
+nonisolated struct AirPlayReceiverAdvertisement: Equatable, Sendable {
+    let name: String
+    let txt: [String: String]
+}
+
+// A receiver found on the network, which may have no Core Audio output yet.
+nonisolated struct DiscoveredAirPlayReceiver: Identifiable, Equatable, Sendable {
+    let id: String
+    let name: String
+    let modelID: String?
+
+    var symbolName: String {
+        let model = modelID ?? ""
+        if model.hasPrefix("AudioAccessory5") { return "homepod.mini" }
+        if model.hasPrefix("AudioAccessory") { return "homepod" }
+        if model.hasPrefix("AppleTV") { return "appletv" }
+        return AirPlayReceiverIcon.symbolName(for: name) ?? "airplayaudio"
+    }
+
+    // One service can appear once per network interface.
+    static func receivers(from advertisements: [AirPlayReceiverAdvertisement],
+                          excludingName computerName: String?) -> [Self] {
+        var seen = Set<String>()
+        return advertisements.compactMap { advertisement -> Self? in
+            guard advertisement.name != computerName, supportsAudio(advertisement.txt) else { return nil }
+            let id = advertisement.txt["deviceid"] ?? advertisement.name
+            guard seen.insert(id).inserted else { return nil }
+            return Self(id: id, name: advertisement.name, modelID: advertisement.txt["model"])
+        }.sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending }
+    }
+
+    // Everything found now, plus previous receivers not yet confirmed gone.
+    static func retaining(_ previous: [Self], in current: [Self]) -> [Self] {
+        let found = Set(current.map(\.id))
+        return (current + previous.filter { !found.contains($0.id) })
+            .sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending }
+    }
+
+    // Bit 9 of the feature flags marks audio. Keep receivers that omit the flags.
+    private static func supportsAudio(_ txt: [String: String]) -> Bool {
+        guard let features = txt["features"]?.split(separator: ",").first,
+              let flags = UInt64(features.replacingOccurrences(of: "0x", with: ""), radix: 16) else { return true }
+        return flags & (1 << 9) != 0
+    }
+}
+
 // AirPlay can expose one HAL device with multiple receiver data sources.
 // These are receiver choices, not independently routable HAL devices.
 nonisolated struct AirPlayDataSources {
@@ -57,6 +113,13 @@ nonisolated struct AirPlayDataSources {
     var routingSourceIDs: [UInt32] {
         guard selectedName != nil else { return [] }
         return Array(Set(selectedIDs)).sorted()
+    }
+
+    // A connected receiver can also be its own HAL device with no data sources,
+    // which routes like any other output.
+    static func isSupported(deviceID: AudioObjectID) -> Bool {
+        var address = address(kAudioDevicePropertyDataSources)
+        return AudioObjectHasProperty(deviceID, &address)
     }
 
     static func read(deviceID: AudioObjectID) -> Self {

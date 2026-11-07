@@ -9,16 +9,19 @@ struct DiagnosticFeedbackView: View {
     @State private var selectedIdentificationIDs: Set<String> = []
     /// Height of the recording row's text; buttons span it like the About page.
     @State private var rowLabelHeight: CGFloat = 0
+    @State private var footerHeight: CGFloat = 0
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
-        VStack(spacing: 0) {
-            Form {
-                recordingSection
-                attachmentSection
-            }
-            .formStyle(.grouped)
-            footer
+        Form {
+            recordingSection
+            attachmentSection
+        }
+        .formStyle(.grouped)
+        // The footer floats over the form, so its last rows must scroll clear of it.
+        .safeAreaPadding(.bottom, footerHeight)
+        .overlay(alignment: .bottom) {
+            footer.onGeometryChange(for: CGFloat.self, of: \.size.height) { footerHeight = $0 }
         }
         .frame(width: 500, height: 570)
         .onAppear { model.refreshIdentificationCandidates() }
@@ -151,6 +154,10 @@ struct DiagnosticFeedbackView: View {
                     .foregroundStyle(model.failed ? Color.red : Color.secondary)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .fixedSize(horizontal: false, vertical: true)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 8)
+                    // Keeps the message readable over the form scrolling behind it.
+                    .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
             }
             HStack(spacing: 10) {
                 Spacer()

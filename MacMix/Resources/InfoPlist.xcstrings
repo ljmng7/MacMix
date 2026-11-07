@@ -359,6 +359,125 @@
           }
         }
       }
+    },
+    "NSLocalNetworkUsageDescription" : {
+      "comment" : "Local Network permission prompt.",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يستخدم MacMix الشبكة المحلية للعثور على مكبرات صوت AirPlay مثل HomePod لتتمكن من اختيارها كمخرج صوت."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MacMix verwendet das lokale Netzwerk, um AirPlay-Lautsprecher wie HomePod zu finden, damit du sie als Ausgabe wählen kannst."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MacMix uses the local network to find AirPlay speakers such as HomePod, so you can choose them as an output."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MacMix usa la red local para encontrar altavoces AirPlay como HomePod y que puedas elegirlos como salida."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MacMix utilise le réseau local pour trouver les enceintes AirPlay comme le HomePod afin que vous puissiez les choisir comme sortie."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MacMix लोकल नेटवर्क का उपयोग HomePod जैसे AirPlay स्पीकर खोजने के लिए करता है, ताकि आप उन्हें आउटपुट के रूप में चुन सकें।"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MacMix menggunakan jaringan lokal untuk menemukan speaker AirPlay seperti HomePod agar Anda dapat memilihnya sebagai output."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MacMix usa la rete locale per trovare altoparlanti AirPlay come HomePod, così puoi sceglierli come uscita."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MacMixは、HomePodなどのAirPlayスピーカーを見つけて出力先として選択できるように、ローカルネットワークを使用します。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MacMix는 HomePod 같은 AirPlay 스피커를 찾아 출력 장치로 선택할 수 있도록 로컬 네트워크를 사용합니다."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MacMix gebruikt het lokale netwerk om AirPlay-speakers zoals HomePod te vinden, zodat je ze als uitvoer kunt kiezen."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MacMix używa sieci lokalnej do wyszukiwania głośników AirPlay, takich jak HomePod, aby można było wybrać je jako wyjście."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O MacMix usa a rede local para encontrar alto-falantes AirPlay, como o HomePod, para que você possa escolhê-los como saída."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MacMix использует локальную сеть для поиска колонок AirPlay, таких как HomePod, чтобы вы могли выбрать их для вывода звука."
+          }
+        },
+        "th" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MacMix ใช้เครือข่ายเฉพาะที่เพื่อค้นหาลำโพง AirPlay เช่น HomePod เพื่อให้คุณเลือกเป็นเอาต์พุตได้"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MacMix, HomePod gibi AirPlay hoparlörlerini bulmak ve çıkış olarak seçebilmeniz için yerel ağı kullanır."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MacMix dùng mạng cục bộ để tìm loa AirPlay như HomePod, giúp bạn chọn chúng làm đầu ra."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MacMix 使用本地网络查找 HomePod 等隔空播放扬声器，以便你将其选为输出设备。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MacMix 使用區域網路尋找 HomePod 等 AirPlay 揚聲器，讓你可將其選為輸出裝置。"
+          }
+        }
+      }
     }
   },
   "version" : "1.0"

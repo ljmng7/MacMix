@@ -42,7 +42,8 @@ struct AppOutputRoutingPicker: View {
     @Environment(\.hasStudioAccess) private var hasStudioAccess
     private var store: AppOutputRoutingStore { audioModel.outputRoutingStore }
     private var selected: [AppOutputDestination] { store.destinations(for: app.bundleID) }
-    private var available: [AppOutputDestination] { audioModel.outputState.routingDestinations }
+    private var outputState: OutputAudioState { audioModel.outputState }
+    private var available: [AppOutputDestination] { outputState.routingDestinations }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -60,11 +61,28 @@ struct AppOutputRoutingPicker: View {
             .buttonStyle(.plain)
             if layout == .compact { Divider() }
             VStack(alignment: .leading, spacing: 10) {
-                ForEach(audioModel.outputState.routingDevices) { device in
-                    RoutedOutputDeviceRow(device: device, volumeState: audioModel.routedDeviceVolumeState(for: device),
-                        audioModel: audioModel, layout: layout,
-                        isSelected: selected.contains { $0.matches(destination(for: device)) }, hasAccess: hasStudioAccess,
-                        onSelection: { audioModel.setOutputDestination(destination(for: device), selected: $0, for: app) })
+                ForEach(outputState.orderedRows(for: outputState.routingDevices)) { row in
+                    switch row {
+                    case let .device(device):
+                        RoutedOutputDeviceRow(device: device, volumeState: audioModel.routedDeviceVolumeState(for: device),
+                            audioModel: audioModel, layout: layout,
+                            isSelected: selected.contains { $0.matches(destination(for: device)) }, hasAccess: hasStudioAccess,
+                            onSelection: { audioModel.setOutputDestination(destination(for: device), selected: $0, for: app) })
+                    case let .nearby(accessory):
+                        if let saved = outputState.selectedDestination(for: accessory, in: selected) {
+                            offlineDestinationRow(saved)
+                        } else {
+                            NearbyAccessoryRow(accessory: accessory, state: outputState) {
+                                audioModel.connectNearbyAccessory($0, for: app)
+                            }
+                            .disabled(!hasStudioAccess)
+                        }
+                    case let .airPlay(receiver):
+                        AirPlayReceiverRow(receiver: receiver) {
+                            audioModel.routeAirPlayReceiverOnceConnected(receiver, for: app)
+                        }
+                        .disabled(!hasStudioAccess)
+                    }
                 }
                 ForEach(idleReceivers, id: \.selectionID) { receiver in
                     let destination = idleDestination(for: receiver)
@@ -81,13 +99,16 @@ struct AppOutputRoutingPicker: View {
                 }
                 ForEach(selected.filter { saved in
                     !available.contains { saved.matches($0) } && !idleReceivers.contains { saved.matches(idleDestination(for: $0)) }
+                        && !outputState.nearbyAccessories.contains { outputState.selectedDestination(for: $0, in: [saved]) != nil }
                 }) { device in
                     offlineDestinationRow(device)
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             if idleReceivers.isEmpty,
-               audioModel.outputState.devices.contains(where: { $0.transportType == kAudioDeviceTransportTypeAirPlay }) {
+               outputState.devices.contains(where: {
+                   $0.transportType == kAudioDeviceTransportTypeAirPlay && $0.selectedDataSourceIDs?.isEmpty == true
+               }) {
                 Text("AirPlay uses the receivers connected in the system output selector.", tableName: "AppOutputRouting")
                     .font(.caption)
                     .foregroundStyle(.secondary)

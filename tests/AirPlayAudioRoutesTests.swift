@@ -254,7 +254,83 @@ nonisolated func MacMixAudioIOContextSetDestinationMask(_ context: Int, _ index:
         state.devices = [group]
         store.bindLegacyAirPlayDestinations(state.routingDestinations)
         precondition(store.destinations(for: "music")[0].dataSourceIDs == [7, 9], "Complete recovered metadata enables migration")
+        checkDiscoveredReceivers()
+        checkNearbyAccessories()
+        let isAirPlay = { (uid: String) in uid.hasSuffix("-airplay") }
+        precondition(RoutedOutputClockOrder.ordered(["a-airplay", "z", "m"], preferred: "a-airplay", isAirPlay: isAirPlay) == ["m", "z", "a-airplay"], "AirPlay never clocks a route with a local output")
+        precondition(RoutedOutputClockOrder.ordered(["a", "z", "z"], preferred: "z", isAirPlay: isAirPlay) == ["z", "a"], "The preferred clock leads and duplicates collapse")
+        precondition(RoutedOutputClockOrder.ordered(["b-airplay", "a-airplay"], preferred: "b-airplay", isAirPlay: isAirPlay) == ["b-airplay", "a-airplay"], "AirPlay-only routes keep the preferred clock")
         print("AirPlay route regression tests passed")
+    }
+
+    @MainActor static func checkNearbyAccessories() {
+        func accessory(_ address: String) -> NearbyAudioAccessory {
+            NearbyAudioAccessory(address: address, name: address, modelUID: "model", availability: .linkedWithoutOutput)
+        }
+        let state = OutputAudioState()
+        state.nearbyAccessories = [accessory("30-7A-00-00-00-01"), accessory("30-7A-00-00-00-02")]
+        let saved = AppOutputDestination(uid: "30-7A-00-00-00-01:output", name: "AirPods")
+        precondition(state.selectedDestination(for: state.nearbyAccessories[0], in: [saved]) == saved, "A saved route matches its taken-off headphones")
+        precondition(state.selectedDestination(for: state.nearbyAccessories[1], in: [saved]) == nil, "Other headphones stay offered to apps")
+
+        let airPods = AudioDevice(id: 200, uid: "30-7A-00-00-00-03:output", name: "AirPods", manufacturer: nil, modelUID: nil,
+            iconName: "airpods", systemIconURL: nil, systemIcon: nil,
+            transportType: kAudioDeviceTransportTypeBluetooth, isCurrent: false, volume: 0.5)
+        let speaker = device(name: "Speaker", current: true)
+        let ordered = OutputAudioState()
+        ordered.devices = [airPods, speaker]
+        ordered.recordRowOrder()
+        ordered.devices = [speaker]
+        ordered.nearbyAccessories = [accessory("30-7A-00-00-00-03")]
+        ordered.recordRowOrder()
+        precondition(ordered.orderedRows(for: ordered.routingDevices).first?.orderKey.hasPrefix("bt:") == true, "Taken-off headphones keep their place in an app's list")
+    }
+
+    @MainActor static func checkDiscoveredReceivers() {
+        func ad(_ name: String, id: String?, model: String? = nil, features: String? = "0x4A7FCA00,0xBC354BD0") -> AirPlayReceiverAdvertisement {
+            var txt: [String: String] = [:]
+            txt["deviceid"] = id; txt["model"] = model; txt["features"] = features
+            return AirPlayReceiverAdvertisement(name: name, txt: txt)
+        }
+        let receivers = DiscoveredAirPlayReceiver.receivers(from: [
+            ad("Living Room", id: "AA", model: "AudioAccessory5,1"),
+            ad("Living Room", id: "AA", model: "AudioAccessory5,1"),
+            ad("This Mac", id: "BB", model: "Mac16,1"),
+            ad("Video Only", id: "CC", features: "0x4A7FC800,0x0"),
+            ad("Bedroom", id: nil, features: nil),
+        ], excludingName: "This Mac")
+        precondition(receivers.map(\.name) == ["Bedroom", "Living Room"], "Dedupes interfaces, drops this Mac and video-only receivers")
+        precondition(receivers[1].symbolName == "homepod.mini" && receivers[0].symbolName == "airplayaudio")
+
+        let partial = DiscoveredAirPlayReceiver.receivers(from: [ad("Attic", id: "FF")], excludingName: nil)
+        let held = DiscoveredAirPlayReceiver.retaining(receivers, in: partial)
+        precondition(held.map(\.name) == ["Attic", "Bedroom", "Living Room"], "A partial first batch must not drop known receivers")
+        precondition(DiscoveredAirPlayReceiver.retaining(held, in: held) == held, "A complete batch has nothing left to remove")
+
+        let state = OutputAudioState()
+        state.devices = [device(name: "Kitchen HomePod", current: true)]
+        let found = DiscoveredAirPlayReceiver.receivers(from: [ad("Kitchen HomePod", id: "DD"), ad("Office HomePod", id: "EE")], excludingName: nil)
+        state.discoveredAirPlayReceivers = state.unlistedAirPlayReceivers(found)
+        precondition(state.discoveredAirPlayReceivers.map(\.name) == ["Office HomePod"], "A connected receiver keeps its Core Audio row only")
+        state.recordRowOrder()
+        precondition(state.orderedRows(for: state.devices).map(\.orderKey).last == "airplay:EE", "Idle receivers are offered as output rows")
+
+        FakeHAL.supported = false
+        precondition(!AirPlayDataSources.isSupported(deviceID: 100), "A receiver with its own HAL device has no data sources")
+        FakeHAL.supported = true
+        precondition(AirPlayDataSources.isSupported(deviceID: 100))
+        state.devices = [device(name: "Office HomePod", current: false)]
+        precondition(state.routingDevices.count == 1 && state.routingDestination(forAirPlayReceiverNamed: "Office HomePod")?.dataSourceIDs == nil,
+            "A dedicated receiver device routes like any other output")
+
+        var connected = device(name: "Kitchen HomePod, Office HomePod", current: false)
+        connected.selectedDataSourceIDs = [7, 9]
+        state.devices = [connected]
+        precondition(state.routingDestination(forAirPlayReceiverNamed: "Office HomePod")?.dataSourceIDs == [7, 9], "A pending app route matches a receiver inside a group")
+        precondition(state.routingDestination(forAirPlayReceiverNamed: "Office") == nil, "Only whole receiver names match")
+        connected.selectedDataSourceIDs = []
+        state.devices = [connected]
+        precondition(state.routingDestination(forAirPlayReceiverNamed: "Office HomePod") == nil, "An output with no connected selection is not routable yet")
     }
 
     static func device(name: String, current: Bool) -> AudioDevice {

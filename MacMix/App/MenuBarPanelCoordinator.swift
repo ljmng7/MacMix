@@ -53,6 +53,8 @@ final class MenuBarPanelCoordinator {
     @ObservationIgnored private var dismissalCleanupTask: Task<Void, Never>?
     @ObservationIgnored private var isPointerInside = false
     @ObservationIgnored private var isPressedInside = false
+    @ObservationIgnored private var isRoutePickerOpen = false
+    @ObservationIgnored private var routePickerObserver: NSObjectProtocol?
     @ObservationIgnored private var temporaryInactivityDuration = inactivityDuration
     @ObservationIgnored private var panelPressMonitor: Any?
     @ObservationIgnored private weak var panelWindow: NSWindow?
@@ -212,15 +214,30 @@ final class MenuBarPanelCoordinator {
     }
 
     func panelDidAppear() {
+        observeRoutePicker()
         if isTemporary {
             noteTemporaryActivity()
+        }
+    }
+
+    // The system AirPlay popover is another window, so the panel must not time out behind it.
+    private func observeRoutePicker() {
+        guard routePickerObserver == nil else { return }
+        routePickerObserver = NotificationCenter.default.addObserver(
+            forName: .airPlayRoutePickerPresentationChanged, object: nil, queue: .main
+        ) { [weak self] notification in
+            let isOpen = notification.object as? Bool == true
+            MainActor.assumeIsolated {
+                self?.isRoutePickerOpen = isOpen
+                self?.noteTemporaryActivity()
+            }
         }
     }
 
     func noteTemporaryActivity() {
         guard isPresented, isTemporary else { return }
         hideTask?.cancel()
-        guard !isPointerInside, !isPressedInside else {
+        guard !isPointerInside, !isPressedInside, !isRoutePickerOpen else {
             hideTask = nil
             return
         }

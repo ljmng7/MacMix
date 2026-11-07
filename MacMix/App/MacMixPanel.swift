@@ -739,7 +739,7 @@ private struct ControlPanelPanelPage: View {
 
                 if showsOutputInPanel {
                     let state = audioModel.outputState
-                    if state.devices.isEmpty && state.nearbyAccessories.isEmpty {
+                    if state.devices.isEmpty && state.nearbyAccessories.isEmpty && state.discoveredAirPlayReceivers.isEmpty {
                         EmptyRow(iconName: "questionmark.circle", title: "No available devices")
                     } else {
                         ForEach(state.orderedRows(for: state.devices)) { row in
@@ -760,6 +760,8 @@ private struct ControlPanelPanelPage: View {
                                     state: state,
                                     onConnect: audioModel.connectNearbyAccessory
                                 )
+                            case let .airPlay(receiver):
+                                AirPlayReceiverRow(receiver: receiver, reservesAccessoryControlSpace: true)
                             }
                         }
                     }
@@ -2186,7 +2188,7 @@ private struct OutputDeviceGroup: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            if state.selectionDevices.isEmpty && state.nearbyAccessories.isEmpty {
+            if state.selectionDevices.isEmpty && state.nearbyAccessories.isEmpty && state.discoveredAirPlayReceivers.isEmpty {
                 EmptyRow(iconName: "questionmark.circle", title: "No available devices")
             } else {
                 ForEach(state.orderedRows(for: state.selectionDevices)) { row in
@@ -2204,6 +2206,8 @@ private struct OutputDeviceGroup: View {
                         )
                     case let .nearby(accessory):
                         NearbyAccessoryRow(accessory: accessory, state: state, onConnect: onConnectNearby)
+                    case let .airPlay(receiver):
+                        AirPlayReceiverRow(receiver: receiver, reservesAccessoryControlSpace: true)
                     }
                 }
             }
@@ -2212,7 +2216,7 @@ private struct OutputDeviceGroup: View {
 }
 
 // Paired headphones that are advertising nearby but have no output on this Mac.
-private struct NearbyAccessoryRow: View {
+struct NearbyAccessoryRow: View {
     let accessory: NearbyAudioAccessory
     let state: OutputAudioState
     let onConnect: (NearbyAudioAccessory) -> Void
@@ -2279,6 +2283,58 @@ private struct NearbyAccessoryRow: View {
         case .inUse(byDeviceNamed: nil):
             return String(localized: "In use by another device", comment: "Status of nearby Bluetooth headphones connected to a device this Mac does not know.")
         }
+    }
+}
+
+// An AirPlay receiver on the network with no Core Audio output yet. The whole
+// row toggles the system picker, and connecting through it also makes the
+// receiver the system output.
+struct AirPlayReceiverRow: View {
+    let receiver: DiscoveredAirPlayReceiver
+    var reservesAccessoryControlSpace = false
+    var onConnect: () -> Void = {}
+    @State private var picker = AirPlayRoutePickerController()
+    @Environment(\.hasStudioAccess) private var hasStudioAccess
+    @Environment(\.isEnabled) private var isEnabled
+    @AppStorage(AccessoryDetailsVisibilityPreference.showsAccessoryDetails) private var showsAccessoryDetails = true
+
+    var body: some View {
+        Button {
+            picker.toggle()
+        } label: {
+            HStack(spacing: 8) {
+                HStack(spacing: 12) {
+                    DeviceIcon(symbolName: receiver.symbolName, systemIcon: nil, isCurrent: false)
+
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(receiver.name)
+                            .font(.body.weight(.medium))
+                            .lineLimit(1)
+
+                        Text("AirPlay, not connected", comment: "Status of an AirPlay receiver such as a HomePod that is on the network but not connected to this Mac.")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                            .lineLimit(1)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+
+                    AirPlayRoutePicker(controller: picker, onPresent: onConnect)
+                        .frame(width: OutputRowMetrics.trailingColumnWidth, height: 28)
+                        .allowsHitTesting(false)
+                }
+
+                if hasStudioAccess, showsAccessoryDetails, reservesAccessoryControlSpace {
+                    Color.clear
+                        .frame(width: 18, height: 28)
+                        .accessibilityHidden(true)
+                }
+            }
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .opacity(isEnabled ? 1 : 0.5)
+        .help(Text("Connect with AirPlay", comment: "Tooltip of an AirPlay receiver row, which opens the system AirPlay picker."))
+        .accessibilityLabel(Text(receiver.name))
     }
 }
 
@@ -2436,6 +2492,11 @@ enum AudioAccessoryControlsPresentation {
     case menuBarPanel
 }
 
+enum OutputRowMetrics {
+    // Volume percentages and the AirPlay button share this column.
+    static let trailingColumnWidth: CGFloat = 34
+}
+
 private struct AudioDeviceRow: View {
     let device: AudioDevice
     let battery: AudioDeviceBattery?
@@ -2507,6 +2568,7 @@ private struct AudioDeviceRow: View {
                             Text(volume, format: .percent.precision(.fractionLength(0)))
                                 .font(.caption.monospacedDigit())
                                 .foregroundStyle(.secondary)
+                                .frame(width: OutputRowMetrics.trailingColumnWidth, alignment: .center)
                         }
                     }
                     .contentShape(Rectangle())
@@ -3080,7 +3142,7 @@ struct MixVolumeRestoreControl: View {
                     .foregroundStyle(.secondary)
                     .opacity(showsRestore ? 1 : 0)
             }
-            .frame(width: 34, alignment: .center)
+            .frame(width: OutputRowMetrics.trailingColumnWidth, alignment: .center)
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)

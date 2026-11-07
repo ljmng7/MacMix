@@ -32,6 +32,12 @@
 	<string>MacMix only captures app audio when you adjust individual app volume for local real-time mixing. It does not record, save, or upload audio.</string>
 	<key>NSBluetoothAlwaysUsageDescription</key>
 	<string>MacMix uses Bluetooth to read battery levels for connected audio devices.</string>
+	<key>NSBonjourServices</key>
+	<array>
+		<string>_airplay._tcp</string>
+	</array>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>MacMix uses the local network to find AirPlay speakers such as HomePod, so you can choose them as an output.</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
 </dict>
