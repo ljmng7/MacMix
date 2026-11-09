@@ -8,6 +8,7 @@ final class ApplicationDockVisibility {
 
     private let windows = NSHashTable<NSWindow>.weakObjects()
     private var observers: [NSObjectProtocol] = []
+    private var closingWindows: Set<ObjectIdentifier> = []
     private let showsMenuBarItem: () -> Bool
 
     init(showsMenuBarItem: @escaping () -> Bool = {
@@ -20,12 +21,19 @@ final class ApplicationDockVisibility {
             MainActor.assumeIsolated {
                 guard let self, let window = notification.object as? NSWindow,
                       self.windows.contains(window) else { return }
-                // willClose arrives while isVisible may still be true.
-                self.refresh(excluding: window)
-                // Closing also changes focus and SwiftUI visibility. Reconcile
-                // once those notifications have finished; a later reopen is
+                // willClose arrives while isVisible is still true, and SwiftUI
+                // runs onDisappear (which calls refresh()) inside the same
+                // close. Treat the window as closed until the close finishes,
+                // or that refresh briefly restores the Dock icon.
+                let id = ObjectIdentifier(window)
+                self.closingWindows.insert(id)
+                self.refresh()
+                // Reconcile once the close has finished; a later reopen is
                 // determined by the real window visibility, not a stale flag.
-                DispatchQueue.main.async { [weak self] in self?.refresh() }
+                DispatchQueue.main.async { [weak self] in
+                    self?.closingWindows.remove(id)
+                    self?.refresh()
+                }
             }
         })
         observers.append(center.addObserver(forName: NSWindow.didBecomeKeyNotification,
@@ -49,9 +57,9 @@ final class ApplicationDockVisibility {
         }
     }
 
-    func refresh(excluding closingWindow: NSWindow? = nil) {
+    func refresh() {
         let hasOpenWindow = windows.allObjects.contains {
-            $0 !== closingWindow && ($0.isVisible || $0.isMiniaturized)
+            !closingWindows.contains(ObjectIdentifier($0)) && ($0.isVisible || $0.isMiniaturized)
         }
         let policy: NSApplication.ActivationPolicy = showsMenuBarItem() && !hasOpenWindow
             ? .accessory : .regular

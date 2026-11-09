@@ -30,6 +30,18 @@ struct DockVisibilityTests {
             visibility.refresh()
         }
 
+        // SwiftUI calls refresh() from onDisappear while the window is still
+        // closing; record every policy change that close produces.
+        var policyChanges: [NSApplication.ActivationPolicy] = []
+        let disappearObserver = NotificationCenter.default.addObserver(
+            forName: NSWindow.willCloseNotification, object: nil, queue: nil) { _ in
+            MainActor.assumeIsolated {
+                visibility.refresh()
+                policyChanges.append(app.activationPolicy())
+            }
+        }
+        defer { NotificationCenter.default.removeObserver(disappearObserver) }
+
         visibility.refresh()
         expect(.accessory, "menu-bar launch has no Dock icon")
         let main = window()
@@ -51,6 +63,15 @@ struct DockVisibilityTests {
         expect(.regular, "Settings keeps the Dock icon after Feedback closes")
         main.close()
         expect(.accessory, "closing Settings last hides the Dock icon")
+        show(main)
+        show(feedback)
+        main.close()
+        policyChanges.removeAll()
+        feedback.close()
+        precondition(policyChanges.allSatisfy { $0 == .accessory },
+            "onDisappear during the last close must not restore the Dock icon")
+        RunLoop.main.run(until: Date().addingTimeInterval(0.1))
+        expect(.accessory, "closing Feedback after Settings keeps the Dock icon hidden")
         menuBarVisible = false
         visibility.refresh()
         expect(.regular, "hiding the menu-bar item preserves access from the Dock")
