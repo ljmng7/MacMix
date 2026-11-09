@@ -483,11 +483,12 @@ private struct ControlPanelSearchResults: View {
             ]),
             (.about, "About", [
                 "Version", "System Audio Recording", "Go to Authorize",
-                "Bluetooth", "Accessibility", "Not Authorized",
+                "Bluetooth", "Accessibility", "Local Network", "Not Authorized",
                 "Privacy Information", "Feedback", "Logs and Feedback", "Show in Finder", "Clear Logs",
                 "Made with 🫶 by Jazmín",
                 "Mixes app audio locally. Never recorded or uploaded.",
                 "Shows battery levels and finds nearby headphones.",
+                "Finds AirPlay speakers such as HomePod.",
                 "Responds to the volume keys. Other keystrokes are never recorded."
             ])
         ]
@@ -1743,6 +1744,7 @@ private struct ControlPanelAboutPage: View {
     let systemAudioPermissionStatus: SystemAudioPermissionStatusModel
     let systemVolumeTakeover: SystemVolumeTakeoverModel
     @State private var bluetoothPermission = BluetoothPermissionModel()
+    @State private var localNetworkPermission = LocalNetworkPermissionModel()
     @Environment(\.openWindow) private var openWindow
 
     var body: some View {
@@ -1786,19 +1788,29 @@ private struct ControlPanelAboutPage: View {
                     isAuthorized: systemVolumeTakeover.hasAccessibilityPermission,
                     action: systemVolumeTakeover.requestAccessibilityPermission
                 )
+
+                PermissionAccessRow(
+                    title: "Local Network",
+                    description: "Finds AirPlay speakers such as HomePod.",
+                    isAuthorized: localNetworkPermission.isAuthorized,
+                    action: localNetworkPermission.openSettings
+                )
             } header: {
                 Text("Privacy Information")
             }
             .onAppear {
                 bluetoothPermission.refresh()
                 systemVolumeTakeover.refreshAccessibilityPermission()
+                localNetworkPermission.refresh()
             }
+            .onDisappear { localNetworkPermission.stop() }
             .onReceive(
                 NotificationCenter.default.publisher(
                     for: NSApplication.didBecomeActiveNotification
                 )
             ) { _ in
                 bluetoothPermission.refresh()
+                localNetworkPermission.refresh()
             }
 
             DiagnosticAboutSection()
