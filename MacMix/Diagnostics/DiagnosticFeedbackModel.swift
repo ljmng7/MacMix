@@ -17,8 +17,6 @@ final class DiagnosticFeedbackModel {
     /// The finished recording waiting to be sent; always attached to the next email.
     private(set) var recording: DiagnosticRecordingFile?
     private(set) var isSavingRecording = false
-    /// Keeps MacMix a regular app while the feedback window is open on its own.
-    @ObservationIgnored var isWindowOpen = false
     @ObservationIgnored private var configurationCaptures: [DiagnosticConfigurationCapture] = []
     @ObservationIgnored private var finishing: Task<Void, Never>?
     @ObservationIgnored private var endSnapshotID: String?

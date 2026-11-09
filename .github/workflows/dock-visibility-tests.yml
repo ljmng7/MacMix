@@ -1,0 +1,37 @@
+name: Dock window lifecycle tests
+
+on:
+  pull_request:
+    paths:
+      - 'MacMix/App/ApplicationDockVisibility.swift'
+      - 'MacMix/App/DockWindowObserver.swift'
+      - 'MacMix/App/MacMixApp.swift'
+      - 'MacMix/Diagnostics/DiagnosticFeedbackModel.swift'
+      - 'tests/DockVisibilityTests.swift'
+      - 'tests/run-dock-visibility-tests.sh'
+      - '.github/workflows/dock-visibility-tests.yml'
+  push:
+    paths:
+      - 'MacMix/App/ApplicationDockVisibility.swift'
+      - 'MacMix/App/DockWindowObserver.swift'
+      - 'MacMix/App/MacMixApp.swift'
+      - 'MacMix/Diagnostics/DiagnosticFeedbackModel.swift'
+      - 'tests/DockVisibilityTests.swift'
+      - 'tests/run-dock-visibility-tests.sh'
+      - '.github/workflows/dock-visibility-tests.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  dock-visibility:
+    runs-on: macos-15
+    timeout-minutes: 20
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_26.3.app/Contents/Developer
+    steps:
+      - uses: actions/checkout@v6
+      - name: Run Dock window lifecycle regression tests
+        run: bash tests/run-dock-visibility-tests.sh
+      - name: Run MacMixStudio regression tests
+        run: swift test --package-path Packages/MacMixStudio

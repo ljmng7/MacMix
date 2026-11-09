@@ -93,6 +93,7 @@ struct MacMixApp: App {
                     systemVolumeTakeover: runtime.systemVolumeTakeover
                 )
                     .environment(\.hasStudioAccess, entitlements.hasStudioAccess)
+                    .background(DockWindowObserver())
                     .background(SceneWindowAnchor { view in
                         runtime.menuBarPanelCoordinator.mainWindow = view.window
                         if let window = view.window { runtime.audioModel.observeAudioInterfaceWindow(window) }
@@ -109,9 +110,7 @@ struct MacMixApp: App {
                     }
                     .onDisappear {
                         DiagnosticLog.shared.record("interface", "main_window_closed")
-                        if !DiagnosticFeedbackModel.shared.isWindowOpen {
-                            NSApp.setActivationPolicy(runtime.menuBarVisibility.isVisible ? .accessory : .regular)
-                        }
+                        ApplicationDockVisibility.shared.refresh()
                     }
             } else {
                 PendingLaunchWindowPlaceholder()
@@ -151,16 +150,13 @@ struct MacMixApp: App {
             if let runtime {
                 DiagnosticFeedbackView(model: .shared)
                     .environment(\.hasStudioAccess, entitlements.hasStudioAccess)
+                    .background(DockWindowObserver())
                     .onAppear {
-                        DiagnosticFeedbackModel.shared.isWindowOpen = true
                         NSApp.setActivationPolicy(.regular)
                         NSApp.activate(ignoringOtherApps: true)
                     }
                     .onDisappear {
-                        DiagnosticFeedbackModel.shared.isWindowOpen = false
-                        if runtime.menuBarPanelCoordinator.mainWindow?.isVisible != true {
-                            NSApp.setActivationPolicy(runtime.menuBarVisibility.isVisible ? .accessory : .regular)
-                        }
+                        ApplicationDockVisibility.shared.refresh()
                     }
             } else {
                 PendingLaunchWindowPlaceholder()
@@ -177,8 +173,8 @@ struct MacMixApp: App {
                 showControlPanel()
             },
             restoreActivationPolicy: {
-                guard let runtime else { return }
-                NSApp.setActivationPolicy(runtime.menuBarVisibility.isVisible ? .accessory : .regular)
+                guard runtime != nil else { return }
+                ApplicationDockVisibility.shared.refresh()
             }
         ))
     }
@@ -363,9 +359,7 @@ final class MenuBarVisibilityModel {
             }
 
             defaults.set(isVisible, forKey: MenuBarPreference.showsMenuBarItem)
-            if !isVisible {
-                NSApp.setActivationPolicy(.regular)
-            }
+            ApplicationDockVisibility.shared.refresh()
         }
     }
 
