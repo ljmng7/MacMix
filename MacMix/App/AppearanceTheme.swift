@@ -21,8 +21,9 @@ enum MainInterfaceBackgroundMaterial: String, CaseIterable, Identifiable {
 
     var id: Self { self }
 
-    func resolved(hasStudioAccess: Bool) -> Self {
-        hasStudioAccess ? self : .standard
+    /// Reduce Transparency keeps the window opaque whatever material is chosen.
+    func resolved(hasStudioAccess: Bool, reducesTransparency: Bool) -> Self {
+        hasStudioAccess && !reducesTransparency ? self : .standard
     }
 
     var usesBlur: Bool {

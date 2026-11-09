@@ -59,6 +59,7 @@ struct AppOutputRoutingPicker: View {
                 .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
+            .accessibilityAddTraits(selected.isEmpty ? .isSelected : [])
             if layout == .compact { Divider() }
             VStack(alignment: .leading, spacing: 10) {
                 ForEach(outputState.orderedRows(for: outputState.routingDevices)) { row in

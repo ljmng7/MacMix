@@ -382,10 +382,16 @@ private enum EqualizerPalette {
 private struct EqualizerDragHandle: View {
     let color: Color
     let isDragging: Bool
+    var isFocused = false
     let themeColor: Color
     let isEnabled: Bool
     var body: some View {
         ZStack {
+            if isFocused && !isDragging {
+                // Stands in for the system focus ring, which is disabled.
+                Circle().stroke(themeColor, lineWidth: 2.5)
+                    .frame(width: 28, height: 28)
+            }
             if isDragging {
                 if #available(macOS 26.0, *), AppAppearanceFeatures.usesLiquidGlass {
                     Color.clear
@@ -416,8 +422,11 @@ private struct SimpleEqualizerControls: View {
     @State private var activeBand: SimpleEQBand?
     @State private var draggedGain: Double?
     @State private var editUpdates = EqualizerEditCoalescer()
+    @FocusState private var focusedBand: SimpleEQBand?
     @Environment(\.hasStudioAccess) private var hasStudioAccess
+    @Environment(\.colorSchemeContrast) private var contrast
     @AppStorage(ThemePreference.accentColor) private var accentColor: ThemeAccentColor = .system
+    private var increasesContrast: Bool { contrast == .increased }
     private var gains: [Double] {
         var values = SimpleEQBand.allCases.map { configuration.simpleGain($0.rawValue) }
         if let activeBand, let draggedGain { values[activeBand.rawValue] = draggedGain }
@@ -443,7 +452,7 @@ private struct SimpleEqualizerControls: View {
                             path.addLine(to: CGPoint(x: x, y: geometry.size.height))
                         }
                     }
-                    .stroke(.secondary.opacity(0.35), style: StrokeStyle(lineWidth: 1, dash: [4, 3]))
+                    .stroke(.secondary.opacity(increasesContrast ? 0.7 : 0.35), style: StrokeStyle(lineWidth: 1, dash: [4, 3]))
                     .mask(LinearGradient(stops: [.init(color: .clear, location: 0),
                                                  .init(color: .black, location: 0.15),
                                                  .init(color: .black, location: 0.85),
@@ -462,6 +471,7 @@ private struct SimpleEqualizerControls: View {
                         let gain = gains[index]
                         EqualizerDragHandle(color: EqualizerPalette.handle(gain),
                                             isDragging: activeBand == band,
+                                            isFocused: focusedBand == band,
                                             themeColor: accentColor.resolvedColor(hasStudioAccess: hasStudioAccess),
                                             isEnabled: true)
                             .position(x: inset + CGFloat(index) * width / 2,
@@ -484,6 +494,7 @@ private struct SimpleEqualizerControls: View {
                                 update(index, gain + (direction == .increment ? 1 : -1))
                             }
                             .focusable()
+                            .focused($focusedBand, equals: band)
                             .focusEffectDisabled()
                             .onKeyPress(.upArrow) { update(index, gain + 1); return .handled }
                             .onKeyPress(.downArrow) { update(index, gain - 1); return .handled }
@@ -497,7 +508,7 @@ private struct SimpleEqualizerControls: View {
                     VStack(spacing: 2) {
                         Text(band.label)
                             .font(.system(size: 15, weight: .semibold))
-                            .foregroundStyle(.secondary.opacity(0.75))
+                            .foregroundStyle(increasesContrast ? AnyShapeStyle(.primary) : AnyShapeStyle(.secondary.opacity(0.75)))
                     }
                     .frame(maxWidth: .infinity)
                 }

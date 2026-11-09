@@ -220,13 +220,14 @@ private struct TemporaryAppVolumeContent: View {
                     AppIcon(image: app.icon, isMuted: app.isMuted)
                 }
                 .buttonStyle(TouchTargetButtonStyle())
-                .accessibilityLabel(app.isMuted ? Text("Unmute") : Text("Mute"))
+                .accessibilityLabel(MuteAccessibility.label(isMuted: app.isMuted, name: app.name))
                 .help(app.isMuted ? String(localized: "Unmute") : String(localized: "Mute"))
                 Text(app.name)
                     .font(.headline.weight(.semibold))
                     .lineLimit(1)
             }
             VolumeSliderRow(
+                accessibilityName: app.name,
                 leadingIcon: app.isMuted ? "speaker.slash.fill" : "speaker.fill",
                 trailingIcon: "speaker.wave.3.fill",
                 percentage: app.volume,
@@ -303,13 +304,14 @@ struct MacMixControlPanel: View {
     @AppStorage(ThemePreference.accentColor) private var accentColor: ThemeAccentColor = .system
     @State private var searchText = ""
     @AppStorage(ThemePreference.mainInterfaceBackgroundMaterial) private var backgroundMaterial: MainInterfaceBackgroundMaterial = .standard
+    @Environment(\.accessibilityReduceTransparency) private var reducesTransparency
 
     private var resolvedAccentColor: Color {
         accentColor.resolvedColor(hasStudioAccess: hasStudioAccess)
     }
 
     private var resolvedBackgroundMaterial: MainInterfaceBackgroundMaterial {
-        backgroundMaterial.resolved(hasStudioAccess: hasStudioAccess)
+        backgroundMaterial.resolved(hasStudioAccess: hasStudioAccess, reducesTransparency: reducesTransparency)
     }
 
     var body: some View {
@@ -658,9 +660,10 @@ private struct ControlPanelDetail: View {
     let hasStudioAccess: Bool
     let inputDeviceLock: InputDeviceLockController
     let systemVolumeTakeover: SystemVolumeTakeoverModel
+    @Environment(\.accessibilityReduceTransparency) private var reducesTransparency
 
     private var resolvedBackgroundMaterial: MainInterfaceBackgroundMaterial {
-        backgroundMaterial.resolved(hasStudioAccess: hasStudioAccess)
+        backgroundMaterial.resolved(hasStudioAccess: hasStudioAccess, reducesTransparency: reducesTransparency)
     }
 
     var body: some View {
@@ -2176,6 +2179,7 @@ private struct SystemVolumeControl: View {
 
     var body: some View {
         VolumeSliderRow(
+            accessibilityName: String(localized: "System Volume"),
             leadingIcon: state.isSystemMuted ? "speaker.slash.fill" : "speaker.fill",
             trailingIcon: "speaker.wave.3.fill",
             percentage: state.systemVolume,
@@ -2411,6 +2415,7 @@ private struct InputVolumeControl: View {
 
     var body: some View {
         VolumeSliderRow(
+            accessibilityName: String(localized: "Input Volume"),
             leadingIcon: state.isInputMuted ? "mic.slash.fill" : "mic.fill",
             trailingIcon: "mic.and.signal.meter.fill",
             percentage: showsPercentage ? state.inputVolume : nil,
@@ -2586,6 +2591,7 @@ private struct AudioDeviceRow: View {
                     .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
+                .accessibilityAddTraits(device.isCurrent ? .isSelected : [])
 
                 if hasStudioAccess,
                    showsAccessoryDetails,
@@ -3023,7 +3029,7 @@ struct AppVolumeControls: View {
             }
             .buttonStyle(TouchTargetButtonStyle(insets: EdgeInsets(top: 4, leading: 6, bottom: 4, trailing: 5)))
             .help(isMuted ? String(localized: "Unmute") : String(localized: "Mute"))
-            .accessibilityLabel(isMuted ? Text("Unmute") : Text("Mute"))
+            .accessibilityLabel(MuteAccessibility.label(isMuted: isMuted, name: name))
 
             Text(name)
                 .font(.body.weight(.medium))
@@ -3037,6 +3043,7 @@ struct AppVolumeControls: View {
 
             AppMixVolumeSlider(value: volumeBinding, maximumVolume: maximumVolume,
                                layout: layout, tint: sliderTint)
+                .accessibilityLabel(Text(name))
 
             MixVolumeRestoreControl(value: volume) {
                 updateVolume(1)
@@ -3139,8 +3146,10 @@ struct MixVolumeRestoreControl: View {
     let onRestore: () -> Void
     @State private var isHovering = false
     @State private var isRevealedByTap = false
+    @FocusState private var isFocused
 
-    private var showsRestore: Bool { isHovering || isRevealedByTap }
+    /// Keyboard focus reveals the glyph like hover does, so the action is visible.
+    private var showsRestore: Bool { isHovering || isRevealedByTap || isFocused }
 
     var body: some View {
         Button(action: activate) {
@@ -3158,6 +3167,7 @@ struct MixVolumeRestoreControl: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+        .focused($isFocused)
         .onHover { isHovering = $0 }
         .task(id: isRevealedByTap) {
             guard isRevealedByTap, (try? await Task.sleep(for: .seconds(3))) != nil else { return }
@@ -3165,6 +3175,7 @@ struct MixVolumeRestoreControl: View {
         }
         .help(Self.restoreTitle)
         .accessibilityLabel(Text(Self.restoreTitle))
+        .accessibilityValue(Text(value, format: .percent.precision(.fractionLength(0))))
     }
 
     /// A pointer always hovers before it clicks. A click without hover comes
@@ -3187,7 +3198,18 @@ struct MixVolumeRestoreControl: View {
     }
 }
 
+/// Names the audio a mute button acts on, since a panel shows several of them.
+enum MuteAccessibility {
+    static func label(isMuted: Bool, name: String) -> Text {
+        isMuted
+            ? Text("Unmute \(name)", comment: "Accessibility label for unmuting the named app or audio, for example an app name or System Volume.")
+            : Text("Mute \(name)", comment: "Accessibility label for muting the named app or audio, for example an app name or System Volume.")
+    }
+}
+
 private struct VolumeSliderRow: View {
+    /// What VoiceOver calls the slider and its mute button.
+    let accessibilityName: String
     let leadingIcon: String
     let trailingIcon: String
     var percentage: Double? = nil
@@ -3209,7 +3231,7 @@ private struct VolumeSliderRow: View {
                 }
                 .buttonStyle(TouchTargetButtonStyle(insets: EdgeInsets(top: 6, leading: 6, bottom: 6, trailing: 5)))
                 .help(isMuted ? String(localized: "Unmute") : String(localized: "Mute"))
-                .accessibilityLabel(isMuted ? Text("Unmute") : Text("Mute"))
+                .accessibilityLabel(MuteAccessibility.label(isMuted: isMuted, name: accessibilityName))
             } else {
                 SliderSymbol(name: leadingIcon)
             }
@@ -3221,6 +3243,7 @@ private struct VolumeSliderRow: View {
                         : accentColor.resolvedColor(hasStudioAccess: hasStudioAccess)
                 )
                 .disabled(!isEnabled)
+                .accessibilityLabel(Text(accessibilityName))
 
             SliderSymbol(name: trailingIcon)
 
@@ -3310,6 +3333,7 @@ struct DeviceIcon: View {
     var showsBackground = true
     @AppStorage(ThemePreference.accentColor) private var accentColor: ThemeAccentColor = .system
     @Environment(\.hasStudioAccess) private var hasStudioAccess
+    @Environment(\.colorSchemeContrast) private var contrast
 
     var body: some View {
         ZStack {
@@ -3318,7 +3342,7 @@ struct DeviceIcon: View {
                     .fill(
                         isCurrent
                             ? accentColor.resolvedColor(hasStudioAccess: hasStudioAccess)
-                            : Color.secondary.opacity(0.16)
+                            : Color.secondary.opacity(contrast == .increased ? 0.32 : 0.16)
                     )
             }
 

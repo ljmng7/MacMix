@@ -958,6 +958,7 @@ private struct SceneDeviceRow: View {
                     .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
+                .accessibilityAddTraits(isSelected ? .isSelected : [])
                 if isSelected {
                     Slider(value: Binding(get: { volume }, set: { selection?.volume = $0 }), in: 0...1)
                         .labelsHidden()
