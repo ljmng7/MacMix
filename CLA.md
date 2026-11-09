@@ -10,7 +10,7 @@ You keep the copyright to your Contributions. This Agreement gives the Maintaine
 
 **"You"** (or **"Your"**) means the individual who signs this Agreement.
 
-**"Maintainer"** means [MAINTAINER LEGAL NAME], the owner of the MacMix project, and any successor to whom the Project is transferred.
+**"Maintainer"** means Jiaming Li (李嘉明), the owner of the MacMix project, and any successor to whom the Project is transferred.
 
 **"Project"** means the MacMix software and related materials published at https://github.com/ljmng7/MacMix, and any software, including official builds of MacMix, made by or for the Maintainer from it.
 
@@ -75,7 +75,7 @@ This Agreement is written in English. The Chinese translation below is provided 
 
 **“你”**指签署本协议的个人。
 
-**“维护者”**指 MacMix 项目的所有者 [维护者法定姓名]，以及本项目今后被转让给的任何继任者。
+**“维护者”**指 MacMix 项目的所有者 李嘉明（Jiaming Li），以及本项目今后被转让给的任何继任者。
 
 **“本项目”**指发布在 https://github.com/ljmng7/MacMix 的 MacMix 软件及相关材料，以及由维护者或为维护者基于其制作的任何软件，包括 MacMix 的官方构建版本。
 
