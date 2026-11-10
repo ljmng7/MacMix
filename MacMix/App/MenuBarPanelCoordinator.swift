@@ -32,6 +32,8 @@ final class MenuBarPanelCoordinator {
 
     private(set) var mode: SystemVolumePanelMode = .fullPanel
     private(set) var isTemporary = false
+    private(set) var maximumPanelHeight = MenuBarPanelPlacement.maximumHeight(
+        anchor: nil, visibleFrame: NSScreen.main?.visibleFrame ?? NSRect(x: 0, y: 0, width: 1440, height: 900))
     private(set) var sceneFeedback: ScenePanelFeedback?
     private(set) var volumeApp: AudioAppState?
     @ObservationIgnored weak var mainWindow: NSWindow?
@@ -62,6 +64,10 @@ final class MenuBarPanelCoordinator {
     @ObservationIgnored private weak var statusItemWindow: NSWindow?
     @ObservationIgnored private var panelWindowObservers: [NSObjectProtocol] = []
     @ObservationIgnored private var statusItemObservers: [NSObjectProtocol] = []
+    @ObservationIgnored private var screenParametersObserver: NSObjectProtocol?
+    @ObservationIgnored private var isAligningPanel = false
+    @ObservationIgnored private var alignmentScheduled = false
+    @ObservationIgnored private var panelContentHeight: CGFloat = 0
 
     func presentTemporary(mode: SystemVolumePanelMode) {
         sceneFeedback = nil
@@ -119,10 +125,19 @@ final class MenuBarPanelCoordinator {
     }
 
     func attachPanelWindow(_ window: NSWindow) {
-        guard panelWindow !== window else { return }
-        panelWindow = window
-        panelWindowObservers = observeGeometry(of: window, trigger: "panel_geometry")
-        installPanelPressMonitor()
+        if panelWindow !== window {
+            for observer in panelWindowObservers { NotificationCenter.default.removeObserver(observer) }
+            panelWindow = window
+            panelWindowObservers = observeGeometry(of: window, trigger: "panel_geometry")
+            installPanelPressMonitor()
+        }
+        if screenParametersObserver == nil {
+            screenParametersObserver = NotificationCenter.default.addObserver(
+                forName: NSApplication.didChangeScreenParametersNotification,
+                object: nil, queue: .main) { [weak self] _ in
+                    MainActor.assumeIsolated { self?.alignPanelToStatusItem(trigger: "screens_changed") }
+                }
+        }
         if statusItemWindow == nil,
            let statusBarWindow = NSApp.windows.first(where: { $0.className.contains("NSStatusBarWindow") }) {
             // The status item introspection runs once at launch and can precede the runtime.
@@ -149,6 +164,7 @@ final class MenuBarPanelCoordinator {
 
     private func attachStatusItemWindow(_ window: NSWindow) {
         guard statusItemWindow !== window else { return }
+        for observer in statusItemObservers { NotificationCenter.default.removeObserver(observer) }
         statusItemWindow = window
         statusItemObservers = observeGeometry(of: window, trigger: "status_item_moved")
         DiagnosticLog.shared.record("interface", "menu_panel_anchor_attached", fields: [
@@ -158,45 +174,79 @@ final class MenuBarPanelCoordinator {
     }
 
     private func observeGeometry(of window: NSWindow, trigger: String) -> [NSObjectProtocol] {
-        [NSWindow.didMoveNotification, NSWindow.didResizeNotification].map { name in
+        [NSWindow.didMoveNotification, NSWindow.didResizeNotification,
+         NSWindow.didChangeScreenNotification, NSWindow.didBecomeKeyNotification].map { name in
             NotificationCenter.default.addObserver(forName: name, object: window, queue: .main) { [weak self] _ in
                 MainActor.assumeIsolated { self?.alignPanelToStatusItem(trigger: trigger) }
             }
         }
     }
 
-    /// MenuBarExtra aligns the panel with the status item only when it shows
-    /// or resizes the window. If the status item moved in between (its own icon
-    /// or a neighbour changed width, which is common right after launch), the
-    /// panel stays misaligned until a large content change resizes it.
+    /// Keep both axes anchored after SwiftUI presentation and content resizing.
+    /// A reused panel can otherwise retain its bottom edge and drift downward
+    /// when sections collapse or the list of running apps changes.
     private func alignPanelToStatusItem(trigger: String) {
+        guard !isAligningPanel else { return }
+        if trigger != "deferred" { scheduleDeferredAlignment() }
         guard let panel = panelWindow, panel.isVisible,
               let anchor = statusItemWindow?.frame, anchor.width > 0,
-              let screen = panel.screen ?? statusItemWindow?.screen else { return }
+              let screen = statusItemWindow?.screen ?? panel.screen else { return }
+        isAligningPanel = true
+        defer { isAligningPanel = false }
 
-        // MenuBarExtra aligns the panel's leading edge with the status item's.
-        let target = anchor.minX.rounded()
-        if trigger == "presented" {
+        let height = MenuBarPanelPlacement.maximumHeight(anchor: anchor, visibleFrame: screen.visibleFrame)
+        if abs(maximumPanelHeight - height) > 0.5 { maximumPanelHeight = height }
+        if panelContentHeight > 0 {
+            let desiredHeight = min(panelContentHeight, height)
+            let contentRect = panel.contentRect(forFrameRect: panel.frame)
+            if abs(contentRect.height - desiredHeight) > 0.5 {
+                panel.setContentSize(NSSize(width: contentRect.width, height: desiredHeight))
+            }
+        }
+        if trigger == "presented" || trigger == "panel_attached" || trigger == "content_appeared" {
             DiagnosticLog.shared.record("interface", "menu_panel_geometry", fields: [
                 "panel_x": String(Int(panel.frame.minX)),
+                "panel_y": String(Int(panel.frame.minY)),
                 "panel_width": String(Int(panel.frame.width)),
+                "panel_height": String(Int(panel.frame.height)),
                 "anchor_x": String(format: "%.1f", anchor.minX),
-                "anchor_width": String(format: "%.1f", anchor.width)
+                "anchor_y": String(format: "%.1f", anchor.minY),
+                "anchor_width": String(format: "%.1f", anchor.width),
+                "visible_frame": NSStringFromRect(screen.visibleFrame),
+                "maximum_height": String(Int(height))
             ])
         }
-        // Leave edge-clamped placements to SwiftUI, and ignore 1 pt rounding
-        // differences so the two never correct each other back and forth.
-        guard target >= screen.frame.minX, target + panel.frame.width <= screen.frame.maxX,
-              abs(panel.frame.minX - target) >= 1.5 else { return }
+        guard let target = MenuBarPanelPlacement.origin(
+            panel: panel.frame, anchor: anchor, visibleFrame: screen.visibleFrame),
+            abs(panel.frame.minX - target.x) >= 1.5 || abs(panel.frame.minY - target.y) >= 1.5 else { return }
 
         DiagnosticLog.shared.record("interface", "menu_panel_realigned", fields: [
             "trigger": trigger,
             "from_x": String(Int(panel.frame.minX)),
-            "to_x": String(Int(target)),
+            "from_y": String(Int(panel.frame.minY)),
+            "to_x": String(Int(target.x)),
+            "to_y": String(Int(target.y)),
             "anchor_x": String(format: "%.1f", anchor.minX),
             "panel_width": String(Int(panel.frame.width))
         ])
-        panel.setFrameOrigin(NSPoint(x: target, y: panel.frame.minY))
+        panel.setFrameOrigin(target)
+    }
+
+    func notePanelContentHeight(_ height: CGFloat) {
+        guard abs(panelContentHeight - height) > 0.5 else { return }
+        panelContentHeight = height
+        DiagnosticLog.shared.record("interface", "menu_panel_content_height", fields: ["height": String(Int(height))])
+        scheduleDeferredAlignment()
+    }
+
+    private func scheduleDeferredAlignment() {
+        guard !alignmentScheduled else { return }
+        alignmentScheduled = true
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
+            self.alignmentScheduled = false
+            self.alignPanelToStatusItem(trigger: "deferred")
+        }
     }
 
     func dismissTemporaryPanel() {
@@ -214,6 +264,7 @@ final class MenuBarPanelCoordinator {
     }
 
     func panelDidAppear() {
+        alignPanelToStatusItem(trigger: "content_appeared")
         observeRoutePicker()
         if isTemporary {
             noteTemporaryActivity()

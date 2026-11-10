@@ -1,0 +1,33 @@
+name: Menu bar panel layout tests
+
+on:
+  pull_request:
+    paths:
+      - 'MacMix/App/MacMixPanel.swift'
+      - 'MacMix/App/MenuBarPanel*.swift'
+      - 'tests/MenuBarPanel*Tests.swift'
+      - 'tests/run-menu-bar-panel-tests.sh'
+      - '.github/workflows/menu-bar-panel-tests.yml'
+  push:
+    paths:
+      - 'MacMix/App/MacMixPanel.swift'
+      - 'MacMix/App/MenuBarPanel*.swift'
+      - 'tests/MenuBarPanel*Tests.swift'
+      - 'tests/run-menu-bar-panel-tests.sh'
+      - '.github/workflows/menu-bar-panel-tests.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  menu-panel:
+    runs-on: macos-15
+    timeout-minutes: 20
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_26.3.app/Contents/Developer
+    steps:
+      - uses: actions/checkout@v6
+      - name: Run native panel placement, viewport, and coordinator tests
+        run: bash tests/run-menu-bar-panel-tests.sh
+      - name: Run MacMixStudio regression tests
+        run: swift test --package-path Packages/MacMixStudio

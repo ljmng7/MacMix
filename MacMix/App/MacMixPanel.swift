@@ -116,31 +116,34 @@ struct MenuBarPanelContent: View {
     @AppStorage(ThemePreference.accentColor) private var accentColor: ThemeAccentColor = .system
 
     var body: some View {
-        Group {
-            if coordinator.isTemporary, let feedback = coordinator.sceneFeedback {
-                TemporarySceneFeedbackContent(feedback: feedback)
-            } else if coordinator.isTemporary, let app = coordinator.volumeApp {
-                TemporaryAppVolumeContent(app: app, audioModel: audioModel)
-                    .onChange(of: app.volume) { coordinator.noteTemporaryActivity() }
-                    .onChange(of: app.isMuted) { coordinator.noteTemporaryActivity() }
-                    .onChange(of: audioModel.outputAppsState.apps.map(\.id)) {
-                        if !audioModel.outputAppsState.apps.contains(where: { $0.id == app.id }) {
-                            coordinator.dismissTemporaryPanel()
+        MenuBarPanelViewport(maximumHeight: coordinator.maximumPanelHeight,
+                             onHeightChange: coordinator.notePanelContentHeight) {
+            Group {
+                if coordinator.isTemporary, let feedback = coordinator.sceneFeedback {
+                    TemporarySceneFeedbackContent(feedback: feedback)
+                } else if coordinator.isTemporary, let app = coordinator.volumeApp {
+                    TemporaryAppVolumeContent(app: app, audioModel: audioModel)
+                        .onChange(of: app.volume) { coordinator.noteTemporaryActivity() }
+                        .onChange(of: app.isMuted) { coordinator.noteTemporaryActivity() }
+                        .onChange(of: audioModel.outputAppsState.apps.map(\.id)) {
+                            if !audioModel.outputAppsState.apps.contains(where: { $0.id == app.id }) {
+                                coordinator.dismissTemporaryPanel()
+                            }
                         }
+                } else {
+                    switch coordinator.mode {
+                    case .systemVolume:
+                        TemporarySystemVolumeContent(audioModel: audioModel)
+                    case .outputPanel:
+                        TemporaryOutputPanelContent(audioModel: audioModel)
+                    case .fullPanel:
+                        MacMixPanel(
+                            audioModel: audioModel,
+                            nowPlayingModel: nowPlayingModel,
+                            hasStudioAccess: hasStudioAccess
+                        )
                     }
-            } else {
-            switch coordinator.mode {
-            case .systemVolume:
-                TemporarySystemVolumeContent(audioModel: audioModel)
-            case .outputPanel:
-                TemporaryOutputPanelContent(audioModel: audioModel)
-            case .fullPanel:
-                MacMixPanel(
-                    audioModel: audioModel,
-                    nowPlayingModel: nowPlayingModel,
-                    hasStudioAccess: hasStudioAccess
-                )
-            }
+                }
             }
         }
         .modifier(
