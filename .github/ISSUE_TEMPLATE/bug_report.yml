@@ -1,58 +1,80 @@
-name: Bug report / 问题反馈
-description: Something in MacMix doesn't work as expected. / MacMix 出现了不符合预期的行为。
+name: Bug report
+description: Something in MacMix doesn't work as expected.
 labels: [bug]
 body:
   - type: markdown
     attributes:
       value: |
-        Thanks for reporting a problem. If you can, also use **Send Feedback** in MacMix: it creates an email with anonymized diagnostic logs, which makes audio issues much easier to track down.
+        Thanks for reporting a problem. If you can, also use **Send Feedback** in MacMix (in the panel, or under About): it creates an email with anonymized diagnostic logs, which makes audio issues much easier to track down.
 
-        感谢反馈问题。如果方便，也可以在 MacMix 里使用 **发送反馈**：它会生成一封附带匿名诊断日志的邮件，能更快定位音频问题。
+        **Issues are public.** Never post your license key, order number or email address here. For license, purchase or activation problems, email jasmine@jazminli.com instead.
+
+        MacMix requires macOS 14.4 or later.
+  - type: checkboxes
+    id: preflight
+    attributes:
+      label: Before you report
+      options:
+        - label: I searched the existing issues and didn't find this problem.
+          required: true
+        - label: I'm on the latest MacMix release, or I built from the latest `main`.
+          required: true
   - type: input
     id: macmix-version
     attributes:
-      label: MacMix version / MacMix 版本
-      description: Shown in About. / 可以在“关于”中查看。
-      placeholder: "2.3.2"
+      label: MacMix version and build
+      description: Shown in About, as version (build).
+      placeholder: "2.3.7 (34)"
     validations:
       required: true
   - type: dropdown
-    id: build
+    id: edition
     attributes:
-      label: Build / 安装来源
+      label: Edition and channel
       options:
-        - Official download (Releases) / 官方下载版
-        - Built from source / 自行编译
+        - Official download, Free
+        - Official download, Studio (stable releases)
+        - Official download, Studio (Beta channel)
+        - Built from source
     validations:
       required: true
   - type: input
     id: macos-version
     attributes:
-      label: macOS version / macOS 版本
+      label: macOS version
       placeholder: "macOS 26.1"
+    validations:
+      required: true
+  - type: dropdown
+    id: chip
+    attributes:
+      label: Mac chip
+      options:
+        - Apple silicon (M-series)
+        - Intel
     validations:
       required: true
   - type: input
     id: mac-model
     attributes:
-      label: Mac model / Mac 机型
+      label: Mac model
       placeholder: "MacBook Air (M2, 2022)"
   - type: textarea
     id: devices
     attributes:
-      label: Audio devices involved / 相关音频设备
-      description: Output and input devices, such as AirPods, displays, AirPlay speakers or audio interfaces. / 涉及的输出和输入设备，例如 AirPods、显示器、AirPlay 音箱或声卡。
+      label: Audio devices involved
+      description: Output and input devices, such as AirPods, displays, AirPlay speakers or audio interfaces.
   - type: textarea
     id: what-happened
     attributes:
-      label: What happened? / 发生了什么？
-      description: What you saw, and what you expected instead. / 你看到了什么，原本期望是什么。
+      label: What happened?
+      description: What you saw, and what you expected instead.
     validations:
       required: true
   - type: textarea
     id: steps
     attributes:
-      label: Steps to reproduce / 复现步骤
+      label: Steps to reproduce
       placeholder: |
         1.
         2.
@@ -62,5 +84,5 @@ body:
   - type: textarea
     id: attachments
     attributes:
-      label: Screenshots or logs / 截图或日志
-      description: Optional. Please remove anything private before attaching. / 可选。附上前请先去掉隐私信息。
+      label: Screenshots or logs
+      description: Optional. Before attaching, remove anything private, including license keys, order numbers and email addresses.

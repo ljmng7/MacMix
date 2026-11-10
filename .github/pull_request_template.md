@@ -1,12 +1,19 @@
-## What does this change? / 改了什么？
+## What does this change?
 
 
 
-## How did you test it? / 怎么测试的？
+Closes #
+
+## How did you test it?
 
 
 
-## Checklist / 检查清单
+## Screenshots
 
-- [ ] I ran the regression tests in [CONTRIBUTING.md](https://github.com/ljmng7/MacMix/blob/main/CONTRIBUTING.md#building-and-testing). / 我运行了 CONTRIBUTING 中的回归测试。
-- [ ] I understand this pull request can only be merged after I sign the CLA. / 我知道签署 CLA 后这个 Pull Request 才能合并。
+<!-- For UI changes, add before and after screenshots. Otherwise, delete this section. -->
+
+## Checklist
+
+- [ ] I ran the regression tests in [CONTRIBUTING.md](https://github.com/ljmng7/MacMix/blob/main/CONTRIBUTING.md#building-and-testing).
+- [ ] If I changed text in the interface, I updated the String Catalogs (`*.xcstrings`), as described in [CONTRIBUTING.md](https://github.com/ljmng7/MacMix/blob/main/CONTRIBUTING.md#translations).
+- [ ] I understand this pull request can only be merged after I sign the CLA.

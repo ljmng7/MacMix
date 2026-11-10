@@ -1,8 +1,11 @@
 blank_issues_enabled: false
 contact_links:
-  - name: Questions and discussion / 使用问题与讨论
+  - name: License, purchase and activation help
+    url: mailto:jasmine@jazminli.com
+    about: Email for MacMix Studio license, purchase or activation problems. Please don't post license keys or order details in public issues.
+  - name: Questions and discussion
     url: https://github.com/ljmng7/MacMix/discussions
-    about: Ask how to use MacMix or talk about ideas. / 询问使用方法，或讨论想法。
-  - name: Report a security vulnerability / 报告安全漏洞
+    about: Ask how to use MacMix or talk about ideas.
+  - name: Report a security vulnerability
     url: https://github.com/ljmng7/MacMix/security/advisories/new
-    about: Please report security issues privately. / 请通过私密渠道报告安全问题。
+    about: Please report security issues privately.

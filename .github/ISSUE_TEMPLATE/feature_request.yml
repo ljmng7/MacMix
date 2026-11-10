@@ -1,22 +1,29 @@
-name: Feature request / 功能建议
-description: Suggest a new feature or an improvement. / 提出新功能或改进建议。
+name: Feature request
+description: Suggest a new feature or an improvement.
 labels: [enhancement]
 body:
   - type: textarea
     id: problem
     attributes:
-      label: What are you trying to do? / 你想解决什么问题？
-      description: Describe the situation and what gets in the way today. / 描述使用场景，以及现在遇到的不便。
+      label: What are you trying to do?
+      description: Describe the situation and what gets in the way today.
     validations:
       required: true
   - type: textarea
     id: proposal
     attributes:
-      label: What would you like MacMix to do? / 希望 MacMix 怎么做？
+      label: What would you like MacMix to do?
     validations:
       required: true
   - type: textarea
     id: alternatives
     attributes:
-      label: Alternatives / 其他方案
-      description: Optional. Workarounds or other apps you have tried. / 可选。你尝试过的替代办法或其他 App。
+      label: Alternatives
+      description: Optional. Workarounds or other apps you have tried.
+  - type: checkboxes
+    id: contribute
+    attributes:
+      label: Contributing
+      description: Optional. Pull requests need a signed [CLA](https://github.com/ljmng7/MacMix/blob/main/CONTRIBUTING.md#contributor-license-agreement) before they can be merged.
+      options:
+        - label: I'd like to work on this and open a pull request.
