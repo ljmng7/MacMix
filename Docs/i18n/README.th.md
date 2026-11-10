@@ -12,6 +12,10 @@
 </p>
 
 <p align="center">
+  <a href="https://x.com/jazminli57"><img src="https://img.shields.io/badge/Follow-%40jazminli57-000000?logo=x&logoColor=white" alt="Follow @jazminli57 on X"></a>
+</p>
+
+<p align="center">
   <a href="https://trendshift.io/repositories/197969?utm_source=trendshift-badge&amp;utm_medium=badge&amp;utm_campaign=badge-trendshift-197969" target="_blank" rel="noopener noreferrer"><img src="https://trendshift.io/api/badge/trendshift/repositories/197969/daily?language=Swift" alt="ljmng7%2FMacMix | Trendshift" width="250" height="55"/></a>
 </p>
 
@@ -36,6 +40,9 @@
 </p>
 
 ---
+
+> [!CAUTION]
+> การสร้างจากซอร์สโค้ดต้องใช้ Xcode 26 ขึ้นไป แนะนำ Xcode 27 ส่วน Xcode 16 หรือเก่ากว่าจะสร้าง MacMix ไม่ได้ ดู [สร้างจากซอร์สโค้ด](#สร้างจากซอร์สโค้ด)
 
 ## ทำไมต้อง MacMix
 
@@ -111,6 +118,8 @@ MacMix ประมวลผลเสียง **บน Mac ของคุณ�
 การมิกซ์แยกแต่ละแอปสร้างขึ้นบน audio process tap ของ macOS ดังนั้น macOS จะขอสิทธิ์การบันทึกเสียงระบบก่อนที่ MacMix จะเปลี่ยนระดับเสียงของแอปอื่นได้ MacMix ใช้สิทธิ์นี้เพื่อการมิกซ์บนเครื่องแบบเรียลไทม์เท่านั้น
 
 ## สร้างจากซอร์สโค้ด
+
+การสร้างจากซอร์สโค้ดต้องใช้ Xcode 26 ขึ้นไป แนะนำ Xcode 27 ส่วน Xcode 16 หรือเก่ากว่าจะสร้าง MacMix ไม่ได้
 
 ```sh
 git clone https://github.com/ljmng7/MacMix.git

@@ -12,6 +12,10 @@
 </p>
 
 <p align="center">
+  <a href="https://x.com/jazminli57"><img src="https://img.shields.io/badge/Follow-%40jazminli57-000000?logo=x&logoColor=white" alt="Follow @jazminli57 on X"></a>
+</p>
+
+<p align="center">
   <a href="https://trendshift.io/repositories/197969?utm_source=trendshift-badge&amp;utm_medium=badge&amp;utm_campaign=badge-trendshift-197969" target="_blank" rel="noopener noreferrer"><img src="https://trendshift.io/api/badge/trendshift/repositories/197969/daily?language=Swift" alt="ljmng7%2FMacMix | Trendshift" width="250" height="55"/></a>
 </p>
 
@@ -36,6 +40,9 @@
 </p>
 
 ---
+
+> [!CAUTION]
+> Zum Erstellen aus dem Quellcode brauchst du Xcode 26 oder neuer; empfohlen wird Xcode 27. Mit Xcode 16 und älter lässt sich MacMix nicht erstellen. Siehe [Aus dem Quellcode erstellen](#aus-dem-quellcode-erstellen).
 
 ## Warum MacMix
 
@@ -111,6 +118,8 @@ MacMix verarbeitet Audio **lokal auf deinem Mac**. Audio wird nie aufgenommen, g
 Die Lautstärke pro App basiert auf Audio-Prozess-Taps von macOS. Deshalb fragt macOS nach der Berechtigung Systemaudioaufnahme, bevor MacMix die Lautstärke einer anderen App ändern kann. MacMix nutzt diese Berechtigung nur für das lokale Mischen in Echtzeit.
 
 ## Aus dem Quellcode erstellen
+
+Zum Erstellen aus dem Quellcode brauchst du Xcode 26 oder neuer; empfohlen wird Xcode 27. Mit Xcode 16 und älter lässt sich MacMix nicht erstellen.
 
 ```sh
 git clone https://github.com/ljmng7/MacMix.git

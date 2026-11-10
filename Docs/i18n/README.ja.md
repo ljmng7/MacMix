@@ -12,6 +12,10 @@
 </p>
 
 <p align="center">
+  <a href="https://x.com/jazminli57"><img src="https://img.shields.io/badge/Follow-%40jazminli57-000000?logo=x&logoColor=white" alt="Follow @jazminli57 on X"></a>
+</p>
+
+<p align="center">
   <a href="https://trendshift.io/repositories/197969?utm_source=trendshift-badge&amp;utm_medium=badge&amp;utm_campaign=badge-trendshift-197969" target="_blank" rel="noopener noreferrer"><img src="https://trendshift.io/api/badge/trendshift/repositories/197969/daily?language=Swift" alt="ljmng7%2FMacMix | Trendshift" width="250" height="55"/></a>
 </p>
 
@@ -36,6 +40,9 @@
 </p>
 
 ---
+
+> [!CAUTION]
+> ソースから MacMix をビルドするには Xcode 26 以降が必要で、Xcode 27 を推奨します。Xcode 16 以前では MacMix をビルドできません。詳しくは[ソースからビルド](#ソースからビルド)を参照してください。
 
 ## MacMix を選ぶ理由
 
@@ -111,6 +118,8 @@ MacMix はオーディオを**お使いの Mac 上で**処理します。オー�
 アプリごとのミックスは macOS のオーディオプロセスタップを利用しているため、MacMix がほかのアプリの音量を変更する前に、macOS が「システムオーディオ録音」の許可を求めます。MacMix はこの許可をローカルでのリアルタイムミックスにのみ使用します。
 
 ## ソースからビルド
+
+ソースから MacMix をビルドするには Xcode 26 以降が必要で、Xcode 27 を推奨します。Xcode 16 以前では MacMix をビルドできません。
 
 ```sh
 git clone https://github.com/ljmng7/MacMix.git

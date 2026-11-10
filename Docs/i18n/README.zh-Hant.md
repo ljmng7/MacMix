@@ -12,6 +12,10 @@
 </p>
 
 <p align="center">
+  <a href="https://x.com/jazminli57"><img src="https://img.shields.io/badge/Follow-%40jazminli57-000000?logo=x&logoColor=white" alt="Follow @jazminli57 on X"></a>
+</p>
+
+<p align="center">
   <a href="https://trendshift.io/repositories/197969?utm_source=trendshift-badge&amp;utm_medium=badge&amp;utm_campaign=badge-trendshift-197969" target="_blank" rel="noopener noreferrer"><img src="https://trendshift.io/api/badge/trendshift/repositories/197969/daily?language=Swift" alt="ljmng7%2FMacMix | Trendshift" width="250" height="55"/></a>
 </p>
 
@@ -36,6 +40,9 @@
 </p>
 
 ---
+
+> [!CAUTION]
+> 從原始碼建置 MacMix 需要 Xcode 26 或更新版本，建議使用 Xcode 27。Xcode 16 及更早版本無法建置 MacMix。詳見[從原始碼建置](#從原始碼建置)。
 
 ## 為什麼選擇 MacMix
 
@@ -111,6 +118,8 @@ MacMix **在你的 Mac 本機**處理音訊，不會錄製、儲存或上傳任�
 單一 App 混音建立在 macOS 的音訊程序 tap 之上，因此 macOS 會在 MacMix 調整其他 App 的音量前要求「系統錄音」權限。MacMix 只將該權限用於本機即時混音。
 
 ## 從原始碼建置
+
+從原始碼建置 MacMix 需要 Xcode 26 或更新版本，建議使用 Xcode 27。Xcode 16 及更早版本無法建置 MacMix。
 
 ```sh
 git clone https://github.com/ljmng7/MacMix.git

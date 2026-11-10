@@ -12,6 +12,10 @@
 </p>
 
 <p align="center">
+  <a href="https://x.com/jazminli57"><img src="https://img.shields.io/badge/Follow-%40jazminli57-000000?logo=x&logoColor=white" alt="Follow @jazminli57 on X"></a>
+</p>
+
+<p align="center">
   <a href="https://trendshift.io/repositories/197969?utm_source=trendshift-badge&amp;utm_medium=badge&amp;utm_campaign=badge-trendshift-197969" target="_blank" rel="noopener noreferrer"><img src="https://trendshift.io/api/badge/trendshift/repositories/197969/daily?language=Swift" alt="ljmng7%2FMacMix | Trendshift" width="250" height="55"/></a>
 </p>
 
@@ -36,6 +40,9 @@
 </p>
 
 ---
+
+> [!CAUTION]
+> Voor bouwen vanuit de broncode heb je Xcode 26 of nieuwer nodig; Xcode 27 wordt aanbevolen. Met Xcode 16 en ouder kun je MacMix niet bouwen. Zie [Bouwen vanuit de broncode](#bouwen-vanuit-de-broncode).
 
 ## Waarom MacMix
 
@@ -111,6 +118,8 @@ MacMix verwerkt audio **lokaal op je Mac**. Het neemt nooit audio op, slaat het 
 Mixen per app is gebouwd op audioproces-taps van macOS. Daarom vraagt macOS om de toestemming Systeemaudio-opname voordat MacMix het volume van een andere app kan wijzigen. MacMix gebruikt die toestemming alleen voor lokaal mixen in realtime.
 
 ## Bouwen vanuit de broncode
+
+Voor bouwen vanuit de broncode heb je Xcode 26 of nieuwer nodig; Xcode 27 wordt aanbevolen. Met Xcode 16 en ouder kun je MacMix niet bouwen.
 
 ```sh
 git clone https://github.com/ljmng7/MacMix.git

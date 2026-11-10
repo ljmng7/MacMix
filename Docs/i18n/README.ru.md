@@ -12,6 +12,10 @@
 </p>
 
 <p align="center">
+  <a href="https://x.com/jazminli57"><img src="https://img.shields.io/badge/Follow-%40jazminli57-000000?logo=x&logoColor=white" alt="Follow @jazminli57 on X"></a>
+</p>
+
+<p align="center">
   <a href="https://trendshift.io/repositories/197969?utm_source=trendshift-badge&amp;utm_medium=badge&amp;utm_campaign=badge-trendshift-197969" target="_blank" rel="noopener noreferrer"><img src="https://trendshift.io/api/badge/trendshift/repositories/197969/daily?language=Swift" alt="ljmng7%2FMacMix | Trendshift" width="250" height="55"/></a>
 </p>
 
@@ -36,6 +40,9 @@
 </p>
 
 ---
+
+> [!CAUTION]
+> Для сборки из исходников нужен Xcode 26 или новее; рекомендуется Xcode 27. Xcode 16 и более ранние версии не могут собрать MacMix. См. [Сборка из исходников](#сборка-из-исходников).
 
 ## Зачем нужен MacMix
 
@@ -111,6 +118,8 @@ MacMix обрабатывает звук **локально на вашем Mac*
 Громкость приложений построена на аудио-тапах процессов macOS, поэтому macOS запрашивает разрешение «Запись системного звука», прежде чем MacMix сможет менять громкость другого приложения. MacMix использует это разрешение только для локального микширования в реальном времени.
 
 ## Сборка из исходников
+
+Для сборки из исходников нужен Xcode 26 или новее; рекомендуется Xcode 27. Xcode 16 и более ранние версии не могут собрать MacMix.
 
 ```sh
 git clone https://github.com/ljmng7/MacMix.git

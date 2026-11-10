@@ -12,6 +12,10 @@
 </p>
 
 <p align="center">
+  <a href="https://x.com/jazminli57"><img src="https://img.shields.io/badge/Follow-%40jazminli57-000000?logo=x&logoColor=white" alt="Follow @jazminli57 on X"></a>
+</p>
+
+<p align="center">
   <a href="https://trendshift.io/repositories/197969?utm_source=trendshift-badge&amp;utm_medium=badge&amp;utm_campaign=badge-trendshift-197969" target="_blank" rel="noopener noreferrer"><img src="https://trendshift.io/api/badge/trendshift/repositories/197969/daily?language=Swift" alt="ljmng7%2FMacMix | Trendshift" width="250" height="55"/></a>
 </p>
 
@@ -36,6 +40,9 @@
 </p>
 
 ---
+
+> [!CAUTION]
+> Kaynaktan derlemek için Xcode 26 veya üstü gerekir; Xcode 27 önerilir. Xcode 16 ve öncesi MacMix’i derleyemez. Bkz. [Kaynaktan derleme](#kaynaktan-derleme).
 
 ## Neden MacMix
 
@@ -111,6 +118,8 @@ MacMix sesi **Mac’inizde yerel olarak** işler. Asla ses kaydetmez, saklamaz v
 Uygulama başına karıştırma macOS ses işlem tap’leri üzerine kuruludur; bu yüzden MacMix başka bir uygulamanın ses düzeyini değiştirmeden önce macOS Sistem Sesi Kaydı izni ister. MacMix bu izni yalnızca yerel, gerçek zamanlı karıştırma için kullanır.
 
 ## Kaynaktan derleme
+
+Kaynaktan derlemek için Xcode 26 veya üstü gerekir; Xcode 27 önerilir. Xcode 16 ve öncesi MacMix’i derleyemez.
 
 ```sh
 git clone https://github.com/ljmng7/MacMix.git

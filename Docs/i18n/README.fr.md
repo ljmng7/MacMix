@@ -12,6 +12,10 @@
 </p>
 
 <p align="center">
+  <a href="https://x.com/jazminli57"><img src="https://img.shields.io/badge/Follow-%40jazminli57-000000?logo=x&logoColor=white" alt="Follow @jazminli57 on X"></a>
+</p>
+
+<p align="center">
   <a href="https://trendshift.io/repositories/197969?utm_source=trendshift-badge&amp;utm_medium=badge&amp;utm_campaign=badge-trendshift-197969" target="_blank" rel="noopener noreferrer"><img src="https://trendshift.io/api/badge/trendshift/repositories/197969/daily?language=Swift" alt="ljmng7%2FMacMix | Trendshift" width="250" height="55"/></a>
 </p>
 
@@ -36,6 +40,9 @@
 </p>
 
 ---
+
+> [!CAUTION]
+> La compilation depuis les sources nécessite Xcode 26 ou une version ultérieure ; Xcode 27 est recommandé. Xcode 16 et les versions antérieures ne peuvent pas compiler MacMix. Voir [Compiler depuis les sources](#compiler-depuis-les-sources).
 
 ## Pourquoi MacMix
 
@@ -111,6 +118,8 @@ MacMix traite l’audio **localement sur votre Mac**. Il n’enregistre, ne cons
 Le mixage par app repose sur les taps de processus audio de macOS : c’est pourquoi macOS demande l’autorisation Enregistrement audio du système avant que MacMix puisse modifier le volume d’une autre app. MacMix utilise cette autorisation uniquement pour le mixage local en temps réel.
 
 ## Compiler depuis les sources
+
+La compilation depuis les sources nécessite Xcode 26 ou une version ultérieure ; Xcode 27 est recommandé. Xcode 16 et les versions antérieures ne peuvent pas compiler MacMix.
 
 ```sh
 git clone https://github.com/ljmng7/MacMix.git

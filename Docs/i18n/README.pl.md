@@ -12,6 +12,10 @@
 </p>
 
 <p align="center">
+  <a href="https://x.com/jazminli57"><img src="https://img.shields.io/badge/Follow-%40jazminli57-000000?logo=x&logoColor=white" alt="Follow @jazminli57 on X"></a>
+</p>
+
+<p align="center">
   <a href="https://trendshift.io/repositories/197969?utm_source=trendshift-badge&amp;utm_medium=badge&amp;utm_campaign=badge-trendshift-197969" target="_blank" rel="noopener noreferrer"><img src="https://trendshift.io/api/badge/trendshift/repositories/197969/daily?language=Swift" alt="ljmng7%2FMacMix | Trendshift" width="250" height="55"/></a>
 </p>
 
@@ -36,6 +40,9 @@
 </p>
 
 ---
+
+> [!CAUTION]
+> Kompilacja ze źródeł wymaga Xcode 26 lub nowszego; zalecany jest Xcode 27. Xcode 16 i starsze wersje nie skompilują MacMix. Zobacz [Kompilacja ze źródeł](#kompilacja-ze-źródeł).
 
 ## Dlaczego MacMix
 
@@ -111,6 +118,8 @@ MacMix przetwarza dźwięk **lokalnie na Twoim Macu**. Nigdy nie nagrywa, nie za
 Miksowanie aplikacji opiera się na tapach procesów audio macOS, dlatego macOS prosi o uprawnienie Nagrywanie dźwięku systemowego, zanim MacMix zmieni głośność innej aplikacji. MacMix używa go wyłącznie do lokalnego miksowania w czasie rzeczywistym.
 
 ## Kompilacja ze źródeł
+
+Kompilacja ze źródeł wymaga Xcode 26 lub nowszego; zalecany jest Xcode 27. Xcode 16 i starsze wersje nie skompilują MacMix.
 
 ```sh
 git clone https://github.com/ljmng7/MacMix.git

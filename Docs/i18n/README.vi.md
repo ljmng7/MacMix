@@ -12,6 +12,10 @@
 </p>
 
 <p align="center">
+  <a href="https://x.com/jazminli57"><img src="https://img.shields.io/badge/Follow-%40jazminli57-000000?logo=x&logoColor=white" alt="Follow @jazminli57 on X"></a>
+</p>
+
+<p align="center">
   <a href="https://trendshift.io/repositories/197969?utm_source=trendshift-badge&amp;utm_medium=badge&amp;utm_campaign=badge-trendshift-197969" target="_blank" rel="noopener noreferrer"><img src="https://trendshift.io/api/badge/trendshift/repositories/197969/daily?language=Swift" alt="ljmng7%2FMacMix | Trendshift" width="250" height="55"/></a>
 </p>
 
@@ -36,6 +40,9 @@
 </p>
 
 ---
+
+> [!CAUTION]
+> Biên dịch từ mã nguồn cần Xcode 26 trở lên; khuyến nghị dùng Xcode 27. Xcode 16 trở về trước không thể biên dịch MacMix. Xem [Biên dịch từ mã nguồn](#biên-dịch-từ-mã-nguồn).
 
 ## Vì sao chọn MacMix
 
@@ -111,6 +118,8 @@ MacMix xử lý âm thanh **ngay trên máy Mac của bạn**. Ứng dụng khô
 Trộn âm theo ứng dụng dựa trên audio process tap của macOS, vì vậy macOS sẽ xin quyền Ghi âm âm thanh hệ thống trước khi MacMix có thể thay đổi âm lượng của ứng dụng khác. MacMix chỉ dùng quyền này để trộn âm cục bộ theo thời gian thực.
 
 ## Biên dịch từ mã nguồn
+
+Biên dịch từ mã nguồn cần Xcode 26 trở lên; khuyến nghị dùng Xcode 27. Xcode 16 trở về trước không thể biên dịch MacMix.
 
 ```sh
 git clone https://github.com/ljmng7/MacMix.git

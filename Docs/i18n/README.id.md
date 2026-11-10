@@ -12,6 +12,10 @@
 </p>
 
 <p align="center">
+  <a href="https://x.com/jazminli57"><img src="https://img.shields.io/badge/Follow-%40jazminli57-000000?logo=x&logoColor=white" alt="Follow @jazminli57 on X"></a>
+</p>
+
+<p align="center">
   <a href="https://trendshift.io/repositories/197969?utm_source=trendshift-badge&amp;utm_medium=badge&amp;utm_campaign=badge-trendshift-197969" target="_blank" rel="noopener noreferrer"><img src="https://trendshift.io/api/badge/trendshift/repositories/197969/daily?language=Swift" alt="ljmng7%2FMacMix | Trendshift" width="250" height="55"/></a>
 </p>
 
@@ -36,6 +40,9 @@
 </p>
 
 ---
+
+> [!CAUTION]
+> Build dari kode sumber memerlukan Xcode 26 atau yang lebih baru; Xcode 27 disarankan. Xcode 16 dan versi sebelumnya tidak dapat mem-build MacMix. Lihat [Build dari kode sumber](#build-dari-kode-sumber).
 
 ## Mengapa MacMix
 
@@ -111,6 +118,8 @@ MacMix memproses audio **secara lokal di Mac Anda**. MacMix tidak pernah merekam
 Mixing per app dibangun di atas tap proses audio macOS, itulah sebabnya macOS meminta izin Perekaman Audio Sistem sebelum MacMix dapat mengubah volume app lain. MacMix hanya menggunakan izin itu untuk mixing lokal secara real time.
 
 ## Build dari kode sumber
+
+Build dari kode sumber memerlukan Xcode 26 atau yang lebih baru; Xcode 27 disarankan. Xcode 16 dan versi sebelumnya tidak dapat mem-build MacMix.
 
 ```sh
 git clone https://github.com/ljmng7/MacMix.git

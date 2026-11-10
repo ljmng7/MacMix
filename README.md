@@ -12,6 +12,10 @@
 </p>
 
 <p align="center">
+  <a href="https://x.com/jazminli57"><img src="https://img.shields.io/badge/Follow-%40jazminli57-000000?logo=x&logoColor=white" alt="Follow @jazminli57 on X"></a>
+</p>
+
+<p align="center">
   <a href="https://trendshift.io/repositories/197969?utm_source=trendshift-badge&amp;utm_medium=badge&amp;utm_campaign=badge-trendshift-197969" target="_blank" rel="noopener noreferrer"><img src="https://trendshift.io/api/badge/trendshift/repositories/197969/daily?language=Swift" alt="ljmng7%2FMacMix | Trendshift" width="250" height="55"/></a>
 </p>
 
@@ -36,6 +40,9 @@
 </p>
 
 ---
+
+> [!CAUTION]
+> Building from source requires Xcode 26 or later; Xcode 27 is recommended. Xcode 16 and earlier can't build MacMix. See [Build from Source](#build-from-source).
 
 ## Why MacMix
 
@@ -111,6 +118,8 @@ MacMix processes audio **locally on your Mac**. It never records, saves or uploa
 Per-app mixing is built on macOS audio process taps, which is why macOS asks for System Audio Recording permission before MacMix can change another app's volume. MacMix uses that permission only for real-time local mixing.
 
 ## Build from Source
+
+Building from source requires Xcode 26 or later; Xcode 27 is recommended. Xcode 16 and earlier can't build MacMix.
 
 ```sh
 git clone https://github.com/ljmng7/MacMix.git

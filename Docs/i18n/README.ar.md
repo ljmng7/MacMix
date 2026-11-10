@@ -14,6 +14,10 @@
 </p>
 
 <p align="center">
+  <a href="https://x.com/jazminli57"><img src="https://img.shields.io/badge/Follow-%40jazminli57-000000?logo=x&logoColor=white" alt="Follow @jazminli57 on X"></a>
+</p>
+
+<p align="center">
   <a href="https://trendshift.io/repositories/197969?utm_source=trendshift-badge&amp;utm_medium=badge&amp;utm_campaign=badge-trendshift-197969" target="_blank" rel="noopener noreferrer"><img src="https://trendshift.io/api/badge/trendshift/repositories/197969/daily?language=Swift" alt="ljmng7%2FMacMix | Trendshift" width="250" height="55"/></a>
 </p>
 
@@ -38,6 +42,9 @@
 </p>
 
 ---
+
+> [!CAUTION]
+> يتطلب البناء من المصدر Xcode 26 أو أحدث، ويُنصح باستخدام Xcode 27. لا يمكن بناء MacMix باستخدام Xcode 16 أو الإصدارات الأقدم. راجع [البناء من المصدر](#البناء-من-المصدر).
 
 ## لماذا MacMix
 
@@ -113,6 +120,8 @@
 يعتمد مزج كل تطبيق على نقاط التقاط عمليات الصوت في macOS، ولهذا يطلب macOS إذن تسجيل صوت النظام قبل أن يتمكن MacMix من تغيير مستوى صوت تطبيق آخر. يستخدم MacMix هذا الإذن للمزج المحلي في الوقت الفعلي فقط.
 
 ## البناء من المصدر
+
+يتطلب البناء من المصدر Xcode 26 أو أحدث، ويُنصح باستخدام Xcode 27. لا يمكن بناء MacMix باستخدام Xcode 16 أو الإصدارات الأقدم.
 
 ```sh
 git clone https://github.com/ljmng7/MacMix.git

@@ -12,6 +12,10 @@
 </p>
 
 <p align="center">
+  <a href="https://x.com/jazminli57"><img src="https://img.shields.io/badge/Follow-%40jazminli57-000000?logo=x&logoColor=white" alt="Follow @jazminli57 on X"></a>
+</p>
+
+<p align="center">
   <a href="https://trendshift.io/repositories/197969?utm_source=trendshift-badge&amp;utm_medium=badge&amp;utm_campaign=badge-trendshift-197969" target="_blank" rel="noopener noreferrer"><img src="https://trendshift.io/api/badge/trendshift/repositories/197969/daily?language=Swift" alt="ljmng7%2FMacMix | Trendshift" width="250" height="55"/></a>
 </p>
 
@@ -36,6 +40,9 @@
 </p>
 
 ---
+
+> [!CAUTION]
+> सोर्स से बिल्ड करने के लिए Xcode 26 या उससे नया चाहिए; Xcode 27 की सलाह दी जाती है। Xcode 16 और उससे पुराने संस्करण MacMix को बिल्ड नहीं कर सकते। देखें: [सोर्स से बिल्ड करें](#सोर्स-से-बिल्ड-करें)।
 
 ## MacMix क्यों
 
@@ -111,6 +118,8 @@ MacMix ऑडियो को **आपके Mac पर ही** प्रोस
 हर ऐप की मिक्सिंग macOS के ऑडियो प्रोसेस टैप पर आधारित है, इसलिए MacMix किसी दूसरे ऐप का वॉल्यूम बदले उससे पहले macOS सिस्टम ऑडियो रिकॉर्डिंग की अनुमति माँगता है। MacMix इस अनुमति का उपयोग केवल स्थानीय रियल टाइम मिक्सिंग के लिए करता है।
 
 ## सोर्स से बिल्ड करें
+
+सोर्स से बिल्ड करने के लिए Xcode 26 या उससे नया चाहिए; Xcode 27 की सलाह दी जाती है। Xcode 16 और उससे पुराने संस्करण MacMix को बिल्ड नहीं कर सकते।
 
 ```sh
 git clone https://github.com/ljmng7/MacMix.git
