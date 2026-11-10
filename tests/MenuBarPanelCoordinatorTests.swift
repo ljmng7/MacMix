@@ -45,9 +45,10 @@ struct MenuBarPanelCoordinatorTests {
             settle()
             let contentHeight = panel.contentRect(forFrameRect: panel.frame).height
             let expectedTop = min(anchor.frame.minY, screen.visibleFrame.maxY) - MenuBarPanelPlacement.menuBarGap
-            precondition(abs(contentHeight - height) < 1, "\(message): incorrect content height")
-            precondition(abs(panel.frame.maxY - expectedTop) < 1.5, "\(message): panel top drifted")
-            precondition(panel.frame.minY >= screen.visibleFrame.minY - 1, "\(message): panel overlaps Dock")
+            let geometry = "panel=\(panel.frame), anchor=\(anchor.frame), visible=\(screen.visibleFrame), expectedHeight=\(height)"
+            precondition(abs(contentHeight - height) < 1, "\(message): incorrect content height; \(geometry)")
+            precondition(abs(panel.frame.maxY - expectedTop) < 1.5, "\(message): panel top drifted; \(geometry)")
+            precondition(panel.frame.minY >= screen.visibleFrame.minY - 1, "\(message): panel overlaps Dock; \(geometry)")
             print("PASS: \(message)")
         }
         coordinator.notePanelContentHeight(expanded)
