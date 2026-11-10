@@ -39,6 +39,12 @@ body:
     validations:
       required: true
   - type: input
+    id: xcode-version
+    attributes:
+      label: Xcode version (if built from source)
+      description: Version and build, from Xcode › About Xcode or `xcodebuild -version`.
+      placeholder: "Xcode 26.3, build …"
+  - type: input
     id: macos-version
     attributes:
       label: macOS version
