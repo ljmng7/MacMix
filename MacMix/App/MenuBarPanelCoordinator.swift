@@ -162,7 +162,7 @@ final class MenuBarPanelCoordinator {
         statusItem.length = max(MenuBarIconMetrics.statusItemLength, ceil(symbolWidth))
     }
 
-    private func attachStatusItemWindow(_ window: NSWindow) {
+    func attachStatusItemWindow(_ window: NSWindow) {
         guard statusItemWindow !== window else { return }
         for observer in statusItemObservers { NotificationCenter.default.removeObserver(observer) }
         statusItemWindow = window

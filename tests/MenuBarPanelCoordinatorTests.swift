@@ -22,8 +22,17 @@ struct MenuBarPanelCoordinatorTests {
         let app = NSApplication.shared
         app.setActivationPolicy(.accessory)
         app.finishLaunching()
-        let item = NSStatusBar.system.statusItem(withLength: 40)
-        item.button?.title = "Test"
+        guard let screen = NSScreen.main else {
+            preconditionFailure("A GUI session and screen are required")
+        }
+        // Hosted runners provide native windows but no SystemUIServer menu bar:
+        // their status-item window has an unplaced frame below the screen. Use
+        // a native anchor fixture to exercise the real coordinator deterministically.
+        let anchor = NSWindow(contentRect: NSRect(
+            x: screen.visibleFrame.maxX - 80, y: screen.visibleFrame.maxY,
+            width: 40, height: 24),
+            styleMask: [.borderless], backing: .buffered, defer: false)
+        anchor.isReleasedWhenClosed = false
         let coordinator = MenuBarPanelCoordinator()
         let panel = NSWindow(contentRect: NSRect(x: 0, y: 150, width: 320, height: 900),
             styleMask: [.borderless], backing: .buffered, defer: false)
@@ -32,12 +41,9 @@ struct MenuBarPanelCoordinatorTests {
             RunLoop.main.run(until: Date().addingTimeInterval(duration))
         }
         settle()
-        coordinator.attachStatusItem(item)
+        coordinator.attachStatusItemWindow(anchor)
         panel.orderFront(nil)
         coordinator.attachPanelWindow(panel)
-        guard let anchor = item.button?.window, let screen = anchor.screen else {
-            preconditionFailure("A GUI session and status-item window are required")
-        }
         let available = MenuBarPanelPlacement.maximumHeight(anchor: anchor.frame, visibleFrame: screen.visibleFrame)
         let expanded = min(900, available)
         let collapsed = min(300, available)
@@ -72,7 +78,7 @@ struct MenuBarPanelCoordinatorTests {
         panel.orderFront(nil)
         expect(expanded, "full panel restores its height and anchor after temporary mode")
         panel.close()
-        NSStatusBar.system.removeStatusItem(item)
+        anchor.close()
         print("All 6 native menu-panel coordinator checks passed.")
     }
 }
