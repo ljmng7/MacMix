@@ -1,0 +1,33 @@
+# 用户在 macOS 中文界面运行 AccessibilityInspector.swift 的实测结果摘要
+# 原始记录日期：2026-11-19；这是终端观察，不是 Swift 编译结果报告。
+
+阶段 1：控制中心菜单栏图标
+AXRole: AXMenuBarItem
+AXSubrole: AXMenuExtra
+AXDescription: 控制中心
+AXIdentifier: com.apple.menuextra.controlcenter
+支持: AXShowMenu, AXPress
+AX 父级: AXGroup (AXHostingView) → AXWindow (AXHostedViewSceneWindow) → AXApplication (控制中心)
+
+阶段 2：控制中心内的“声音”右侧 AirPlay 按钮
+AXRole: AXCheckBox
+AXSubrole: AXToggle
+AXDescription: 隔空播放音频
+AXIdentifier: controlcenter-airplay
+AXValue: 0
+支持: AXPress
+父控件: AXGroup，AXIdentifier=module-Sound，支持 AXShowMenu、AXPress
+窗口: AXWindow，AXSubrole=AXSystemDialog，AXTitle=控制中心
+
+阶段 3：声音设备列表中的 HomePod mini（卧室）
+AXRole: AXCheckBox
+AXSubrole: AXToggle
+AXDescription: 卧室
+AXIdentifier: sound-device-卧室
+AXValue: 0
+支持: AXPress
+父控件: AXScrollArea；所属窗口：AXSystemDialog，标题=控制中心
+
+独立的自动化脚本（ControlCenterAirPlayTest.swift）三个 AXPress 状态均为 0。
+用户确认：FineTune 通过 Xcode 运行时，卧室尝试连接转圈后回到 MacBook Neo 扬声器；完全停止 FineTune 后，同一终端脚本可连接 HomePod 并保持输出。
+注意：FineTune 的设备优先级恢复逻辑是合理嫌疑点，但尚未在此案例中用日志验证为唯一原因。
