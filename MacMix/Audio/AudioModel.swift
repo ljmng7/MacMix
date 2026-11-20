@@ -65,6 +65,86 @@ final class OutputAudioState {
     // Paired headphones advertising nearby that Core Audio does not list.
     var nearbyAccessories: [NearbyAudioAccessory] = []
     var discoveredAirPlayReceivers: [DiscoveredAirPlayReceiver] = []
+
+    // Raw Bonjour results, including the currently connected receiver.
+    var observedAirPlayReceivers: [DiscoveredAirPlayReceiver] = []
+
+    private var confirmedAirPlayReceiverName: String?
+    private var confirmedAirPlayUID: String?
+    private var confirmedAirPlaySources: [UInt32]?
+
+    func rememberConfirmedAirPlay(_ name: String) {
+        guard let current = currentDevice,
+              current.transportType == kAudioDeviceTransportTypeAirPlay
+        else { return }
+
+        confirmedAirPlayReceiverName = name
+        confirmedAirPlayUID = current.uid
+        confirmedAirPlaySources = current.selectedDataSourceIDs
+    }
+
+    func clearStaleAirPlayName() {
+        guard confirmedAirPlayReceiverName != nil else { return }
+
+        guard let current = currentDevice,
+              current.transportType == kAudioDeviceTransportTypeAirPlay,
+              current.uid == confirmedAirPlayUID
+        else {
+            confirmedAirPlayReceiverName = nil
+            confirmedAirPlayUID = nil
+            confirmedAirPlaySources = nil
+            return
+        }
+
+        if let previous = confirmedAirPlaySources,
+           let selected = current.selectedDataSourceIDs,
+           previous != selected {
+            confirmedAirPlayReceiverName = nil
+            confirmedAirPlayUID = nil
+            confirmedAirPlaySources = nil
+        }
+    }
+
+    private var activeConfirmedAirPlayName: String? {
+        guard let current = currentDevice,
+              current.transportType == kAudioDeviceTransportTypeAirPlay,
+              current.name.localizedCaseInsensitiveCompare("AirPlay")
+                  == .orderedSame else {
+            return nil
+        }
+
+        // Prefer the receiver confirmed by our connection workflow.
+        if let name = confirmedAirPlayReceiverName,
+           current.uid == confirmedAirPlayUID {
+            if let saved = confirmedAirPlaySources,
+               let selected = current.selectedDataSourceIDs,
+               saved != selected {
+                return nil
+            }
+            return name
+        }
+
+        // A generic HAL "AirPlay" device does not identify its receiver.
+        // Only use Bonjour as a fallback when exactly one is discovered.
+        guard observedAirPlayReceivers.count == 1 else {
+            return nil
+        }
+
+        return observedAirPlayReceivers[0].name
+    }
+
+    func presentationName(for device: AudioDevice) -> String {
+        guard device.isCurrent,
+              device.transportType == kAudioDeviceTransportTypeAirPlay,
+              device.name.localizedCaseInsensitiveCompare("AirPlay")
+                  == .orderedSame,
+              let name = activeConfirmedAirPlayName else {
+            return device.name
+        }
+
+        return name
+    }
+
     // Canonical (hex-only, uppercase) address of the accessory being connected.
     var connectingAccessoryAddress: String?
     // First-seen order of output rows. Headphones keep their place while they
@@ -84,9 +164,33 @@ final class OutputAudioState {
 
     func orderedRows(for devices: [AudioDevice]) -> [OutputRow] {
         let index = Dictionary(rowOrder.enumerated().map { ($1, $0) }, uniquingKeysWith: min)
+        let visibleReceivers = discoveredAirPlayReceivers.filter {
+            guard let name = activeConfirmedAirPlayName else {
+                return true
+            }
+            return $0.name.localizedCaseInsensitiveCompare(name)
+                != .orderedSame
+        }
+
         let rows = devices.map(OutputRow.device) + nearbyAccessories.map(OutputRow.nearby)
-            + discoveredAirPlayReceivers.map(OutputRow.airPlay)
+            + visibleReceivers.map(OutputRow.airPlay)
         return rows.enumerated().sorted { lhs, rhs in
+            // Keep built-in speakers ahead of other outputs,
+            // regardless of discovery or connection order.
+            func isBuiltIn(_ row: OutputRow) -> Bool {
+                if case let .device(device) = row {
+                    return device.transportType == kAudioDeviceTransportTypeBuiltIn
+                }
+                return false
+            }
+
+            let leftBuiltIn = isBuiltIn(lhs.element)
+            let rightBuiltIn = isBuiltIn(rhs.element)
+
+            if leftBuiltIn != rightBuiltIn {
+                return leftBuiltIn
+            }
+
             let l = index[lhs.element.orderKey] ?? Int.max, r = index[rhs.element.orderKey] ?? Int.max
             return l != r ? l < r : lhs.offset < rhs.offset
         }.map(\.element)
@@ -94,7 +198,10 @@ final class OutputAudioState {
 
     // A receiver already offered through Core Audio keeps that row.
     func unlistedAirPlayReceivers(_ receivers: [DiscoveredAirPlayReceiver]) -> [DiscoveredAirPlayReceiver] {
-        let listed = Set((devices + airPlayDestinations).map(\.name))
+        var listed = Set((devices + airPlayDestinations).map(\.name))
+        if let name = activeConfirmedAirPlayName {
+            listed.insert(name)
+        }
         return receivers.filter { !listed.contains($0.name) }
     }
 
@@ -657,6 +764,25 @@ final class AudioModel: NSObject {
             })
         }
         restoreCachedSystemAudioPermissionRequirementState()
+
+        interfaceVisibilityObservers.append(
+            NotificationCenter.default.addObserver(
+                forName: Notification.Name(
+                    "MacMix.AirPlayConnectionDidFinish"
+                ),
+                object: nil,
+                queue: .main
+            ) { [weak self] notification in
+                guard let name = notification.userInfo?[
+                    "receiverName"
+                ] as? String else { return }
+
+                MainActor.assumeIsolated {
+                    self?.refreshOutputState()
+                    self?.outputState.rememberConfirmedAirPlay(name)
+                }
+            }
+        )
         nearbyAccessoryScanner.onChange = { [weak self] in self?.refreshNearbyAccessories() }
         airPlayReceiverBrowser.onChange = { [weak self] in self?.refreshDiscoveredAirPlayReceivers() }
 
@@ -727,6 +853,7 @@ final class AudioModel: NSObject {
             return
         }
         setOutputDevicesIfChanged(devices)
+        outputState.clearStaleAirPlayName()
         let airPlayDestinations = hardware.airPlayDestinations(in: devices)
         if outputState.airPlayDestinations != airPlayDestinations {
             outputState.airPlayDestinations = airPlayDestinations
@@ -2535,7 +2662,11 @@ final class AudioModel: NSObject {
     }
 
     private func refreshDiscoveredAirPlayReceivers() {
-        let receivers = outputState.unlistedAirPlayReceivers(airPlayReceiverBrowser.receivers)
+        let observed = airPlayReceiverBrowser.receivers
+        if outputState.observedAirPlayReceivers != observed {
+            outputState.observedAirPlayReceivers = observed
+        }
+        let receivers = outputState.unlistedAirPlayReceivers(observed)
         guard outputState.discoveredAirPlayReceivers != receivers else { return }
         outputState.discoveredAirPlayReceivers = receivers
         outputState.recordRowOrder()
