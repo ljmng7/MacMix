@@ -51,8 +51,21 @@ struct AppOutputRoutingPicker: View {
                 HStack(spacing: 12) {
                     DeviceIcon(symbolName: audioModel.outputState.menuBarSymbolName,
                                systemIcon: nil, isCurrent: selected.isEmpty)
-                    Text("Follow system output", tableName: "AppOutputRouting")
-                        .font(.body.weight(.medium))
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Follow system output", tableName: "AppOutputRouting")
+                            .font(.body.weight(.medium))
+
+                        if selected.isEmpty,
+                           let current = outputState.currentDevice {
+                            Text("→ \(outputState.presentationName(for: current))")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        } else if !selected.isEmpty {
+                            Text("App-specific output selected")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
                     Spacer()
                 }
                 .frame(minHeight: 28)

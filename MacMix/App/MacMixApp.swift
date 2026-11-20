@@ -147,7 +147,7 @@ struct MacMixApp: App {
         }
 
         Window("Send Feedback", id: DiagnosticFeedbackView.windowID) {
-            if let runtime {
+            if runtime != nil {
                 DiagnosticFeedbackView(model: .shared)
                     .environment(\.hasStudioAccess, entitlements.hasStudioAccess)
                     .background(DockWindowObserver())

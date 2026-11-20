@@ -120,6 +120,18 @@
         }
       }
     },
+    "NSAppleEventsUsageDescription" : {
+      "comment" : "Privacy - AppleEvents Sending Usage Description",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "MacMix uses automation to select AirPlay audio output devices in macOS Sound Settings."
+          }
+        }
+      }
+    },
     "NSAudioCaptureUsageDescription" : {
       "comment" : "Privacy usage description for system audio capture permission.",
       "extractionState" : "manual",

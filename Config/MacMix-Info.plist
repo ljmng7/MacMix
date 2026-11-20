@@ -28,6 +28,8 @@
 	<string>$(MACOSX_DEPLOYMENT_TARGET)</string>
 	<key>LSUIElement</key>
 	<true/>
+	<key>NSAppleEventsUsageDescription</key>
+	<string>MacMix uses automation to select AirPlay audio output devices in macOS Sound Settings.</string>
 	<key>NSAudioCaptureUsageDescription</key>
 	<string>MacMix only captures app audio when you adjust individual app volume for local real-time mixing. It does not record, save, or upload audio.</string>
 	<key>NSBluetoothAlwaysUsageDescription</key>
