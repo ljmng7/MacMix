@@ -6,12 +6,15 @@
 //
 
 import AppKit
+import CoreAudio
 import Combine
 import MacMixStudio
 import MenuBarExtraAccess
 import ServiceManagement
 import SwiftUI
 import UniformTypeIdentifiers
+import ApplicationServices
+import CoreGraphics
 
 struct MacMixPanel: View {
     let audioModel: AudioModel
@@ -44,24 +47,20 @@ struct MacMixPanel: View {
 
             Divider()
 
-            if showsOutputInPanel {
-                OutputSection(audioModel: audioModel)
+            if showsOutputInPanel || showsInputInPanel {
+                PanelDeviceSwitcher(
+                    audioModel: audioModel,
+                    showsOutput: showsOutputInPanel,
+                    showsInput: showsInputInPanel
+                )
             }
 
-            if showsOutputInPanel && showsMixInPanel {
+            if (showsOutputInPanel || showsInputInPanel) && showsMixInPanel {
                 Divider()
             }
 
             if showsMixInPanel {
                 MixSection(audioModel: audioModel)
-            }
-
-            if (showsOutputInPanel || showsMixInPanel) && showsInputInPanel {
-                Divider()
-            }
-
-            if showsInputInPanel {
-                InputSection(audioModel: audioModel)
             }
 
             if showsOutputInPanel || showsMixInPanel || showsInputInPanel {
@@ -765,7 +764,13 @@ private struct ControlPanelPanelPage: View {
                                     onConnect: audioModel.connectNearbyAccessory
                                 )
                             case let .airPlay(receiver):
-                                AirPlayReceiverRow(receiver: receiver, reservesAccessoryControlSpace: true)
+
+                                AirPlayReceiverRow(
+                                    receiver: receiver,
+                                    reservesAccessoryControlSpace: true,
+                                    useSystemOutputAutomation: true
+                                )
+
                             }
                         }
                     }
@@ -2126,6 +2131,104 @@ private struct NotificationSoundMuteButton: View {
     }
 }
 
+private struct PanelDeviceSwitcher: View {
+    let audioModel: AudioModel
+    let showsOutput: Bool
+    let showsInput: Bool
+
+    private enum DeviceTab: Equatable {
+        case output
+        case input
+    }
+
+    @State private var selectedTab: DeviceTab = .output
+
+    private var activeTab: DeviceTab {
+        if selectedTab == .input && showsInput {
+            return .input
+        }
+        return showsOutput ? .output : .input
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(spacing: 6) {
+                if showsOutput {
+                    Button {
+                        selectedTab = .output
+                    } label: {
+                        Label("Output", systemImage: "speaker.wave.2.fill")
+                            .font(.headline.weight(.semibold))
+                            .foregroundStyle(
+                                activeTab == .output
+                                    ? Color.primary : Color.secondary
+                            )
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 6)
+                            .frame(maxWidth: .infinity, minHeight: 34)
+                            .contentShape(Rectangle())
+                            .background(
+                                activeTab == .output
+                                    ? Color.accentColor.opacity(0.16)
+                                    : Color.clear,
+                                in: RoundedRectangle(cornerRadius: 8)
+                            )
+                    }
+                    .buttonStyle(.plain)
+                    .help("Output")
+                }
+
+                if showsInput {
+                    Button {
+                        selectedTab = .input
+                    } label: {
+                        Label("Input", systemImage: "mic.fill")
+                            .font(.headline.weight(.semibold))
+                            .foregroundStyle(
+                                activeTab == .input
+                                    ? Color.primary : Color.secondary
+                            )
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 6)
+                            .frame(maxWidth: .infinity, minHeight: 34)
+                            .contentShape(Rectangle())
+                            .background(
+                                activeTab == .input
+                                    ? Color.accentColor.opacity(0.16)
+                                    : Color.clear,
+                                in: RoundedRectangle(cornerRadius: 8)
+                            )
+                    }
+                    .buttonStyle(.plain)
+                    .help("Input")
+                }
+            }
+            .frame(maxWidth: .infinity)
+
+            if activeTab == .output {
+                OutputDeviceGroup(
+                    state: audioModel.outputState,
+                    onSelect: audioModel.selectOutputDevice,
+                    onSetListeningMode: audioModel.setListeningMode,
+                    onSetSpatialAudioMode: audioModel.setSpatialAudioMode,
+                    onConnectNearby: audioModel.connectNearbyAccessory
+                )
+            } else {
+                InputDeviceGroup(
+                    state: audioModel.inputState,
+                    onSelect: audioModel.selectInputDevice
+                )
+
+                InputVolumeControl(
+                    state: audioModel.inputState,
+                    onVolumeChange: audioModel.setInputVolume,
+                    onToggleMute: audioModel.toggleInputMute
+                )
+            }
+        }
+    }
+}
+
 private struct OutputSection: View {
     let audioModel: AudioModel
     @AppStorage("MacMix.OutputSectionExpanded") private var isOutputExpanded = true
@@ -2212,6 +2315,7 @@ private struct OutputDeviceGroup: View {
                     case let .device(device):
                         AudioDeviceRow(
                             device: device,
+                            displayName: state.presentationName(for: device),
                             battery: state.batteryByDeviceUID[device.uid],
                             accessoryControls: state.accessoryControlsByDeviceUID[device.uid],
                             reservesAccessoryControlSpace: true,
@@ -2223,7 +2327,13 @@ private struct OutputDeviceGroup: View {
                     case let .nearby(accessory):
                         NearbyAccessoryRow(accessory: accessory, state: state, onConnect: onConnectNearby)
                     case let .airPlay(receiver):
-                        AirPlayReceiverRow(receiver: receiver, reservesAccessoryControlSpace: true)
+
+                        AirPlayReceiverRow(
+                            receiver: receiver,
+                            reservesAccessoryControlSpace: true,
+                            useSystemOutputAutomation: true
+                        )
+
                     }
                 }
             }
@@ -2308,6 +2418,7 @@ struct NearbyAccessoryRow: View {
 struct AirPlayReceiverRow: View {
     let receiver: DiscoveredAirPlayReceiver
     var reservesAccessoryControlSpace = false
+    var useSystemOutputAutomation = false
     var onConnect: () -> Void = {}
     @State private var picker = AirPlayRoutePickerController()
     @Environment(\.hasStudioAccess) private var hasStudioAccess
@@ -2315,9 +2426,17 @@ struct AirPlayReceiverRow: View {
     @AppStorage(AccessoryDetailsVisibilityPreference.showsAccessoryDetails) private var showsAccessoryDetails = true
 
     var body: some View {
+
+
         Button {
-            picker.toggle()
+            if useSystemOutputAutomation {
+                AirPlaySystemOutputAutomation.connect(to: receiver.name)
+            } else {
+                picker.toggle()
+            }
         } label: {
+
+
             HStack(spacing: 8) {
                 HStack(spacing: 12) {
                     DeviceIcon(symbolName: receiver.symbolName, systemIcon: nil, isCurrent: false)
@@ -2327,10 +2446,6 @@ struct AirPlayReceiverRow: View {
                             .font(.body.weight(.medium))
                             .lineLimit(1)
 
-                        Text("AirPlay, not connected", comment: "Status of an AirPlay receiver such as a HomePod that is on the network but not connected to this Mac.")
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
-                            .lineLimit(1)
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
 
@@ -2353,6 +2468,434 @@ struct AirPlayReceiverRow: View {
         .accessibilityLabel(Text(receiver.name))
     }
 }
+
+
+
+@MainActor
+private enum AirPlaySystemOutputAutomation {
+
+    static func connect(to name: String) {
+        guard AXIsProcessTrusted() else {
+            let alert = NSAlert()
+            alert.messageText = "MacMix 需要辅助功能权限"
+            alert.informativeText = """
+            连接 AirPlay 设备需要控制 macOS 控制中心。
+
+            请前往「隐私与安全性 → 辅助功能」，
+            允许 MacMix 控制电脑，然后重新连接。
+            """
+            alert.alertStyle = .informational
+            alert.addButton(withTitle: "前往授权")
+            alert.addButton(withTitle: "取消")
+
+            NSApp.activate(ignoringOtherApps: true)
+
+            if alert.runModal() == .alertFirstButtonReturn,
+               let url = URL(string:
+                "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility"
+               ) {
+                NSWorkspace.shared.open(url)
+            }
+            return
+        }
+
+        Task { @MainActor in
+            print("AirPlay: 正在连接 \(name)")
+            let result = await connectAndVerify(to: name)
+            print("AirPlay: \(result)")
+
+            if result.hasPrefix("✅"),
+               result.contains("控制中心已收起") {
+                NotificationCenter.default.post(
+                    name: Notification.Name(
+                        "MacMix.AirPlayConnectionDidFinish"
+                    ),
+                    object: nil,
+                    userInfo: ["receiverName": name]
+                )
+            }
+        }
+    }
+
+    private static func connectAndVerify(
+        to name: String
+    ) async -> String {
+        guard AXIsProcessTrusted() else {
+            return "请先授予 MacMix 辅助功能权限"
+        }
+
+        guard let center = findMenuBarControl() else {
+            return "找不到控制中心入口"
+        }
+
+        // 如果控制中心已经打开，不再重复点击入口。
+        if !isControlCenterOpen() {
+            guard press(center) else {
+                return "无法打开控制中心"
+            }
+        }
+
+        // 不使用固定的长时间等待。
+        guard let picker = await waitForControl(
+            "controlcenter-airplay"
+        ) else {
+            return "找不到 AirPlay 按钮"
+        }
+
+        guard press(picker) else {
+            return "无法打开 AirPlay 设备列表"
+        }
+
+        guard let receiver = await waitForControl(
+            "sound-device-\(name)"
+        ) else {
+            return "设备列表中没有找到 \(name)"
+        }
+
+        guard press(receiver) else {
+            return "无法选择 \(name)"
+        }
+
+        // 最长等待 20 秒。音频输出一旦确认稳定，立即继续。
+        let deadline = Date().addingTimeInterval(20)
+        var stableSamples = 0
+        var connected = false
+
+        while Date() < deadline {
+            if isTargetAirPlayOutput(name) {
+                stableSamples += 1
+                if stableSamples >= 3 {
+                    connected = true
+                    break
+                }
+            } else {
+                stableSamples = 0
+            }
+
+            try? await Task.sleep(for: .milliseconds(300))
+        }
+
+        guard connected else {
+            return "未确认 \(name) 已连接。请检查系统声音输出，控制中心暂不自动关闭。"
+        }
+
+        // 已确认输出稳定，再收起控制中心。
+        let closed = await dismissControlCenter(
+            center: center,
+            targetName: name
+        )
+
+        return closed
+            ? "✅ 已确认连接到 \(name)，控制中心已收起"
+            : "✅ 已确认连接到 \(name)，但控制中心未能自动收起"
+    }
+
+    // 同时检查 Core Audio 和系统声音列表。
+    // AXPress 本身不能作为连接成功的依据。
+    private static func isTargetAirPlayOutput(
+        _ name: String
+    ) -> Bool {
+        guard let current = CoreAudioHardware()
+            .devices(for: .output)?
+            .first(where: { $0.isCurrent }),
+              current.transportType ==
+                  kAudioDeviceTransportTypeAirPlay else {
+            return false
+        }
+
+        // 优先核对 MacMix 已解析的真实接收器名称
+        let names = current.name.components(
+            separatedBy: ", "
+        )
+
+        if names.contains(where: {
+            $0.localizedCaseInsensitiveCompare(name)
+                == .orderedSame
+        }) {
+            return true
+        }
+
+        // 系统只返回通用 AirPlay 时，
+        // 进一步确认控制中心选中的接收器。
+        guard let receiver = findInTree(
+            "sound-device-\(name)"
+        ) else {
+            return false
+        }
+
+        var value: CFTypeRef?
+
+        guard AXUIElementCopyAttributeValue(
+            receiver,
+            cf(kAXValueAttribute),
+            &value
+        ) == .success else {
+            return false
+        }
+
+        return (value as? NSNumber)?.intValue == 1
+    }
+
+    private static func dismissControlCenter(
+        center: AXUIElement,
+        targetName: String
+    ) async -> Bool {
+
+        func isPanelVisible() -> Bool {
+            isControlCenterOpen()
+                || findInTree("sound-device-\(targetName)") != nil
+                || findInTree("module-Sound") != nil
+        }
+
+        // 声音详情和控制中心主面板最多两层。
+        for _ in 0..<2 {
+            if !isPanelVisible() {
+                return true
+            }
+
+            // 优先复用打开控制中心时取得的元素。
+            // 仅在原元素失效时才重新查找菜单栏按钮。
+            if !press(center) {
+                guard let fresh = findMenuBarControl(),
+                      press(fresh) else {
+                    return false
+                }
+            }
+
+            try? await Task.sleep(
+                for: .milliseconds(130)
+            )
+        }
+
+        // 检查关闭是否完成，不再执行多余的点击。
+        for _ in 0..<4 {
+            if !isPanelVisible() {
+                return true
+            }
+
+            try? await Task.sleep(
+                for: .milliseconds(100)
+            )
+        }
+
+        return !isPanelVisible()
+    }
+
+    private static func cf(_ value: String) -> CFString {
+        value.withCString {
+            CFStringCreateWithCString(
+                nil, $0,
+                CFStringBuiltInEncodings.UTF8.rawValue
+            )!
+        }
+    }
+
+    private static func read(
+        _ element: AXUIElement,
+        _ key: String
+    ) -> String? {
+        var result: CFTypeRef?
+        guard AXUIElementCopyAttributeValue(
+            element, cf(key), &result
+        ) == .success else {
+            return nil
+        }
+        return result as? String
+    }
+
+    private static func children(
+        _ element: AXUIElement,
+        attribute: String = kAXChildrenAttribute
+    ) -> [AXUIElement] {
+        var result: CFTypeRef?
+        guard AXUIElementCopyAttributeValue(
+            element, cf(attribute), &result
+        ) == .success,
+        let result else {
+            return []
+        }
+        return result as? [AXUIElement] ?? []
+    }
+
+    private static func controlCenterApp() -> AXUIElement? {
+        guard let app = NSRunningApplication
+            .runningApplications(
+                withBundleIdentifier: "com.apple.controlcenter"
+            ).first else {
+            return nil
+        }
+
+        return AXUIElementCreateApplication(
+            app.processIdentifier
+        )
+    }
+
+    private static func windows() -> [AXUIElement] {
+        guard let app = controlCenterApp() else {
+            return []
+        }
+        return children(app, attribute: kAXWindowsAttribute)
+    }
+
+    private static func isControlCenterOpen() -> Bool {
+        // 不能只判断 AXSystemDialog：
+        // 声音设备详情有时以其他窗口结构呈现。
+        if windows().contains(where: {
+            read($0, kAXSubroleAttribute) == "AXSystemDialog"
+        }) {
+            return true
+        }
+
+        return findInTree("controlcenter-airplay") != nil
+            || findInTree("module-Sound") != nil
+    }
+
+    // 先直接搜索控件树，避免大量逐点命中测试。
+    private static func findInTree(
+        _ identifier: String
+    ) -> AXUIElement? {
+        var queue = windows()
+        var index = 0
+
+        while index < queue.count && index < 500 {
+            let element = queue[index]
+            index += 1
+
+            if read(element, kAXIdentifierAttribute) == identifier {
+                return element
+            }
+
+            queue.append(contentsOf: children(element))
+        }
+
+        return nil
+    }
+
+    // 兼容控件没有暴露 AXChildren 的情况。
+    // 只作为备用查找方式。
+    private static func fallbackFind(
+        _ identifier: String
+    ) -> AXUIElement? {
+        let bounds = CGDisplayBounds(CGMainDisplayID())
+        let system = AXUIElementCreateSystemWide()
+
+        let minX = max(bounds.minX + 10, bounds.maxX - 550)
+        let maxX = bounds.maxX - 10
+        let maxY = min(bounds.maxY - 30, bounds.minY + 800)
+
+        for y in stride(
+            from: bounds.minY + 50,
+            through: maxY,
+            by: CGFloat(20)
+        ) {
+            for x in stride(
+                from: minX,
+                through: maxX,
+                by: CGFloat(20)
+            ) {
+                var element: AXUIElement?
+
+                guard AXUIElementCopyElementAtPosition(
+                    system, Float(x), Float(y), &element
+                ) == .success,
+                let element else {
+                    continue
+                }
+
+                var current = element
+
+                for _ in 0..<6 {
+                    if read(
+                        current, kAXIdentifierAttribute
+                    ) == identifier {
+                        return current
+                    }
+
+                    var parent: CFTypeRef?
+                    guard AXUIElementCopyAttributeValue(
+                        current, cf(kAXParentAttribute), &parent
+                    ) == .success,
+                    let parent,
+                    CFGetTypeID(parent) == AXUIElementGetTypeID()
+                    else {
+                        break
+                    }
+                    current = parent as! AXUIElement
+                }
+            }
+        }
+
+        return nil
+    }
+
+    private static func waitForControl(
+        _ identifier: String
+    ) async -> AXUIElement? {
+        // 控件出现就立即继续，不额外等待。
+        for _ in 0..<12 {
+            if let found = findInTree(identifier) {
+                return found
+            }
+            try? await Task.sleep(for: .milliseconds(100))
+        }
+
+        return fallbackFind(identifier)
+    }
+
+    private static func findMenuBarControl() -> AXUIElement? {
+        let bounds = CGDisplayBounds(CGMainDisplayID())
+        let system = AXUIElementCreateSystemWide()
+
+        for yOffset in [12, 19, 25] {
+            let y = bounds.minY + CGFloat(yOffset)
+
+            for x in stride(
+                from: bounds.maxX - 700,
+                through: bounds.maxX - 10,
+                by: CGFloat(10)
+            ) {
+                var element: AXUIElement?
+
+                guard AXUIElementCopyElementAtPosition(
+                    system, Float(x), Float(y), &element
+                ) == .success,
+                let element else {
+                    continue
+                }
+
+                var current = element
+
+                for _ in 0..<6 {
+                    if read(
+                        current, kAXIdentifierAttribute
+                    ) == "com.apple.menuextra.controlcenter" {
+                        return current
+                    }
+
+                    var parent: CFTypeRef?
+                    guard AXUIElementCopyAttributeValue(
+                        current, cf(kAXParentAttribute), &parent
+                    ) == .success,
+                    let parent,
+                    CFGetTypeID(parent) == AXUIElementGetTypeID()
+                    else {
+                        break
+                    }
+                    current = parent as! AXUIElement
+                }
+            }
+        }
+
+        return nil
+    }
+
+    private static func press(_ element: AXUIElement) -> Bool {
+        AXUIElementPerformAction(
+            element, cf(kAXPressAction)
+        ) == .success
+    }
+}
+
 
 private struct MixSection: View {
     let audioModel: AudioModel
@@ -2516,6 +3059,7 @@ enum OutputRowMetrics {
 
 private struct AudioDeviceRow: View {
     let device: AudioDevice
+    let displayName: String?
     let battery: AudioDeviceBattery?
     let accessoryControls: AudioAccessoryControlState?
     let reservesAccessoryControlSpace: Bool
@@ -2529,6 +3073,7 @@ private struct AudioDeviceRow: View {
 
     init(
         device: AudioDevice,
+        displayName: String? = nil,
         battery: AudioDeviceBattery?,
         accessoryControls: AudioAccessoryControlState?,
         reservesAccessoryControlSpace: Bool,
@@ -2538,6 +3083,7 @@ private struct AudioDeviceRow: View {
         onSetSpatialAudioMode: ((SpatialAudioMode, AudioDevice) -> Void)? = nil
     ) {
         self.device = device
+        self.displayName = displayName
         self.battery = battery
         self.accessoryControls = accessoryControls
         self.reservesAccessoryControlSpace = reservesAccessoryControlSpace
@@ -2565,7 +3111,7 @@ private struct AudioDeviceRow: View {
                         )
 
                         VStack(alignment: .leading, spacing: 2) {
-                            Text(device.name)
+                            Text(displayName ?? device.name)
                                 .font(.body.weight(.medium))
                                 .lineLimit(1)
 
@@ -2632,7 +3178,7 @@ private struct AudioDeviceRow: View {
                     .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
-            .accessibilityLabel(Text(device.name))
+            .accessibilityLabel(Text(displayName ?? device.name))
             .accessibilityValue(isAccessoryControlsExpanded ? Text("Expanded") : Text("Collapsed"))
         } else {
             Color.clear
@@ -3009,6 +3555,38 @@ struct AppVolumeControls: View {
     @AppStorage(ThemePreference.accentColor) private var accentColor: ThemeAccentColor = .system
     @Environment(\.hasStudioAccess) private var hasStudioAccess
 
+    @ViewBuilder
+    private var appNameControl: some View {
+        if let audioControlsExpanded {
+            Button {
+                audioControlsExpanded.wrappedValue.toggle()
+            } label: {
+                appNameText
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(Text(name))
+            .accessibilityValue(
+                audioControlsExpanded.wrappedValue
+                    ? Text("Expanded") : Text("Collapsed")
+            )
+        } else {
+            appNameText
+        }
+    }
+
+    private var appNameText: some View {
+        Text(name)
+            .font(.body.weight(.medium))
+            .lineLimit(1)
+            .frame(
+                minWidth: layout == .controlPanel ? 90 : 60,
+                idealWidth: layout == .controlPanel ? 110 : 60,
+                maxWidth: layout == .controlPanel ? 130 : 60,
+                alignment: .leading
+            )
+            .contentShape(Rectangle())
+    }
+
     private var sliderTint: Color {
         if isMuted {
             return MacMixTint.gray
@@ -3031,15 +3609,7 @@ struct AppVolumeControls: View {
             .help(isMuted ? String(localized: "Unmute") : String(localized: "Mute"))
             .accessibilityLabel(MuteAccessibility.label(isMuted: isMuted, name: name))
 
-            Text(name)
-                .font(.body.weight(.medium))
-                .lineLimit(1)
-                .frame(
-                    minWidth: layout == .controlPanel ? 90 : 60,
-                    idealWidth: layout == .controlPanel ? 110 : 60,
-                    maxWidth: layout == .controlPanel ? 130 : 60,
-                    alignment: .leading
-                )
+            appNameControl
 
             AppMixVolumeSlider(value: volumeBinding, maximumVolume: maximumVolume,
                                layout: layout, tint: sliderTint)

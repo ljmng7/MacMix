@@ -4,6 +4,24 @@ import Observation
 @MainActor
 @Observable
 final class MenuBarPanelCoordinator {
+
+    @ObservationIgnored
+    private var airPlayReturnObserver: NSObjectProtocol?
+
+    init() {
+        airPlayReturnObserver = NotificationCenter.default.addObserver(
+            forName: Notification.Name(
+                "MacMix.AirPlayConnectionDidFinish"
+            ),
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor [weak self] in
+                self?.restoreFullPanelAfterAirPlay()
+            }
+        }
+    }
+
     private static let inactivityDuration = Duration.seconds(1)
     private static let touchInactivityDuration = Duration.seconds(3)
     private static let presentationDelay = Duration.milliseconds(32)
@@ -197,6 +215,44 @@ final class MenuBarPanelCoordinator {
             "panel_width": String(Int(panel.frame.width))
         ])
         panel.setFrameOrigin(NSPoint(x: target, y: panel.frame.minY))
+    }
+
+    func restoreFullPanelAfterAirPlay() {
+        presentationTask?.cancel()
+        presentationTask = nil
+
+        dismissalCleanupTask?.cancel()
+        dismissalCleanupTask = nil
+
+        hideTask?.cancel()
+        hideTask = nil
+
+        isTemporary = false
+        mode = .fullPanel
+
+        NSApp.activate(ignoringOtherApps: true)
+
+        // 面板还存在时，直接将它显示到前台。
+        if isPresented, panelWindow?.isVisible == true {
+            panelWindow?.makeKeyAndOrderFront(nil)
+            print("AirPlay: MacMix 面板已置于前台")
+            return
+        }
+
+        // 如果状态仍是打开但实际窗口已消失，
+        // 先重置状态，再触发重新打开。
+        if isPresented {
+            isPresented = false
+
+            Task { @MainActor [weak self] in
+                await Task.yield()
+                self?.isPresented = true
+            }
+        } else {
+            isPresented = true
+        }
+
+        print("AirPlay: 已请求重新打开 MacMix 面板")
     }
 
     func dismissTemporaryPanel() {
